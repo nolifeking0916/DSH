@@ -66,6 +66,14 @@ def call(cmd, payload):
 def main():
     rows = json.load(open(ROWS, encoding="utf-8"))
 
+    # 0. 幂等：已存在同名子表就删掉重建（列顺序与数据都能整体换掉）
+    ex = call("sheets list", {"docid": DOCID})
+    for s0 in ex.get("sheets", []) or []:
+        if s0.get("title") == SHEET:
+            print("删除旧子表:", s0.get("sheet_id"))
+            print(call("sheets delete", {"docid": DOCID, "sheet_id": s0.get("sheet_id"),
+                                          "type": "delete"}))
+
     # 1. 新建子表（列顺序在这一次定死）
     #    注意：type=add 时后端要的是 sheet_title（新子表名），不是 new_sheet_title
     rv = call("sheets add", {"docid": DOCID, "type": "add", "sheet_title": SHEET, "fields": FIELDS})

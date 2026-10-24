@@ -48,7 +48,7 @@
   }
   function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* 隐私模式等 */ } }
   function clearOldKeys() { OLD_KEYS.forEach((k) => { try { localStorage.removeItem(k); } catch (e) { } }); }
-  function wipe() { try { localStorage.removeItem(KEY); } catch (e) { } S = load(); }
+  function wipe() { try { localStorage.removeItem(KEY); } catch (e) { } clearOldKeys(); S = load(); }
 
   /* ---------------- 五级切档 ---------------- */
   function bandM1(score, dim) {
@@ -349,7 +349,7 @@
   }
 
   /* ---------------- 启动 ---------------- */
-  window.APP = { go, toConsent, toQuiz, pick, next, prev, openGrid, closeGrid, download, clearAll, reset, openReport, S: () => S };
+  window.APP = { go, toConsent, toQuiz, pick, next, prev, openGrid, closeGrid, download, clearAll, reset, openReport, save, S: () => S };
   clearOldKeys();
   if (!S.a || !S.a.m1) S = load();
   render();

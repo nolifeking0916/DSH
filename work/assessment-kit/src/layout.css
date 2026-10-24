@@ -39,7 +39,33 @@ button{cursor:pointer;border:none;background:none}
   body{background:#fff}
   .noprint{display:none!important}
   .print-only{display:block}
-  .rep-block{break-inside:avoid;page-break-inside:avoid}
+  /* 只对小构件用 break-inside:avoid；整块 rep-block 可能高于一页，硬套会留下空白页 */
+  .compose,.short-board,.grade,.list-metrics .metric,.metric-row,.bar,.panel,.card{break-inside:avoid;page-break-inside:avoid}
+  .must li,.wrong-list li{break-inside:avoid;page-break-inside:avoid;orphans:2;widows:2}
+  .rep-block h3{break-after:avoid;page-break-after:avoid}
+  .keep{break-inside:avoid;page-break-inside:avoid}
+  body{padding-bottom:20px}   /* 给固定页脚留位置，避免压住最后一行 */
+  p{orphans:2;widows:2}
   .wrap{max-width:100%;padding:0}
 }
-@page{margin:12mm}
+/* 页码：@page margin box 只有 Chrome ≥131 / Edge 支持（Firefox、Safari 忽略 → 自动降级为区块编号） */
+@page{
+  size:A4;               /* 集团用纸为 A4；如需 Letter 改这一行即可 */
+  margin:12mm 12mm 16mm; /* 底部留出页脚带 */
+  @bottom-right{content:"第 " counter(page) " 页";font-size:10px;color:#5C6A60}
+}
+/* 打印页脚：position:fixed 在打印时每页重复，跨浏览器都能读到候选人身份信息 */
+/* 打印页脚：固定元素在打印时每页重复；bottom 放到负值 → 落在页边距区，不压正文 */
+.print-end{font-size:10px;color:var(--muted);border-top:1px solid var(--line);padding-top:4px;margin-top:14px}
+
+/* 报告分区：屏幕一次只显示一个；打印时四个区块全部输出，每块另起一页 */
+.rep-sec{display:none}
+.rep-sec.on{display:block}
+.print-head{font-size:var(--fs-1);color:var(--muted);border-bottom:1px solid var(--line);padding-bottom:6px;margin-bottom:12px}
+
+@media print{
+  .rep-sec{display:block!important;break-before:page;page-break-before:always}
+  .rep-sec:first-child{break-before:auto;page-break-before:auto}
+  .print-head{display:block!important}
+  .rep-nav{display:none!important}
+}

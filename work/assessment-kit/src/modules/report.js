@@ -178,13 +178,14 @@ window.REP = (function () {
     const p = Math.max(0, Math.min(100, Math.round(v / max * 100)));
     return '<div class="bar"><span class="bar-label">' + esc(label) + '</span><span class="bar-track"><span class="bar-fill" style="width:' + p + '%"></span></span><span class="bar-value">' + esc(valueText || (p + "%")) + "</span></div>";
   }
-  function metricRow(d, barLabel) {
+  function metricRow(d) {
     return '<div class="metric-row"><span class="mr-name">' + esc(d.name) + '</span><span class="mr-score">' +
       esc(d.scoreText || (d.score + (d.max ? " / " + d.max : ""))) + "</span>" + gradePill(d.grade) + "</div>" +
-      (d.max ? bar(barLabel || "相对表现", d.score, d.max, d.score + " / " + d.max) : "");
+      (d.max ? bar("相对表现", d.score, d.max, d.score + " / " + d.max) : "");
   }
+  const RADAR_SHORT = { DED: "演绎", IND: "归纳", NUM: "数量", CON: "约束", SPA: "图形", CRI: "批判", PLN: "规划", RSK: "风险" };
   function radarSVG(dims) {
-    const R = 120, cx = 160, cy = 150, n = dims.length;
+    const R = 108, cx = 180, cy = 150, n = dims.length;
     const pt = (i, r) => {
       const a = -Math.PI / 2 + i * 2 * Math.PI / n;
       return [cx + Math.cos(a) * r, cy + Math.sin(a) * r];
@@ -193,14 +194,20 @@ window.REP = (function () {
     const grid = [0.25, 0.5, 0.75, 1].map((f) => poly(dims.map((_, i) => pt(i, R * f))));
     const self = dims.map((d, i) => pt(i, R * Math.max(0.04, Math.min(1, d.pct / 100))));
     const labels = dims.map((d, i) => {
-      const p = pt(i, R + 26);
+      const p = pt(i, R + 24);
       const p2 = pt(i, R * Math.max(0.04, Math.min(1, d.pct / 100)));
-      return '<text class="radar-label" x="' + p[0].toFixed(1) + '" y="' + p[1].toFixed(1) + '" text-anchor="middle">' + esc(d.short || d.name) + "</text>" +
-        '<text class="radar-value" x="' + p2[0].toFixed(1) + '" y="' + (p2[1] - 6).toFixed(1) + '" text-anchor="middle">' + d.pct + "</text>";
+      // 数值标在顶点外侧：左半边靠左、右半边靠右，避免与维度名叠字
+      const left = p2[0] < cx - 6, right = p2[0] > cx + 6;
+      const vx = left ? p2[0] - 7 : right ? p2[0] + 7 : p2[0];
+      const anchor = left ? "end" : right ? "start" : "middle";
+      const onAxis = Math.abs(p2[1] - cy) < 10;   // 水平轴上的顶点：数值放到点的正上方，避开维度名
+      const vy = onAxis ? p2[1] - 8 : (p2[1] < cy ? -6 : 12);
+      return '<text class="radar-label" x="' + p[0].toFixed(1) + '" y="' + p[1].toFixed(1) + '" text-anchor="middle">' + esc(RADAR_SHORT[d.key] || d.short || d.name) + "</text>" +
+        '<text class="radar-value" x="' + vx.toFixed(1) + '" y="' + vy.toFixed(1) + '" text-anchor="' + anchor + '">' + d.pct + "</text>";
     }).join("");
     const axes = dims.map((_, i) => { const p = pt(i, R); return '<line class="radar-axis" x1="' + cx + '" y1="' + cy + '" x2="' + p[0].toFixed(1) + '" y2="' + p[1].toFixed(1) + '"/>'; }).join("");
     const dots = dims.map((d, i) => '<circle class="radar-point" cx="' + self[i][0].toFixed(1) + '" cy="' + self[i][1].toFixed(1) + '" r="3"/>').join("");
-    return '<div class="radar-wrap"><svg class="radar" viewBox="0 0 320 300" width="320" height="300" role="img" aria-label="八维度相对位置雷达图">' +
+    return '<div class="radar-wrap"><svg class="radar" viewBox="0 0 360 300" width="360" height="300" role="img" aria-label="八维度相对位置雷达图">' +
       '<g class="radar-grid">' + grid.map((g) => '<polygon points="' + g + '"/>').join("") + axes + "</g>" +
       '<polygon points="' + poly(dims.map((_, i) => pt(i, R * 0.25))) + '" fill="none" stroke="#B7BEB9" stroke-width="1" stroke-dasharray="3 3"/>' +
       '<polygon points="' + poly(dims.map((_, i) => pt(i, R * 0.5))) + '" fill="none" stroke="#C9A55C" stroke-width="1" stroke-dasharray="3 3"/>' +
@@ -242,17 +249,17 @@ window.REP = (function () {
     }
     if (id === "m1") {
       return '<div class="rep-block"><h3>第一项 · ' + esc(D.m1.meta.title) + "</h3>" +
-        '<div class="dims">' + R.m1.dims.map(metricRow).join("") + "</div>" +
+        '<div class="dims">' + R.m1.dims.map((d) => metricRow(d)).join("") + "</div>" +
         '<div class="short-board">短板：<b>' + esc(R.m1.short.name) + "（" + esc(R.m1.short.grade) + "）</b>。整体档按最短板的一维确定。</div>" +
         '<p class="note">每维 0–24 分，按绝对锚点切档（顶尖 22–24 / 优秀 18–21 / 良好 14–17 / 合格 9–13 / 待提升 0–8）；暂未建立参照分布，后续内部样本到量后校准。</p></div>';
     }
     if (id === "m2") {
       const need = (R.m2.needReview || []);
       return '<div class="rep-block"><h3>第二项 · 情境测试</h3>' +
-        '<div class="dims">' + R.m2.dims.map(metricRow).join("") + "</div>" +
+        '<div class="dims">' + R.m2.dims.map((d) => metricRow(d)).join("") + "</div>" +
         '<p class="note">加权总分 ' + R.m2.total + " / 5.00。档位：顶尖 ≥4.4 / 优秀 3.8–4.39 / 良好 3.0–3.79 / 合格 2.4–2.99 / 待提升 &lt;2.4。</p>" +
         (need.length ? '<div class="short-board">需复核：<b>' + esc(need.join("、")) + "</b>（自我参照与情境作答差异较大，按『需结合真实经历再确认』处理，不直接采信任一方）。</div>" : "") +
-        ((R.m2.consistency && R.m2.consistency.length) ? '<div class="rep-block" style="margin-top:var(--sp-4)"><h3>一致性检查</h3><ul class="must">' +
+        ((R.m2.consistency && R.m2.consistency.length) ? '<div class="rep-block keep" style="margin-top:var(--sp-4)"><h3>一致性检查</h3><ul class="must">' +
           R.m2.consistency.map((c) => "<li><b>" + esc(c.pair) + "</b>：" + esc(c.status) + "（作答 " + esc(c.detail) + "）</li>").join("") + "</ul>" +
           '<p class="note">一致性检查题不计入任何维度分，只用于观察同一致情境的两种问法是否指向同一倾向；一正一负的按需复核处理。</p></div>' : "") + "</div>";
     }
@@ -274,12 +281,21 @@ window.REP = (function () {
     const nav = [['总报告', 'total'], ['第一项', 'm1'], ['第二项', 'm2'], ['第三项', 'm3']];
     const sec = (id) => secHTML(R, id);
     LAST = R;
-    let cur = "total";
+    const PAGES = [["total", "总报告"], ["m1", "第一项报告"], ["m2", "第二项报告"], ["m3", "第三项报告"]];
+    const all = PAGES.map((pg, i) =>
+      '<section class="rep-sec' + (pg[0] === "total" ? " on" : "") + '" data-sec="' + pg[0] + '">' +
+      '<div class="print-only print-head">报告区块 ' + (i + 1) + " / " + PAGES.length + "： " + esc(pg[1]) +
+      " ｜ " + esc(R.name || "") + " ｜ 编号 " + esc(R.code || "") + (R.idLast4 ? " ｜ 末 4 位 " + esc(R.idLast4) : "") + "</div>" +
+      secHTML(R, pg[0]) +
+      // 区块落款：跨浏览器都能定位到「这是谁的报告、报告第几块」；不依赖固定定位（固定元素会压住正文）
+      '<div class="print-only print-end">本区块结束 ｜ 云上文旅集团核心人才系列测试 ｜ 编号 ' + esc(R.code || "") +
+      (R.name ? " ｜ " + esc(R.name) : "") + (R.idLast4 ? " ｜ 末 4 位 " + esc(R.idLast4) : "") +
+      " ｜ 报告共 " + PAGES.length + " 个区块（每块另起一页）</div></section>").join("");
     return '<div class="wrap" style="max-width:760px">' +
       '<div class="topbar"><div class="wrap" style="padding:0"><div class="toprow"><b>施测人报告</b><span>' + esc(R.name || "") +
       " ｜ " + esc(String(R.code || "").slice(0, 12)) + "…" + (R.idLast4 ? " ｜ 末4位 " + esc(R.idLast4) : "") + "</span></div></div></div>" +
       '<div class="rep-nav noprint">' + nav.map((n) => '<button data-s="' + n[1] + '" onclick="REP.setSec(this.dataset.s)">' + esc(n[0]) + "</button>").join("") + "</div>" +
-      '<div id="rep-body" style="padding-bottom:var(--sp-6)">' + sec(cur) + "</div>" +
+      '<div id="rep-body" style="padding-bottom:var(--sp-6)">' + all + "</div>" +
       '<div class="noprint" style="margin:var(--sp-3) 0"><button class="btn btn-primary btn-full" onclick="window.print()">打印 / 存为 PDF</button></div>' +
       '<div class="foot">' + C.foot.map((f) => "<b>" + esc(f) + "</b>").join("") + "</div></div>";
   }
@@ -289,8 +305,8 @@ window.REP = (function () {
     if (!LAST) return;
     const btns = document.querySelectorAll(".rep-nav button");
     btns.forEach((b) => b.setAttribute("aria-current", b.dataset.s === id ? "true" : "false"));
-    const body = document.getElementById("rep-body");
-    if (body) body.innerHTML = secHTML(LAST, id);
+    document.querySelectorAll(".rep-sec").forEach((s) => s.classList.toggle("on", s.dataset.sec === id));
+    window.scrollTo(0, 0);
   }
 
   return { score: score, build: build, reportHTML: reportHTML, gradePill: gradePill, bandComposite: bandComposite, ORD: ORD };

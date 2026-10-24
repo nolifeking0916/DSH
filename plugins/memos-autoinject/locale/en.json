@@ -1,6 +1,0 @@
-{
-  "meta": {
-    "title": "MemOS Memory Auto-Inject",
-    "description": "Recalls relevant MemOS cloud memories before each user turn and injects them as bounded, source-labeled context."
-  }
-}

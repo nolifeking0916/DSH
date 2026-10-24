@@ -1,1 +1,0 @@
-{ "meta": { "title": "WikiSkill Context Inject", "description": "Injects a matched skill index and relevant wiki patterns before each user turn; executors carry skills, not wiki bodies." } }

@@ -1,1 +1,0 @@
-{ "meta": { "title": "WikiSkill 技能与经验注入", "description": "每轮按问题命中注入技能索引与 wiki 相关经验，执行者只带技能、不读 wiki 正文。" } }

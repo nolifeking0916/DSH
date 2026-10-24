@@ -14,12 +14,22 @@
         relativity: 0.45
         skillThreshold: 0.5
         shortQuerySkillThreshold: 0.6
-        maxMem: 4
+        # 2026-10-24 记忆「减量提质」：常驻只留 2 条高相关记忆（≥0.55），其余由模型按需调
+        # search_memory 工具。依据：采纳率实测 记忆 9.1% ＜ 技能 22.7% ＜ 经验 25.0%。
+        maxMem: 2
+        memoryMinScore: 0.55
         maxSkills: 5
         maxPatterns: 3
         # 服务端候选池上限：给足才拿得到 skill 视图（4 会把 skill_detail_list 挤空），客户端再截断
         serverLimit: 25
         budgetChars: 800
+        # 2026-10-24：按类配额分配预算，避免【记忆】被经验+技能挤成 0 条（实测 room=-53）
+        patternQuota: 340
+        skillQuota: 220
+        memoryQuota: 240
+        # 技能本地兜底：MemOS 命中为 0 或请求失败时，读本地技能目录做关键词匹配
+        localSkillFallback: true
+        skillsDir: /Users/leto/.dsh/skills
         timeoutMs: 1800
         injectStep: 1
         debugLog: /tmp/context-inject.log

@@ -397,10 +397,29 @@ function internalBand(v){
   if(v>=2.4) return {name:"带教区", cls:"t-sand"};
   return {name:"风险区", cls:"t-red"};
 }
-/* 解码题目：正确选项与分值经过编码，页面不直接给出答案 */
+/* 解码题目：正确选项与分值经过编码，页面不直接给出答案
+ * 位布局（packed 值，与 build_eq_web_v2.py 的 SCHEME_FLAG 一一对应，fixed-20261024）：
+ *   bit 8      版本标记，恒为 1（0x100）。旧格式没有这一位 → 走下方旧格式回退。
+ *   bit 7      third  存在位（1 = 有第二个 1 分选项）
+ *   bit 6      second 存在位（1 = 有 1 分选项）
+ *   bits 5-4   third  选项序号 0..3 → A/B/C/D
+ *   bits 3-2   second 选项序号 0..3 → A/B/C/D
+ *   bits 1-0   answer 正确项序号 0..3 → A/B/C/D
+ * 每个字段「2 位序号 + 1 位存在」：序号只用 0..3，任何选项（含 D）都不会溢出到邻域，
+ * 编码 ↔ 解码一一对应。旧布局把 1-based 序号(1..4)塞进 2 位域再 %4 还原，
+ * D(4) 会溢出成 0 —— 那 10 题的「1 分项」集合因此失真（Q01 会把 1 分发给错误选项）。
+ */
 function decodeItem(q){
+  if(q.c==="0") return {ans:null, second:null, third:null};   /* 一致性题哨兵：不计分 */
   var key=hash32(q.id+"|"+q.dimension+"|4");
   var v=(parseInt(q.c,16) ^ key)>>>0;
+  if(v & 0x100){                                               /* 新格式（fixed-20261024） */
+    return {ans:"ABCD"[v & 3],
+            second:((v & 0x40)? "ABCD"[(v>>2)&3] : null),
+            third:((v & 0x80)? "ABCD"[(v>>4)&3] : null)};
+  }
+  /* 旧格式回退：仅保证旧页面白屏时不炸，新出厂数据不会走到这里 */
+  console.warn("[EQ] 旧格式编码，已按旧规则解码（请重新生成题库）：", q.id);
   var bestIdx=v%4, t=Math.floor(v/4), s1=t%4, s2=Math.floor(t/4)%4;
   return {ans:"ABCD"[bestIdx],
           second:(s1>0? "ABCD"[s1-1] : null),

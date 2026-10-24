@@ -1,0 +1,326 @@
+/* ================================================================
+   components.css · 组件库
+   契约：work/assessment-kit/BUILD_CONTRACT.md §2
+   视觉基准：work/assessment-kit/prototypes/candidate-flow-prototype.html
+             （A 变体「纸感编辑式」为准；吸收 B 变体的 .tasklist 与 .topbar 眉题）
+   排除：原型专用的 .qtabs / .switcher / .proto-badge 不进成品。
+   ---------------------------------------------------------------
+   给 lead 的调用约定
+   · 颜色只从 tokens.css 变量取，本文件不写死十六进制。
+   · 焦点：基线里已给 3px 描边（浅底 --focus / 深底 --focus-dark，≥3:1）。
+   · 触控：可点目标 min-height ≥ 44px（--tap）。
+   · 对比度：正文 ≥ 4.5:1；控件边界与承载信息的图形 ≥ 3:1。
+   · 打印：@media print 内不依赖「深底 + 浅字」，UA 丢背景时仍可读。
+   · 本文件只管组件，长度/位置/分栏交给 layout.css（后加载，冲突以它为准）。
+   ================================================================ */
+
+/* ================================================================
+   1. 基线（reset / 页面底 / 焦点）
+   ================================================================ */
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;min-height:100vh;background:var(--page);color:var(--ink);
+  font-family:var(--font);font-size:var(--fs-4);line-height:1.65;-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4,h5,p,ul,ol,figure,blockquote{margin:0;padding:0}
+ul,ol{list-style:none}
+img,svg{max-width:100%}
+button,input,select,textarea{font-family:inherit;font-size:16px;color:inherit}
+button{cursor:pointer;border:none;background:none;text-align:left}
+a{color:var(--green)}
+
+/* 焦点指示器：浅底用深绿（10.06:1），深底用金（4.55:1），均 ≥3:1 */
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px;border-radius:4px}
+.btn-primary:focus-visible,.topbar :focus-visible,.grade[data-level="T"] :focus-visible{
+  outline-color:var(--focus-dark)}
+
+/* ================================================================
+   2. 容器与纸面
+   ================================================================ */
+.wrap{width:100%;max-width:560px;margin:0 auto;padding:0 18px}
+.sheet{background:var(--sheet);border:1px solid var(--line-warm);border-radius:6px;margin-top:18px;
+  padding:30px 26px 26px;box-shadow:0 1px 0 rgba(30,70,52,.05)}
+.card{background:#fff;border:1px solid var(--line);border-radius:var(--r-l)}
+.panel{background:#fff;border:1px solid var(--line);border-radius:var(--r-m);padding:var(--sp-4);margin-bottom:var(--sp-3)}
+.panel h3{font-size:var(--fs-2);color:var(--muted);font-weight:600;margin-bottom:10px;letter-spacing:.04em}
+
+/* 品牌区 */
+.brand{text-align:center;margin-bottom:var(--sp-5)}
+.brand h1{font-family:var(--serif);font-size:25px;font-weight:600;letter-spacing:.02em;line-height:1.45}
+.brand .rule{width:44px;height:2px;background:var(--gold);margin:14px auto 0}   /* 金 = 装饰线 */
+.brand .sub{font-size:var(--fs-1);color:var(--muted);margin-top:var(--sp-3);letter-spacing:.06em}
+
+/* 段标题 */
+.sect-title{font-family:var(--serif);font-size:var(--fs-4);font-weight:600;color:var(--green);
+  padding-bottom:8px;border-bottom:1px solid var(--line-warm);margin:var(--sp-5) 0 var(--sp-3)}
+
+/* 键值行 */
+.kv{display:flex;gap:var(--sp-3);padding:9px 0;border-bottom:1px dotted var(--line-warm);font-size:14.5px}
+.kv i{font-style:normal;color:var(--muted);flex:0 0 84px;font-size:var(--fs-2)}
+.kv b{font-weight:600}
+
+/* 三项模块清单（首页「本次包含」） */
+.modlist li{display:flex;gap:var(--sp-3);align-items:baseline;padding:13px 0;
+  border-bottom:1px solid #EFE9DC;font-size:14.5px}
+.modlist li:last-child{border-bottom:none}
+.modlist .no{font-family:var(--serif);color:var(--sand);font-size:var(--fs-4);flex:0 0 22px}
+.modlist .t{flex:1;min-width:0}
+.modlist .t em{display:block;font-style:normal;color:var(--muted);font-size:12.5px;margin-top:3px}
+.modlist .c{flex:0 0 auto;color:var(--ink2);font-size:var(--fs-2)}
+
+/* 任务清单（吸收 B 变体：首页「本次任务」总览） */
+.tasklist li{display:flex;align-items:center;gap:var(--sp-3);padding:13px 0;border-bottom:1px solid var(--line)}
+.tasklist li:last-child{border-bottom:none}
+.tasklist .mk{width:32px;height:32px;border-radius:var(--r-s);background:var(--good-bg);color:var(--good);
+  display:flex;align-items:center;justify-content:center;font-size:var(--fs-2);font-weight:800;flex:0 0 auto}
+.tasklist .tt{flex:1;min-width:0;font-size:14.5px}
+.tasklist .tt em{display:block;font-style:normal;color:var(--muted);font-size:var(--fs-1);margin-top:2px}
+.tasklist .pc{font-size:var(--fs-2);color:var(--ink2);text-align:right;white-space:nowrap}
+
+/* 顶部细眉题条（吸收 B 变体 .topbar；sticky，滚动时保留模块名 + 进度 + 计时） */
+.topbar{position:sticky;top:0;z-index:50;background:var(--green);color:var(--cream)}
+.topbar .wrap{padding-top:10px;padding-bottom:10px}
+.toprow{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:var(--fs-2)}
+.toprow b{font-size:var(--fs-4);font-weight:600}
+.toprow span{font-variant-numeric:tabular-nums;opacity:.92}
+.topbar .pbar{height:4px;background:rgba(255,255,255,.55);border-radius:2px;margin-top:9px}
+.topbar .pbar i{display:block;height:100%;background:var(--gold);border-radius:2px}  /* 金在深绿底 4.55:1 ✓ */
+
+/* ================================================================
+   3. 按钮 / 表单 / 提示
+   ================================================================ */
+.btn{min-height:var(--tap);padding:0 20px;border-radius:var(--r-m);font-size:15.5px;font-weight:600;
+  display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.btn-primary{background:var(--green);color:#fff}
+.btn-ghost{background:#fff;color:var(--green);border:1px solid var(--green)}
+.btn-quiet{background:transparent;color:var(--ink2);border:1px solid var(--line-2)}
+.btn[disabled]{opacity:.42;cursor:not-allowed}
+.btn-full{width:100%}
+
+.field{display:block;margin-bottom:14px}
+.field span{display:block;font-size:var(--fs-2);color:var(--ink2);margin-bottom:6px}
+.field input{width:100%;min-height:var(--tap);padding:10px 13px;border:1px solid var(--line-2);
+  border-radius:var(--r-m);background:#fff;font-size:16px}
+.field input:focus-visible{border-color:var(--green2);outline:2px solid var(--green2);outline-offset:1px}
+.hint{font-size:12.5px;color:var(--muted);line-height:1.7;margin-top:6px}
+.hint a{color:var(--green)}
+
+.tag{display:inline-flex;align-items:center;min-height:24px;padding:0 9px;border-radius:999px;
+  font-size:11.5px;font-weight:700;line-height:1.4}
+.t-good{background:var(--good-bg);color:var(--good)}
+.t-sand{background:var(--sand-bg);color:var(--sand)}
+
+.terms p{font-size:13.5px;line-height:1.85;color:var(--ink2);margin-bottom:9px}
+.terms p b{color:var(--ink)}
+.check{display:flex;gap:10px;align-items:flex-start;min-height:var(--tap);padding:10px 12px;
+  border:1px solid var(--line-2);border-radius:var(--r-m);background:var(--paper);font-size:13.5px;line-height:1.7}
+.check input{width:22px;height:22px;flex:0 0 auto;margin-top:1px;accent-color:var(--green)}
+
+.warn{font-size:var(--fs-2);color:var(--red);background:var(--red-bg);border-radius:var(--r-s);
+  padding:9px 12px;margin-top:var(--sp-3)}
+
+/* 页脚（两行合规声明） */
+.foot{margin-top:26px;padding:14px 0 28px;text-align:center;font-size:11.5px;line-height:1.9;
+  color:var(--muted);border-top:1px solid var(--line)}
+.foot b{display:block;font-weight:600}
+
+/* ================================================================
+   4. 答题页
+   ================================================================ */
+.qbar{height:3px;background:var(--line-warm);border-radius:2px;margin:0 0 22px}
+.qbar i{display:block;height:100%;background:var(--green);border-radius:2px}
+
+/* 细眉题：模块名 + 进度 + 计时 */
+.qmeta{display:flex;gap:10px;justify-content:space-between;align-items:baseline;flex-wrap:wrap;
+  font-size:var(--fs-1);color:var(--muted);margin-bottom:var(--sp-3)}
+.qmeta>span{min-width:0;overflow-wrap:anywhere}
+.qmeta .qm-mod{color:var(--ink2);font-weight:600;letter-spacing:.04em}
+.qmeta .qm-right{font-variant-numeric:tabular-nums}
+
+.qstem{font-family:var(--serif);font-size:20px;line-height:1.7;margin-bottom:22px;color:var(--ink)}
+.opts{display:grid;gap:var(--sp-3)}
+.opt{display:flex;gap:13px;align-items:flex-start;text-align:left;width:100%;min-height:64px;padding:15px 16px;
+  background:#fff;border:1px solid var(--line-warm);border-radius:var(--r-m);font-size:var(--fs-5);line-height:1.6}
+/* .opt 卡面沿用原型的浅暖描边（1.41:1，纸感必需）；控件本身由高对比文字识别，
+   按 WCAG 2.2 1.4.11 Understanding「控件已有足够对比的文字可识别时不必额外画边界」处理。
+   承载状态与边界的描边用 ≥3:1：.k 徽标 --line-2（3.45:1）、选中态 --green（10.6:1）。 */
+.opt .k{flex:0 0 26px;height:26px;border-radius:50%;border:1px solid var(--line-2);color:var(--ink2);
+  font-size:12.5px;display:flex;align-items:center;justify-content:center;font-weight:700}
+.opt[aria-pressed="true"]{border-color:var(--green);background:#F4F7F4;box-shadow:inset 3px 0 0 var(--green)}
+.opt[aria-pressed="true"] .k{background:var(--green);border-color:var(--green);color:#fff}
+
+.qnav{display:flex;gap:10px;margin-top:var(--sp-5)}
+.qnav .btn{flex:1}
+
+/* 7 点量表：每格 ≥44×44px（窄屏靠 --sp 收紧与 sheet 内边距适配） */
+.scale{display:grid;grid-template-columns:repeat(7,minmax(44px,1fr));gap:3px;align-items:end}
+.scale .seg{min-height:56px;padding:8px 2px;border-radius:var(--r-s);background:#F6F5F1;border:1px solid var(--line-2);
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:6px}
+.scale .dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--line-2);background:#fff}
+.scale .sl{font-size:10.5px;line-height:1.25;color:var(--muted);text-align:center}
+.scale .seg[aria-pressed="true"]{border-color:var(--green);background:#EFF5F1}
+.scale .seg[aria-pressed="true"] .dot{border-color:var(--green);background:var(--green)}
+@media (max-width:460px){
+  .scale{gap:1px}
+  .sheet{padding-left:16px;padding-right:16px}
+}
+
+/* 题号抽屉 */
+.gridbtn{display:flex;gap:10px;align-items:center;justify-content:center;width:100%;min-height:var(--tap);
+  border:1px dashed var(--line-2);border-radius:var(--r-s);color:var(--ink2);font-size:var(--fs-3);background:#fff}
+.mask{position:fixed;inset:0;background:rgba(20,32,26,.45);z-index:70;display:none}
+.mask.on{display:block}
+.gridpanel{position:fixed;left:0;right:0;bottom:0;z-index:71;background:#fff;border-radius:18px 18px 0 0;
+  padding:16px 18px calc(18px + env(safe-area-inset-bottom));max-height:72vh;overflow:auto;display:none}
+.gridpanel.on{display:block}
+.gridpanel h4{font-size:var(--fs-3);margin-bottom:12px}
+.gridpanel .g{display:grid;grid-template-columns:repeat(6,minmax(44px,1fr));gap:6px}
+.gridpanel .g b{display:flex;align-items:center;justify-content:center;min-height:44px;min-width:44px;
+  border-radius:7px;background:#F0F2F0;color:var(--ink2);font-size:12.5px;font-weight:600}
+.gridpanel .g b.done{background:var(--good-bg);color:var(--good)}
+.gridpanel .g b.cur{outline:2px solid var(--green);outline-offset:1px}
+@media (min-width:520px){
+  .gridpanel .g{grid-template-columns:repeat(8,minmax(44px,1fr))}
+}
+
+/* ================================================================
+   5. 报告页专用组件（成品新增，契约 §2 追加项）
+   ---------------------------------------------------------------
+   5.1 五级色标 .grade / .grade-pill
+       DOM：<span class="grade-pill" data-level="A">优秀</span>
+       data-level ∈ T / A / B / C / D（= 逻辑数据的五档 key）。
+       颜色 + 文字双编码：级别名必须写进元素里，颜色只是辅助；
+       黑白打印时名字仍在，含义不丢。
+   5.2 .grade-meter（可选，五段强度条：顶尖5 / 优秀4 / 良好3 / 合格2 / 待提升1）
+       DOM：<span class="grade-meter"><i></i><i></i><i></i><i></i><i></i></span>
+       段数即等级 → 与颜色无关的第二重编码，打印/色觉差异下都能读。
+   ================================================================ */
+.grade-pill{display:inline-flex;align-items:center;gap:6px;min-height:26px;padding:0 10px;border-radius:999px;
+  font-size:var(--fs-2);font-weight:700;line-height:1.4;white-space:nowrap;border:1px solid transparent}
+.grade-pill[data-level="T"]{background:var(--lv-t-bg);color:var(--lv-t-fg);border-color:var(--lv-t-bg)}
+.grade-pill[data-level="A"]{background:var(--lv-a-bg);color:var(--lv-a-fg);border-color:var(--lv-a-fg)}
+.grade-pill[data-level="B"]{background:var(--lv-b-bg);color:var(--lv-b-fg);border-color:var(--lv-b-fg)}
+.grade-pill[data-level="C"]{background:var(--lv-c-bg);color:var(--lv-c-fg);border-color:var(--lv-c-fg)}
+.grade-pill[data-level="D"]{background:var(--lv-d-bg);color:var(--lv-d-fg);border-color:var(--lv-d-fg)}
+
+.grade{display:flex;flex-direction:column;gap:6px;padding:12px 14px;border-radius:var(--r-m);
+  border:1px solid transparent;min-width:132px}
+.grade-name{font-family:var(--serif);font-size:var(--fs-5);font-weight:600;line-height:1.4}
+.grade-score{font-size:var(--fs-1);color:inherit;font-variant-numeric:tabular-nums}
+.grade[data-level="T"]{background:var(--lv-t-bg);color:var(--lv-t-fg);border-color:var(--lv-t-bg)}
+.grade[data-level="A"]{background:var(--lv-a-bg);color:var(--lv-a-fg);border-color:var(--lv-a-fg)}
+.grade[data-level="B"]{background:var(--lv-b-bg);color:var(--lv-b-fg);border-color:var(--lv-b-fg)}
+.grade[data-level="C"]{background:var(--lv-c-bg);color:var(--lv-c-fg);border-color:var(--lv-c-fg)}
+.grade[data-level="D"]{background:var(--lv-d-bg);color:var(--lv-d-fg);border-color:var(--lv-d-fg)}
+.grade[data-level="T"] .grade-score{color:var(--cream)}
+
+.grade-meter{display:inline-flex;gap:3px;align-items:center}
+.grade-meter i{width:9px;height:9px;border:1px solid currentColor;opacity:.32}
+.grade-meter i.on{opacity:1;background:currentColor}
+.grade[data-level="T"] .grade-meter i{opacity:1;background:currentColor}
+.grade[data-level="A"] .grade-meter i:nth-child(-n+4){opacity:1;background:currentColor}
+.grade[data-level="B"] .grade-meter i:nth-child(-n+3){opacity:1;background:currentColor}
+.grade[data-level="C"] .grade-meter i:nth-child(-n+2){opacity:1;background:currentColor}
+.grade[data-level="D"] .grade-meter i:nth-child(1){opacity:1;background:currentColor}
+
+/* 5.3 维度成绩行：维度名 + 分数 + 五级胶囊
+       DOM：<div class="metric-row"><span class="mr-name">演绎推理</span>
+             <span class="mr-score">T 55</span>
+             <span class="grade-pill" data-level="A">优秀</span></div> */
+.metric-row{display:flex;align-items:center;gap:var(--sp-3);min-height:var(--tap);
+  padding:8px 0;border-bottom:1px dotted var(--line-warm)}
+.metric-row:last-child{border-bottom:none}
+.metric-row .mr-name{flex:1;min-width:0;font-size:var(--fs-4);line-height:1.5}
+.metric-row .mr-score{flex:0 0 auto;font-family:var(--serif);font-size:var(--fs-5);
+  font-variant-numeric:tabular-nums;color:var(--ink)}
+.metric-row .grade-pill{flex:0 0 auto}
+
+/* 5.4 维度相对表现条：长度是主编码，颜色只是辅助
+       DOM：<div class="bar"><span class="bar-label">演绎推理</span>
+             <span class="bar-track"><span class="bar-fill" style="width:78%"></span></span>
+             <span class="bar-value">78</span></div>
+       .bar-fill 的 width 由 JS 按维度相对表现写入（0–100）。 */
+.bars{display:grid;gap:10px;margin:var(--sp-3) 0}
+.bar{display:grid;grid-template-columns:minmax(68px,96px) 1fr auto;gap:var(--sp-3);
+  align-items:center;min-height:32px}
+.bar-label{font-size:var(--fs-2);color:var(--ink2);overflow-wrap:anywhere}
+.bar-track{height:12px;background:#EDEFEC;border:1px solid var(--bar-edge);border-radius:999px;overflow:hidden}
+.bar-fill{display:block;height:100%;background:var(--bar-fill);border-radius:999px;
+  background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.30) 0 3px,transparent 3px 8px)}
+.bar-value{font-size:var(--fs-2);color:var(--ink2);font-variant-numeric:tabular-nums;
+  min-width:3.4em;text-align:right}
+
+/* 5.5 雷达图容器
+       DOM：<div class="radar-wrap"><svg class="radar" viewBox="0 0 420 420" width="420" height="420" …>
+                <g class="radar-grid">…</g><polygon class="radar-area" …/>
+                <text class="radar-label">演绎推理</text><text class="radar-value">T 55</text>
+              </svg></div>
+       形状 + 文字标注双重表达：顶点旁必须同时有维度名与数值。 */
+.radar-wrap{width:100%;max-width:420px;margin:0 auto;break-inside:avoid}
+.radar{display:block;width:100%;height:auto}
+.radar-grid line,.radar-grid polygon{fill:none;stroke:var(--chart-grid);stroke-width:1}
+.radar-axis{stroke:var(--chart-grid);stroke-width:1}
+.radar-area{fill:var(--chart-area);stroke:var(--green);stroke-width:2;stroke-linejoin:round}
+.radar-point{fill:var(--green)}
+.radar-label{font-size:12px;fill:var(--ink2)}
+.radar-value{font-size:11px;fill:var(--muted)}
+
+/* 5.6 短板提示块（左侧金色竖条；金色在浅底只有 2.21:1 → 只作装饰线，
+       块的身份由「短板」标题文字承担，不靠颜色单独传达） */
+.short-board{border:1px solid var(--line-warm);border-left:4px solid var(--gold);
+  border-radius:0 var(--r-s) var(--r-s) 0;padding:12px 14px;margin:var(--sp-4) 0;background:var(--sheet)}
+.short-board .sb-title{display:block;font-family:var(--serif);font-size:var(--fs-3);font-weight:600;
+  color:var(--green);margin-bottom:4px}
+.short-board .sb-text{font-size:var(--fs-2);line-height:1.8;color:var(--ink2)}
+.short-board .sb-text b{color:var(--ink)}
+
+/* 5.7 综合评估块（总报告顶部）
+       DOM：<section class="compose"><h3 class="compose-title">综合评估</h3>
+             <div class="compose-head"><span class="grade" data-level="B">…</span></div>
+             <p class="compose-note">…</p>
+             <p class="compose-note compose-flag">…</p></section> */
+.compose{background:var(--cream);border:1px solid var(--line-warm);border-left:4px solid var(--gold);
+  border-radius:var(--r-m);padding:18px 20px;margin:var(--sp-4) 0;break-inside:avoid}
+.compose-title{font-family:var(--serif);font-size:var(--fs-5);font-weight:600;color:var(--green);margin-bottom:12px}
+.compose-head{display:flex;align-items:center;gap:var(--sp-3);flex-wrap:wrap;margin-bottom:10px}
+.compose-note{font-size:var(--fs-2);line-height:1.8;color:var(--ink2)}
+.compose-note + .compose-note{margin-top:6px}
+.compose-flag{border-left:3px solid var(--sand);padding-left:10px;color:var(--sand);font-weight:600}
+
+/* 5.8 三项并列成绩表
+       DOM：<div class="list-metrics"><div class="metric">
+               <div class="metric-name">第一项 · 管理行为成熟度</div>
+               <div class="metric-value"><span class="grade-pill" data-level="B">良好</span></div>
+               <div class="metric-note">短板 · 关注重点</div></div> … </div> */
+.list-metrics{display:grid;grid-template-columns:1fr;gap:var(--sp-3);margin:var(--sp-4) 0}
+.metric{background:#fff;border:1px solid var(--line);border-radius:var(--r-m);padding:14px 16px}
+.metric-name{font-size:var(--fs-2);color:var(--ink2);line-height:1.6;margin-bottom:8px}
+.metric-value{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.metric-note{font-size:var(--fs-1);color:var(--muted);line-height:1.7}
+.metric-note b{color:var(--ink2)}
+@media (min-width:640px){
+  .list-metrics{grid-template-columns:repeat(3,1fr)}
+}
+
+/* ================================================================
+   6. 打印
+   · 只用 break-inside / break-before 这类跨浏览器可用的分页属性；
+     @page 只写 margin / size（由 layout.css 负责），页码不靠 margin box
+     （Firefox / Safari 不支持）。
+   · 不依赖「深底 + 浅字」传达信息：深底色块在打印时改为白底深字。
+   ================================================================ */
+@media print{
+  body{background:#fff}
+  .mask,.gridpanel,.btn,.gridbtn,.qnav,.topbar{display:none !important}
+  .compose,.short-board,.metric-row,.list-metrics,.metric,.grade,.grade-pill,.radar-wrap,
+  .card,.panel,.foot{break-inside:avoid}
+  .compose,.short-board,.grade,.grade-pill,.radar-wrap,.list-metrics{
+    print-color-adjust:exact;-webkit-print-color-adjust:exact}
+  /* 深绿底浅字的档位块在丢背景后不可读 → 打印改为白底深字 + 深色描边 */
+  .grade-pill[data-level="T"],.grade[data-level="T"]{
+    background:transparent;color:var(--green);border:2px solid var(--green)}
+  .grade[data-level="T"] .grade-score{color:var(--green)}
+  .short-board,.compose{border-left-width:4px}
+  /* SVG 打印需要确定的内在尺寸（viewBox 之外的 width/height 用绝对单位） */
+  .radar-wrap{width:120mm;max-width:120mm}
+  .radar{width:120mm;height:120mm}
+}

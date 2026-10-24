@@ -1,0 +1,584 @@
+{
+ "reuse": [],
+ "rewrite": [
+  1,
+  2,
+  3,
+  4,
+  5,
+  6,
+  7,
+  8,
+  9,
+  10,
+  11,
+  12,
+  13,
+  14,
+  15,
+  16,
+  17,
+  18,
+  19,
+  20,
+  21,
+  22,
+  23,
+  24,
+  25,
+  26,
+  27,
+  28,
+  29,
+  30,
+  31,
+  32,
+  33,
+  34,
+  35,
+  36,
+  37,
+  38,
+  39,
+  40,
+  41,
+  42,
+  43,
+  44,
+  45,
+  46,
+  47,
+  48,
+  49,
+  50,
+  51,
+  52,
+  53,
+  54,
+  55,
+  56,
+  57,
+  58,
+  59,
+  60,
+  61,
+  62,
+  63,
+  64,
+  65,
+  66,
+  67,
+  68,
+  69,
+  70,
+  71,
+  72,
+  73,
+  74,
+  75,
+  76,
+  77,
+  78,
+  79,
+  80,
+  81,
+  82,
+  83,
+  84,
+  85,
+  86,
+  87,
+  88,
+  89,
+  90,
+  91,
+  92,
+  93,
+  94,
+  95,
+  96
+ ],
+ "drop": [],
+ "detail": [
+  {
+   "old": 1,
+   "best": "INT-13",
+   "score": 0.269
+  },
+  {
+   "old": 2,
+   "best": "JPS-21",
+   "score": 0.154
+  },
+  {
+   "old": 3,
+   "best": "INT-06",
+   "score": 0.208
+  },
+  {
+   "old": 4,
+   "best": "JPS-23",
+   "score": 0.353
+  },
+  {
+   "old": 5,
+   "best": "JPS-24",
+   "score": 0.143
+  },
+  {
+   "old": 6,
+   "best": "INT-02",
+   "score": 0.238
+  },
+  {
+   "old": 7,
+   "best": "JPS-21",
+   "score": 0.182
+  },
+  {
+   "old": 8,
+   "best": "INT-21",
+   "score": 0.19
+  },
+  {
+   "old": 9,
+   "best": "JPS-17",
+   "score": 0.238
+  },
+  {
+   "old": 10,
+   "best": "INT-24",
+   "score": 0.2
+  },
+  {
+   "old": 11,
+   "best": "JPS-24",
+   "score": 0.143
+  },
+  {
+   "old": 12,
+   "best": "INT-21",
+   "score": 0.333
+  },
+  {
+   "old": 13,
+   "best": "INT-07",
+   "score": 0.208
+  },
+  {
+   "old": 14,
+   "best": "JPS-14",
+   "score": 0.208
+  },
+  {
+   "old": 15,
+   "best": "INT-18",
+   "score": 0.333
+  },
+  {
+   "old": 16,
+   "best": "TFS-21",
+   "score": 0.292
+  },
+  {
+   "old": 17,
+   "best": "JPS-01",
+   "score": 0.211
+  },
+  {
+   "old": 18,
+   "best": "TFS-24",
+   "score": 0.16
+  },
+  {
+   "old": 19,
+   "best": "SNT-04",
+   "score": 0.174
+  },
+  {
+   "old": 20,
+   "best": "INT-08",
+   "score": 0.2
+  },
+  {
+   "old": 21,
+   "best": "TFS-03",
+   "score": 0.182
+  },
+  {
+   "old": 22,
+   "best": "INT-13",
+   "score": 0.211
+  },
+  {
+   "old": 23,
+   "best": "JPS-10",
+   "score": 0.2
+  },
+  {
+   "old": 24,
+   "best": "TFS-08",
+   "score": 0.16
+  },
+  {
+   "old": 25,
+   "best": "JPS-11",
+   "score": 0.182
+  },
+  {
+   "old": 26,
+   "best": "SNT-19",
+   "score": 0.273
+  },
+  {
+   "old": 27,
+   "best": "JPS-07",
+   "score": 0.211
+  },
+  {
+   "old": 28,
+   "best": "JPS-08",
+   "score": 0.211
+  },
+  {
+   "old": 29,
+   "best": "TFS-04",
+   "score": 0.24
+  },
+  {
+   "old": 30,
+   "best": "JPS-08",
+   "score": 0.2
+  },
+  {
+   "old": 31,
+   "best": "JPS-10",
+   "score": 0.19
+  },
+  {
+   "old": 32,
+   "best": "SNT-22",
+   "score": 0.136
+  },
+  {
+   "old": 33,
+   "best": "SNT-24",
+   "score": 0.211
+  },
+  {
+   "old": 34,
+   "best": "SNT-18",
+   "score": 0.176
+  },
+  {
+   "old": 35,
+   "best": "INT-04",
+   "score": 0.2
+  },
+  {
+   "old": 36,
+   "best": "SNT-22",
+   "score": 0.217
+  },
+  {
+   "old": 37,
+   "best": "INT-04",
+   "score": 0.174
+  },
+  {
+   "old": 38,
+   "best": "INT-11",
+   "score": 0.238
+  },
+  {
+   "old": 39,
+   "best": "SNT-13",
+   "score": 0.19
+  },
+  {
+   "old": 40,
+   "best": "SNT-04",
+   "score": 0.143
+  },
+  {
+   "old": 41,
+   "best": "SNT-22",
+   "score": 0.211
+  },
+  {
+   "old": 42,
+   "best": "SNT-18",
+   "score": 0.278
+  },
+  {
+   "old": 43,
+   "best": "SNT-07",
+   "score": 0.222
+  },
+  {
+   "old": 44,
+   "best": "JPS-12",
+   "score": 0.182
+  },
+  {
+   "old": 45,
+   "best": "SNT-05",
+   "score": 0.222
+  },
+  {
+   "old": 46,
+   "best": "JPS-12",
+   "score": 0.174
+  },
+  {
+   "old": 47,
+   "best": "SNT-13",
+   "score": 0.167
+  },
+  {
+   "old": 48,
+   "best": "SNT-18",
+   "score": 0.136
+  },
+  {
+   "old": 49,
+   "best": "INT-04",
+   "score": 0.227
+  },
+  {
+   "old": 50,
+   "best": "SNT-05",
+   "score": 0.222
+  },
+  {
+   "old": 51,
+   "best": "TFS-01",
+   "score": 0.381
+  },
+  {
+   "old": 52,
+   "best": "SNT-24",
+   "score": 0.211
+  },
+  {
+   "old": 53,
+   "best": "TFS-19",
+   "score": 0.3
+  },
+  {
+   "old": 54,
+   "best": "SNT-10",
+   "score": 0.286
+  },
+  {
+   "old": 55,
+   "best": "TFS-03",
+   "score": 0.24
+  },
+  {
+   "old": 56,
+   "best": "INT-18",
+   "score": 0.227
+  },
+  {
+   "old": 57,
+   "best": "TFS-13",
+   "score": 0.19
+  },
+  {
+   "old": 58,
+   "best": "TFS-07",
+   "score": 0.304
+  },
+  {
+   "old": 59,
+   "best": "TFS-04",
+   "score": 0.185
+  },
+  {
+   "old": 60,
+   "best": "SNT-06",
+   "score": 0.211
+  },
+  {
+   "old": 61,
+   "best": "TFS-19",
+   "score": 0.2
+  },
+  {
+   "old": 62,
+   "best": "JPS-18",
+   "score": 0.211
+  },
+  {
+   "old": 63,
+   "best": "INT-20",
+   "score": 0.238
+  },
+  {
+   "old": 64,
+   "best": "TFS-23",
+   "score": 0.19
+  },
+  {
+   "old": 65,
+   "best": "INT-13",
+   "score": 0.167
+  },
+  {
+   "old": 66,
+   "best": "JPS-18",
+   "score": 0.15
+  },
+  {
+   "old": 67,
+   "best": "INT-07",
+   "score": 0.143
+  },
+  {
+   "old": 68,
+   "best": "TFS-09",
+   "score": 0.25
+  },
+  {
+   "old": 69,
+   "best": "INT-19",
+   "score": 0.182
+  },
+  {
+   "old": 70,
+   "best": "INT-01",
+   "score": 0.19
+  },
+  {
+   "old": 71,
+   "best": "SNT-19",
+   "score": 0.238
+  },
+  {
+   "old": 72,
+   "best": "INT-10",
+   "score": 0.13
+  },
+  {
+   "old": 73,
+   "best": "JPS-13",
+   "score": 0.25
+  },
+  {
+   "old": 74,
+   "best": "INT-15",
+   "score": 0.19
+  },
+  {
+   "old": 75,
+   "best": "JPS-03",
+   "score": 0.2
+  },
+  {
+   "old": 76,
+   "best": "TFS-05",
+   "score": 0.238
+  },
+  {
+   "old": 77,
+   "best": "JPS-08",
+   "score": 0.333
+  },
+  {
+   "old": 78,
+   "best": "JPS-24",
+   "score": 0.222
+  },
+  {
+   "old": 79,
+   "best": "JPS-05",
+   "score": 0.263
+  },
+  {
+   "old": 80,
+   "best": "JPS-02",
+   "score": 0.182
+  },
+  {
+   "old": 81,
+   "best": "JPS-08",
+   "score": 0.316
+  },
+  {
+   "old": 82,
+   "best": "JPS-18",
+   "score": 0.263
+  },
+  {
+   "old": 83,
+   "best": "JPS-16",
+   "score": 0.182
+  },
+  {
+   "old": 84,
+   "best": "JPS-22",
+   "score": 0.211
+  },
+  {
+   "old": 85,
+   "best": "JPS-08",
+   "score": 0.2
+  },
+  {
+   "old": 86,
+   "best": "JPS-08",
+   "score": 0.182
+  },
+  {
+   "old": 87,
+   "best": "INT-23",
+   "score": 0.227
+  },
+  {
+   "old": 88,
+   "best": "JPS-12",
+   "score": 0.182
+  },
+  {
+   "old": 89,
+   "best": "JPS-12",
+   "score": 0.238
+  },
+  {
+   "old": 90,
+   "best": "JPS-20",
+   "score": 0.3
+  },
+  {
+   "old": 91,
+   "best": "JPS-08",
+   "score": 0.316
+  },
+  {
+   "old": 92,
+   "best": "JPS-07",
+   "score": 0.412
+  },
+  {
+   "old": 93,
+   "best": "JPS-22",
+   "score": 0.211
+  },
+  {
+   "old": 94,
+   "best": "JPS-09",
+   "score": 0.238
+  },
+  {
+   "old": 95,
+   "best": "JPS-07",
+   "score": 0.2
+  },
+  {
+   "old": 96,
+   "best": "INT-24",
+   "score": 0.227
+  }
+ ]
+}

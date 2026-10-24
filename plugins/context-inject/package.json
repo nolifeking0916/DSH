@@ -1,0 +1,23 @@
+{
+  "name": "@local/context-inject",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Unified per-turn context injector: MemOS memories + skill KB + wiki patterns in one request and one bounded block.",
+  "exports": {
+    ".": "./index.js",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg"
+  },
+  "files": [
+    "index.js",
+    "cordis.patch.yml",
+    "locale/*.json",
+    "icon.svg"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  }
+}

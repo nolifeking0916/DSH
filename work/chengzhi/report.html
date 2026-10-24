@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  :root{
+    --green:#1E4634; --green2:#2A5C42; --green3:#3D7A5B;
+    --gold:#C9A55C;
+    --cream:#F5F0E4;
+    --paper:#FAF9F4;
+    --ink:#1D2A23; --ink2:#42544B; --muted:#77867D;
+    --line:#E6EAE7;
+    --red:#C0453B; --red-bg:#FBEDEA;
+    --good:#1B7A56; --good-bg:#E5F1EB;
+    --neu:#4C5C55; --neu-bg:#EFF3F0;
+    --sand:#8A7448; --sand-bg:#F4EEE0;
+  }
+  html,body{ background:var(--paper); }
+  body{
+    width:1560px;
+    font-family:"PingFang SC","Hiragino Sans GB","Heiti SC","Microsoft YaHei",system-ui,-apple-system,"Segoe UI",sans-serif;
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+    font-feature-settings:"tnum" 1;
+  }
+  .sheet{ background:var(--paper); }
+
+  /* ---------- header ---------- */
+  .hero{
+    position:relative; overflow:hidden;
+    padding:40px 54px 38px;
+    background:
+      radial-gradient(1100px 320px at 88% -60%, rgba(255,255,255,.13), transparent 62%),
+      radial-gradient(760px 300px at 4% 130%, rgba(201,165,92,.18), transparent 60%),
+      linear-gradient(112deg,#183C2C 0%,#1E4634 42%,#2C6146 100%);
+    color:#fff;
+  }
+  .hero::after{
+    content:""; position:absolute; inset:0;
+    background-image:repeating-linear-gradient(115deg, rgba(255,255,255,.028) 0 1px, transparent 1px 62px);
+    pointer-events:none;
+  }
+  .hero-row{ display:flex; align-items:flex-end; justify-content:space-between; gap:30px; position:relative; z-index:2; }
+  .title-wrap{ display:flex; align-items:center; gap:18px; }
+  .bar{ width:7px; height:62px; border-radius:4px; background:linear-gradient(180deg,var(--gold),#E7D4A8); flex:none; }
+  h1{ font-size:45px; letter-spacing:.045em; font-weight:800; line-height:1.12; }
+  .sub{ margin-top:10px; font-size:16px; color:rgba(255,255,255,.72); letter-spacing:.09em; }
+  .datechip{
+    flex:none; text-align:center; padding:12px 26px; border-radius:16px;
+    background:rgba(255,255,255,.11); border:1px solid rgba(255,255,255,.24);
+    backdrop-filter:blur(2px);
+  }
+  .datechip .d1{ font-size:13px; color:rgba(255,255,255,.66); letter-spacing:.14em; }
+  .datechip .d2{ font-size:26px; font-weight:700; letter-spacing:.03em; margin-top:4px; }
+  .goldline{ height:4px; background:linear-gradient(90deg,var(--gold) 0%,#E4D3AC 34%,var(--cream) 62%,rgba(245,240,228,.25) 100%); }
+
+  /* ---------- body ---------- */
+  .body{ padding:30px 54px 34px; }
+
+  /* ---------- kpi ---------- */
+  .kpis{ display:grid; grid-template-columns:repeat(5,1fr); gap:15px; }
+  .kpi{
+    background:#fff; border:1px solid var(--line); border-radius:15px; padding:16px 18px 15px;
+    box-shadow:0 2px 8px rgba(30,70,52,.045); position:relative; overflow:hidden;
+  }
+  .kpi::before{ content:""; position:absolute; left:0; top:0; bottom:0; width:4px; background:var(--accent,#C6D2CB); }
+  .kpi .lab{ font-size:13px; color:var(--muted); letter-spacing:.06em; display:flex; align-items:center; gap:7px; }
+  .kpi .dot{ width:8px; height:8px; border-radius:50%; background:var(--accent,#C6D2CB); flex:none; }
+  .kpi .val{ margin-top:7px; font-size:37px; font-weight:800; line-height:1; color:var(--ink); letter-spacing:-.01em; }
+  .kpi .val .u{ font-size:15px; font-weight:600; color:var(--muted); margin-left:4px; letter-spacing:.04em; }
+  .kpi .note{ margin-top:9px; font-size:12.5px; color:var(--ink2); letter-spacing:.03em; }
+  .track{ margin-top:10px; height:5px; border-radius:3px; background:#EDF1EE; overflow:hidden; }
+  .track i{ display:block; height:100%; border-radius:3px; background:linear-gradient(90deg,var(--green3),var(--green2)); }
+
+  /* ---------- insight ---------- */
+  .insight{
+    margin-top:17px; display:flex; align-items:center; gap:16px;
+    background:linear-gradient(90deg,#FDF3F1,#FCF7F4 60%,#FBFAF5);
+    border:1px solid #F1DCD7; border-left:5px solid var(--red);
+    border-radius:13px; padding:15px 22px;
+  }
+  .mark{
+    flex:none; width:30px; height:30px; border-radius:9px; background:var(--red); color:#fff;
+    display:flex; align-items:center; justify-content:center; font-size:19px; font-weight:800; line-height:1;
+  }
+  .ins-text{ font-size:19px; font-weight:700; color:#8E332B; letter-spacing:.03em; }
+  .ins-text em{ font-style:normal; font-weight:600; color:#B4706A; }
+  .ins-right{ margin-left:auto; display:flex; align-items:center; gap:11px; }
+  .pill{
+    background:#fff; border:1px solid #EBD9D4; color:#8E332B; border-radius:999px;
+    padding:7px 15px; font-size:14px; font-weight:700; letter-spacing:.02em; white-space:nowrap;
+  }
+  .pill.mute{ background:#FBF7F1; border-color:#E9DFC8; color:var(--sand); font-weight:600; }
+
+  /* ---------- table ---------- */
+  .tbar{ display:flex; align-items:baseline; justify-content:space-between; margin:26px 2px 13px; }
+  .tbar .l{ font-size:20px; font-weight:800; letter-spacing:.05em; color:var(--ink); }
+  .tbar .l span{ font-size:13.5px; font-weight:600; color:var(--muted); margin-left:10px; letter-spacing:.03em; }
+  .tbar .r{ font-size:12.5px; color:var(--muted); letter-spacing:.04em; }
+
+  .tablewrap{ background:#fff; border:1px solid var(--line); border-radius:16px; overflow:hidden; box-shadow:0 3px 14px rgba(30,70,52,.05); }
+  table{ width:100%; border-collapse:collapse; table-layout:fixed; }
+  thead th{
+    background:linear-gradient(180deg,#265741,#1E4634); color:#fff; font-weight:700; font-size:16.5px;
+    padding:13px 10px 12px; text-align:center; letter-spacing:.04em; white-space:nowrap; border-right:1px solid rgba(255,255,255,.1);
+  }
+  thead th:last-child{ border-right:none; }
+  thead th .s{ display:block; font-size:11.5px; font-weight:500; color:rgba(255,255,255,.66); margin-top:3px; letter-spacing:.03em; }
+  thead th.focus{ position:relative; box-shadow:inset 0 4px 0 var(--gold); }
+  thead th.focus .s{ color:#E8CE9B; }
+
+  tbody td{
+    padding:7px 10px; font-size:14.5px; text-align:center; color:var(--ink2);
+    border-bottom:1px solid var(--line); border-right:1px solid #F0F3F1; height:45px;
+  }
+  tbody tr:nth-child(odd){ background:#FBFCFB; }
+  tbody tr:nth-child(even){ background:#fff; }
+  tbody tr:last-child td{ border-bottom:none; }
+  tbody tr:hover{ background:#F4F8F5; }
+  tbody tr.grp td{ border-top:1px solid #CCD8D1; }
+  tbody tr.grp td.idx{ border-top-left-radius:8px; }
+
+  td.idx{ color:#8D9A93; font-size:13px; font-weight:600; }
+  td.org{
+    background:#EEF3EF !important; text-align:left; padding-left:14px;
+    font-weight:700; color:#2F4A3C; font-size:14px; letter-spacing:.02em;
+    border-left:4px solid var(--green3); white-space:nowrap;
+  }
+  td.name{ text-align:left; padding-left:14px; padding-right:6px; color:var(--ink); font-weight:700; font-size:15px; white-space:nowrap; }
+  td.name .tag{
+    display:inline-block; margin-left:6px; vertical-align:1px; font-size:11px; font-weight:600; color:#8A8471;
+    background:#F2EEE3; border:1px solid #E6DFCC; border-radius:5px; padding:1px 6px; letter-spacing:.02em;
+  }
+  td.post{ text-align:left; padding-left:14px; color:var(--ink2); }
+  td.lv{ }
+  .lv{
+    display:inline-block; min-width:38px; padding:3px 9px; border-radius:7px; font-size:13px; font-weight:700; letter-spacing:.04em;
+  }
+  .lv.m{ background:var(--good-bg); color:var(--good); }
+  .lv.p{ background:var(--sand-bg); color:var(--sand); }
+
+  td.sc{ }
+  .chip{
+    display:inline-flex; align-items:center; justify-content:center; min-width:54px; height:30px;
+    border-radius:8px; font-size:16px; font-weight:800; letter-spacing:.01em; padding:0 10px;
+  }
+  .chip.r{ background:var(--red-bg); color:var(--red); }
+  .chip.g{ background:var(--good-bg); color:var(--good); }
+  .chip.b{ background:var(--neu-bg); color:var(--neu); }
+  td.sc.focus{ background:#FCF6F1 !important; box-shadow:inset 3px 0 0 #E4C9A6; }
+
+  tfoot td{
+    padding:14px 10px; font-size:15px; font-weight:700; color:var(--ink); text-align:center;
+    background:linear-gradient(180deg,#F1F6F2,#E9F0EA); border-top:1px solid #DCE6DE;
+  }
+  tfoot td.lbl{ text-align:right; padding-right:18px; color:#3B5547; font-size:14px; letter-spacing:.03em; }
+  tfoot td.lbl span{ color:var(--muted); font-weight:600; font-size:12.5px; margin-left:8px; }
+  tfoot td.avg{ font-size:18px; color:var(--green); letter-spacing:.01em; }
+
+  .foot{ margin-top:16px; display:flex; justify-content:space-between; align-items:center; }
+  .foot .note{ font-size:12.5px; color:var(--muted); letter-spacing:.03em; }
+  .foot .org{ font-size:12.5px; color:var(--muted); letter-spacing:.08em; }
+</style>
+</head>
+<body>
+<div class="sheet">
+  <div class="hero">
+    <div class="hero-row">
+      <div class="title-wrap">
+        <div class="bar"></div>
+        <div>
+          <h1>称职度梳理日报</h1>
+          <div class="sub">集团行政人事部 · 称职度专项梳理</div>
+        </div>
+      </div>
+      <div class="datechip">
+        <div class="d1">梳理周期</div>
+        <div class="d2">10月22日 – 23日</div>
+      </div>
+    </div>
+  </div>
+  <div class="goldline"></div>
+
+  <div class="body">
+    <!-- KPI -->
+    <div class="kpis">
+      <div class="kpi" style="--accent:#3D7A5B">
+        <div class="lab"><span class="dot"></span>应评估</div>
+        <div class="val">80<span class="u">人</span></div>
+        <div class="note">本轮评估范围</div>
+      </div>
+      <div class="kpi" style="--accent:#1B7A56">
+        <div class="lab"><span class="dot"></span>实评估</div>
+        <div class="val">80<span class="u">人</span></div>
+        <div class="note">完成率 100%</div>
+        <div class="track"><i style="width:100%"></i></div>
+      </div>
+      <div class="kpi" style="--accent:#1B7A56">
+        <div class="lab"><span class="dot"></span>今日待评估</div>
+        <div class="val">0<span class="u">人</span></div>
+        <div class="note">今日已评估完毕</div>
+      </div>
+      <div class="kpi" style="--accent:#C9A55C">
+        <div class="lab"><span class="dot"></span>明日待评估</div>
+        <div class="val">49<span class="u">人</span></div>
+        <div class="note">次日待完成</div>
+      </div>
+      <div class="kpi" style="--accent:#C0453B">
+        <div class="lab"><span class="dot"></span>明显低于平均分</div>
+        <div class="val">17<span class="u">人</span></div>
+        <div class="note">占本次已评估的 13%</div>
+      </div>
+    </div>
+
+    <!-- insight -->
+    <div class="insight">
+      <div class="mark">!</div>
+      <div class="ins-text">目前，低分人员主要共性在于<em>培养潜质不足</em></div>
+      <div class="ins-right">
+        <div class="pill">17 人中 14 人 培养潜质 ≤5 分</div>
+        <div class="pill mute">全员均值 6.59 / 10</div>
+      </div>
+    </div>
+
+    <!-- table -->
+    <div class="tbar">
+      <div class="l">低分名单<span>共 17 人 · 按机构顺序排列</span></div>
+      <div class="r"></div>
+    </div>
+
+    <div class="tablewrap">
+      <table>
+        <colgroup>
+          <col style="width:4.2%"><col style="width:12.4%"><col style="width:8.6%"><col style="width:12.2%">
+          <col style="width:5.2%"><col style="width:10.2%"><col style="width:15.8%"><col style="width:15.8%"><col style="width:15.6%">
+        </colgroup>
+        <thead>
+          <tr>
+            <th>序号</th>
+            <th style="text-align:left;padding-left:16px">机构</th>
+            <th style="text-align:left;padding-left:16px">姓名</th>
+            <th style="text-align:left;padding-left:16px">岗位</th>
+            <th>职级</th>
+            <th>总分<span class="s">满分 30</span></th>
+            <th>工作态度<span class="s">满分 10</span></th>
+            <th>工作业绩<span class="s">满分 10</span></th>
+            <th class="focus">培养潜质<span class="s">满分 10 · 共性维度</span></th>
+          </tr>
+        </thead>
+        <tbody id="tb"></tbody>
+        <tfoot>
+          <tr>
+            <td class="lbl" colspan="5">所有目前已评估 · 均值</td>
+            <td class="avg">21.35 / 30</td>
+            <td class="avg">7.51 / 10</td>
+            <td class="avg">7.31 / 10</td>
+            <td class="avg" style="background:linear-gradient(180deg,#F5EEE1,#EBE0C9);color:#7A5F26">6.59 / 10</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <div class="foot">
+      <div class="note">培养潜质为本次低分人员的主要共性维度</div>
+      <div class="org">集团行政人事部</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const ROWS = [
+ ["云上草原商管","钟苗","运营收益部经理","M5", 18,"b", 7,"g", 6,"b", 5,"r"],
+ ["聚力旅行社","杨阳","销售","P5", 18,"b", 7,"g", 5,"r", 6,"b"],
+ ["聚力旅行社","苏林","销售","P5", 17,"r", 5,"r", 7,"g", 5,"r"],
+ ["星空天文酒店","姚建军","行政总厨","P5", 16,"r", 5,"r", 5,"r", 6,"b"],
+ ["星空天文酒店","王辉","西厨师长","P5", 15,"r", 5,"r", 5,"r", 5,"r"],
+ ["星空天文酒店","陈敬","雪具大厅厨师长","P5", 16,"r", 5,"r", 6,"b", 5,"r"],
+ ["茅山森林世界","丁永俭","技保部经理","M5", 19,"b", 7,"b", 7,"b", 5,"r"],
+ ["云上草原度假村","吴维浩","中厨主管","P5", 13,"r", 6,"r", 7,"b", 0,"r"],
+ ["云上草原度假村","周清华","宾客接待部总监","M5", 18,"b", 8,"g", 10,"g", 0,"r"],
+ ["云上草原度假村","宋健","直播运营","P5", 19,"b", 8,"g", 6,"r", 5,"r"],
+ ["云上草原度假村","刘杰","弱电工程师","P5", 19,"b", 6,"r", 8,"g", 5,"r"],
+ ["云上草原度假村","赵倩","财务部经理","M5", 19,"b", 6,"r", 8,"g", 5,"r"],
+ ["云上草原度假村","王灿","工程部经理","M5", 16,"r", 10,"b", 6,"r", 0,"r"],
+ ["云上草原度假村","李锐","西厨厨师长","P5", 14,"r", 6,"r", 8,"g", 0,"r"],
+ ["云上草原度假村","许敏","商城运营","P5", 19,"b", 8,"g", 6,"r", 5,"r"],
+ ["云上草原度假村","郁灿根","民宿主理人","M5", 14,"r", 8,"g", 6,"r", 0,"r"],
+ ["工程管理分公司","尹涛","维修工程师","P5", 19,"b", 7,"b", 6,"r", 6,"r"]
+];
+const NOTE = { "周清华": "临近退休" };
+const tb = document.getElementById('tb');
+let html = "", i = 0;
+while (i < ROWS.length) {
+  const org = ROWS[i][0];
+  let span = 1;
+  while (i + span < ROWS.length && ROWS[i+span][0] === org) span++;
+  for (let k = 0; k < span; k++) {
+    const r = ROWS[i+k];
+    const chip = (v,c)=> `<span class="chip ${c}">${v}</span>`;
+    html += `<tr class="${(k===0 && i>0)?"grp":""}">`;
+    html += `<td class="idx">${i+k+1}</td>`;
+    if (k === 0) html += `<td class="org" rowspan="${span}">${org}</td>`;
+    html += `<td class="name">${r[1]}${NOTE[r[1]]?`<span class="tag">${NOTE[r[1]]}</span>`:""}</td>`;
+    html += `<td class="post">${r[2]}</td>`;
+    html += `<td class="lv"><span class="lv ${r[3][0].toLowerCase()}">${r[3]}</span></td>`;
+    html += `<td class="sc">${chip(r[4],r[5])}</td>`;
+    html += `<td class="sc">${chip(r[6],r[7])}</td>`;
+    html += `<td class="sc">${chip(r[8],r[9])}</td>`;
+    html += `<td class="sc focus">${chip(r[10],r[11])}</td>`;
+    html += "</tr>";
+  }
+  i += span;
+}
+tb.innerHTML = html;
+</script>
+</body>
+</html>

@@ -1,0 +1,26 @@
+# Bundle patch: WikiSkill 执行层注入（技能索引 + 相关经验）
+- insert:
+    - id: wikiskill-inject
+      name: '@local/wikiskill-inject'
+      config:
+        enabled: true
+        skillsDir: /Users/leto/.dsh/skills
+        wikiDir: /Users/leto/.dsh/wiki
+        maxSkills: 6
+        maxPatterns: 3
+        maxChars: 500
+        cacheMs: 60000
+        debugLog: /tmp/wikiskill-inject.log
+        # 语义匹配：MemOS reranker（失败自动回退关键词 2-gram）
+        apiBase: https://memos.memtensor.cn/api/openmem/v1
+        apiKeyEnv: MEMOS_API_KEY
+        apiKey: mpg-hBClucRHzmRk7ML2Y9Qa148iZjAdl94JMsWH9QAR
+        rerankTimeoutMs: 1500
+        rerankThreshold: 0.25
+        rerankMaxDocs: 60
+        # 主路径：知识库 Skill 文件语义检索（MemOS search/memory + skill view）
+        kbId: basef0649423-0dab-4fc0-8c91-a585f66c0ba5
+        userId: HR
+        skillThreshold: 0.4
+        skillTimeoutMs: 1500
+        skillLimit: 25

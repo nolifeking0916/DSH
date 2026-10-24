@@ -1,0 +1,1172 @@
+{
+ "meta": {
+  "title": "情商与关系管理在线测试题库",
+  "version": "1.0",
+  "sjt_scored": 48,
+  "sjt_consistency": 12,
+  "self_items": 16,
+  "note": "48 道计分题（8 维各 6 题）+ 12 道一致性题（6 对）+ 16 道自评题；一致性题不计分，只用于作答一致性观察。"
+ },
+ "dimensions": [
+  {
+   "key": "regu",
+   "name": "情绪稳定",
+   "outer": "A",
+   "outer_name": "情绪自控",
+   "weight": 15
+  },
+  {
+   "key": "conf",
+   "name": "冲突处理",
+   "outer": "C",
+   "outer_name": "冲突与协作",
+   "weight": 15
+  },
+  {
+   "key": "rela",
+   "name": "关系经营",
+   "outer": "D",
+   "outer_name": "关系与影响",
+   "weight": 15
+  },
+  {
+   "key": "infl",
+   "name": "影响力说服",
+   "outer": "D",
+   "outer_name": "关系与影响",
+   "weight": 13
+  },
+  {
+   "key": "empa",
+   "name": "同理心",
+   "outer": "B",
+   "outer_name": "同理沟通",
+   "weight": 12
+  },
+  {
+   "key": "team",
+   "name": "协作补位",
+   "outer": "C",
+   "outer_name": "冲突与协作",
+   "weight": 11
+  },
+  {
+   "key": "comm",
+   "name": "倾听表达",
+   "outer": "B",
+   "outer_name": "同理沟通",
+   "weight": 10
+  },
+  {
+   "key": "self",
+   "name": "自我觉察",
+   "outer": "A",
+   "outer_name": "情绪自控",
+   "weight": 9
+  }
+ ],
+ "self_scale": {
+  "min": 1,
+  "max": 7,
+  "labels": {
+   "1": "完全不符合",
+   "4": "一般",
+   "7": "完全符合"
+  },
+  "reverse_items": [
+   "S02",
+   "S04",
+   "S06",
+   "S08",
+   "S10",
+   "S12",
+   "S14",
+   "S16"
+  ]
+ },
+ "self_items": [
+  {
+   "id": "S01",
+   "text": "遇到反对意见时，我能较快把注意力转回事情本身。",
+   "dimension": "regu",
+   "reverse": false
+  },
+  {
+   "id": "S02",
+   "text": "别人否定我的方案后，我通常会想很久。",
+   "dimension": "regu",
+   "reverse": true
+  },
+  {
+   "id": "S03",
+   "text": "我能较早察觉同事情绪上的变化。",
+   "dimension": "empa",
+   "reverse": false
+  },
+  {
+   "id": "S04",
+   "text": "当对方说话带情绪时，我第一反应是判断谁对谁错。",
+   "dimension": "empa",
+   "reverse": true
+  },
+  {
+   "id": "S05",
+   "text": "别人讲完后，我能用对方的话复述出他的结论。",
+   "dimension": "comm",
+   "reverse": false
+  },
+  {
+   "id": "S06",
+   "text": "讨论时我常常先把自己的结论说出来。",
+   "dimension": "comm",
+   "reverse": true
+  },
+  {
+   "id": "S07",
+   "text": "我会记住合作方之前提过的关注点。",
+   "dimension": "rela",
+   "reverse": false
+  },
+  {
+   "id": "S08",
+   "text": "我和人的联系通常只到事情办完为止。",
+   "dimension": "rela",
+   "reverse": true
+  },
+  {
+   "id": "S09",
+   "text": "出现分歧时，我倾向于把它明确提出来讨论。",
+   "dimension": "conf",
+   "reverse": false
+  },
+  {
+   "id": "S10",
+   "text": "我更愿意私下消化分歧，而不是当场表态。",
+   "dimension": "conf",
+   "reverse": true
+  },
+  {
+   "id": "S11",
+   "text": "对方不同意我时，我能先弄清楚他真正在意什么。",
+   "dimension": "infl",
+   "reverse": false
+  },
+  {
+   "id": "S12",
+   "text": "推动事情时我主要依靠流程和职级。",
+   "dimension": "infl",
+   "reverse": true
+  },
+  {
+   "id": "S13",
+   "text": "别人临时有困难，我通常愿意先顶一下。",
+   "dimension": "team",
+   "reverse": false
+  },
+  {
+   "id": "S14",
+   "text": "我接下额外的事时很少说清代价和归属。",
+   "dimension": "team",
+   "reverse": true
+  },
+  {
+   "id": "S15",
+   "text": "我能说清自己哪些场景容易情绪上头。",
+   "dimension": "self",
+   "reverse": false
+  },
+  {
+   "id": "S16",
+   "text": "被指出问题后，我第一反应是解释，而不是先复盘。",
+   "dimension": "self",
+   "reverse": true
+  }
+ ],
+ "sjt": [
+  {
+   "id": "Q01",
+   "dimension": "regu",
+   "stem": "上级在全员会上批评你的方案有漏洞，你更可能：",
+   "options": {
+    "A": "当场承认漏洞并给出改法",
+    "B": "会后单独找上级核对情况",
+    "C": "会上先不回应，会后找同事说",
+    "D": "会上当场反驳上级"
+   },
+   "answer": "A",
+   "second": "B",
+   "score": 2,
+   "faking": false,
+   "note": "最优 A 计 2 分；次优 B 计 1 分；其余 0 分"
+  },
+  {
+   "id": "Q02",
+   "dimension": "regu",
+   "stem": "大型活动开园前两小时，你负责的检票口被游客围住，同事慌了：",
+   "options": {
+    "A": "先接管现场分流，再安排人处理投诉",
+    "B": "让同事继续顶着，自己先去处理投诉",
+    "C": "先安抚同事情绪，避免他出错",
+    "D": "立刻上报领导等指示"
+   },
+   "answer": "A",
+   "second": "C",
+   "score": 2,
+   "faking": false,
+   "note": "最优 A 计 2 分；次优 C 计 1 分；其余 0 分"
+  },
+  {
+   "id": "Q03",
+   "dimension": "regu",
+   "stem": "客户在同一通电话里第三次投诉，语气很激动，你已经处理完两轮：",
+   "options": {
+    "A": "先复述确认他的诉求，约定明确回电时间",
+    "B": "耐心解释政策流程",
+    "C": "强调这不是你个人决定",
+    "D": "直接转接给其他同事"
+   },
+   "answer": "A",
+   "second": "B",
+   "score": 2,
+   "faking": false,
+   "note": "最优 A 计 2 分；次优 B 计 1 分；其余 0 分"
+  },
+  {
+   "id": "Q04",
+   "dimension": "regu",
+   "stem": "合作方当众质疑你们的服务标准，与事实确有差距：",
+   "options": {
+    "A": "承认差距并当场给出改进时间点",
+    "B": "会后单独沟通",
+    "C": "当场逐条反驳对方",
+    "D": "当场说明这是部门统一规定"
+   },
+   "answer": "A",
+   "second": "B",
+   "score": 2,
+   "faking": true,
+   "note": "最优 A 计 2 分；次优 B 计 1 分；其余 0 分；含「公认正确但不可自证」选项"
+  },
+  {
+   "id": "Q05",
+   "dimension": "regu",
+   "stem": "月底冲刺期，你已连续三天每天只睡四小时：",
+   "options": {
+    "A": "重排优先级，把能交付的部分先交付",
+    "B": "硬扛下来不求助",
+    "C": "直接告诉领导忙到做不完",
+    "D": "降低标准先把数量交出来"
+   },
+   "answer": "A",
+   "second": "B",
+   "score": 2,
+   "faking": false,
+   "note": "最优 A 计 2 分；次优 B 计 1 分；其余 0 分"
+  },
+  {
+   "id": "Q06",
+   "dimension": "regu",
+   "stem": "新同事在群里说你的安排让他很被动：",
+   "options": {
+    "A": "私下问清具体哪里别扭，再调整安排",
+    "B": "在群里把安排的来由说清楚",
+    "C": "不解释，按原安排继续",
+    "D": "回一句大家都是这么排的"
+   },
+   "answer": "A",
+   "second": "B",
+   "score": 2,
+   "faking": false,
+   "note": "最优 A 计 2 分；次优 B 计 1 分；其余 0 分"
+  },
+  {
+   "id": "Q07",
+   "dimension": "conf",
+   "stem": "你和营销负责人在同一场活动的排期上争资源，邮件已经来回三轮：",
+   "options": {
+    "A": "先弄清对方的真实顾虑，再谈可行方案",
+    "B": "继续用邮件把数据补全辩到底",
+    "C": "把双方拉进群让上级定",
+    "D": "放弃这块资源避免伤和气"
+   },
+   "answer": "A",
+   "second": "B",
+   "score": 2,
+   "faking": false,
+   "note": "最优 A 计 2 分；次优 B 计 1 分；其余 0 分"
+  },
+  {
+   "id": "Q08",
+   "dimension": "conf",
+   "stem": "跨机构会上两家机构当着众人争执分成比例：",
+   "options": {
+    "A": "先把争执拉回共同目标，再按数据谈",
+    "B": "会后单独找双方谈",
+    "C": "当场站到关系更近的一方",
+    "D": "暂时离席避免表态"
+   },
+   "answer": "A",
+   "second": "B",
+   "score": 2,
+   "faking": false,
+   "note": "最优 A 计 2 分；次优 B 计 1 分；其余 0 分"
+  },
+  {
+   "id": "Q09",
+   "dimension": "conf",
+   "stem": "下属当众质疑你的判断，但你的判断是对的：",
+   "options": {
+    "A": "当场肯定他的出发点并说明依据",
+    "B": "会后私下谈",
+    "C": "当场把话压回去",
+    "D": "事后跟同事说他不专业"
+   },
+   "answer": "A",
+   "second": "B",
+   "score": 2,
+   "faking": false,
+   "note": "最优 A 计 2 分；次优 B 计 1 分；其余 0 分"
+  },
+  {
+   "id": "Q10",
+   "dimension": "conf",
+   "stem": "同一个分歧已经被反复提起三次，每次都不了了之：",
+   "options": {
+    "A": "把它作为一个正式议题定结论并留纪要",
+    "B": "再私下沟通一次",
+    "C": "继续拖着避开这个话题",
+    "D": "在会上发一次脾气"
+   },
+   "answer": "A",
+   "second": "B",
+   "score": 2,
+   "faking": true,
+   "note": "最优 A 计 2 分；次优 B 计 1 分；其余 0 分；含「公认正确但不可自证」选项"
+  },
+  {
+   "id": "Q11",
+   "dimension": "conf",
+   "stem": "两个部门同时要同一批人力，谁都不肯让：",
+   "options": {
+    "A": "约两个负责人一起排优先级并定分工",
+    "B": "各自去找各自上级",
+    "C": "私下跟对方私下商量",
+    "D": "让两边先各自干着"
+   },
+   "answer": "A",
+   "second": "B",
+   "score": 2,
+   "faking": false,
+   "note": "最优 A 计 2 分；次优 B 计 1 分；其余 0 分"
+  },
+  {
+   "id": "Q12",
+   "dimension": "conf",
+   "stem": "供应商当面指出合同里有一条对自己不利：",
+   "options": {
+    "A": "逐条确认事实，能调整的当场给方案",
+    "B": "说回去研究后答复",
+    "C": "坚持原条款不让步",
+    "D": "说这不是我定的条款"
+   },
+   "answer": "A",
+   "second": "B",
+   "score": 2,
+   "faking": false,
+   "note": "最优 A 计 2 分；次优 B 计 1 分；其余 0 分"
+  },
+  {
+   "id": "Q13",
+   "dimension": "rela",
+   "stem": "半年没联系的机构负责人，这次直接找你办事：",
+   "options": {
+    "A": "先回顾上次合作的细节，再谈这次的事",
+    "B": "直接看能不能办，能办就办",
+    "C": "转给同事对接",
+    "D": "先找其他同事打听对方近况"
+   },
+   "answer": "A",
+   "second": "B",
+   "score": 2,
+   "faking": true,
+   "note": "最优 A 计 2 分；次优 B 计 1 分；其余 0 分；含「公认正确但不可自证」选项"
+  },
+  {
+   "id": "Q14",
+   "dimension": "rela",
+   "stem": "新到任的领导找你要一份很琐碎的材料：",
+   "options": {
+    "A": "按时给齐，并附一句这份材料的用途建议",
+    "B": "按时给齐即可",
+    "C": "先拖两天再看",
+    "D": "让下属直接对接不露面"
+   },
+   "answer": "A",
+   "second": "B",
+   "score": 2,
+   "faking": false,
+   "note": "最优 A 计 2 分；次优 B 计 1 分；其余 0 分"
+  },
+  {
+   "id": "Q15",
+   "dimension": "rela",
+   "stem": "团队里最资深的老员工公开质疑你的方案：",
+   "options": {
+    "A": "先请他补充意见，再整合进方案",
+    "B": "坚持自己的方案不变",
+    "C": "先不表态，等别人说完",
+    "D": "背后说他倚老卖老"
+   },
+   "answer": "A",
+   "second": "B",
+   "score": 2,
+   "faking": false,
+   "note": "最优 A 计 2 分；次优 B 计 1 分；其余 0 分"
+  },
+  {
+   "id": "Q16",
+   "dimension": "rela",
+   "stem": "跨机构活动需要借人手，对方并不熟悉你：",
+   "options": {
+    "A": "提前和对方负责人对齐双方能得的好处再开口",
+    "B": "直接发消息请对方支持",
+    "C": "让上级出面去借",
+    "D": "算了不借了"
+   },
+   "answer": "A",
+   "second": "B",
+   "score": 2,
+   "faking": false,
+   "note": "最优 A 计 2 分；次优 B 计 1 分；其余 0 分"
+  },
+  {
+   "id": "Q17",
+   "dimension": "rela",
+   "stem": "合作过的商户这次提了额外要求，你打算：",
+   "options": {
+    "A": "先回顾当初是怎么谈的，再谈新的条件",
+    "B": "按原合同和原办法处理",
+    "C": "压价谈成",
+    "D": "直接不接这单"
+   },
+   "answer": "A",
+   "second": "B",
+   "score": 2,
+   "faking": false,
+   "note": "最优 A 计 2 分；次优 B 计 1 分；其余 0 分"
+  },
+  {
+   "id": "Q18",
+   "dimension": "rela",
+   "stem": "有同事在群里说过你不好相处：",
+   "options": {
+    "A": "私下问他具体指的是哪几件事",
+    "B": "当作没听见",
+    "C": "在群里怼回去",
+    "D": "找上级告状"
+   },
+   "answer": "A",
+   "second": "B",
+   "score": 2,
+   "faking": true,
+   "note": "最优 A 计 2 分；次优 B 计 1 分；其余 0 分；含「公认正确但不可自证」选项"
+  },
+  {
+   "id": "Q19",
+   "dimension": "infl",
+   "stem": "你的排期方案被两位负责经营的同事反对，理由是影响收入：",
+   "options": {
+    "A": "私下分别摸清各自的顾虑，再带可选方案去谈",
+    "B": "强调公司制度必须执行",
+    "C": "换个方案避开他们",
+    "D": "先搁置这件事"
+   },
+   "answer": "A",
+   "second": "C",
+   "score": 2,
+   "faking": false,
+   "note": "最优 A 计 2 分；次优 C 计 1 分；其余 0 分"
+  },
+  {
+   "id": "Q20",
+   "dimension": "infl",
+   "stem": "新流程推行阻力很大，一线反馈说做不到：",
+   "options": {
+    "A": "拿试点数据说明可行性，并一起改流程",
+    "B": "强调必须执行否则追责",
+    "C": "收集意见后暂缓推行",
+    "D": "换一个执行力强的人去推"
+   },
+   "answer": "A",
+   "second": "B",
+   "score": 2,
+   "faking": false,
+   "note": "最优 A 计 2 分；次优 B 计 1 分；其余 0 分"
+  },
+  {
+   "id": "Q21",
+   "dimension": "infl",
+   "stem": "运营部门很忙，你要他们配合一场大型活动：",
+   "options": {
+    "A": "说明这次能带给他们什么，并只占用半天",
+    "B": "请上级去施压",
+    "C": "私下求情让他们通融",
+    "D": "放弃这次活动"
+   },
+   "answer": "A",
+   "second": "B",
+   "score": 2,
+   "faking": false,
+   "note": "最优 A 计 2 分；次优 B 计 1 分；其余 0 分"
+  },
+  {
+   "id": "Q22",
+   "dimension": "infl",
+   "stem": "你的方案被上级否掉了：",
+   "options": {
+    "A": "问清否决理由，针对顾虑重做一版再提",
+    "B": "换一个方向重新提一次",
+    "C": "坚持原方案再报一次",
+    "D": "不再提了"
+   },
+   "answer": "A",
+   "second": "B",
+   "score": 2,
+   "faking": false,
+   "note": "最优 A 计 2 分；次优 B 计 1 分；其余 0 分"
+  },
+  {
+   "id": "Q23",
+   "dimension": "infl",
+   "stem": "团队成员对新要求执行意愿很低：",
+   "options": {
+    "A": "和他一起把动作拆小，并配齐资源",
+    "B": "在例会上强调标准与时限",
+    "C": "先不催，看他自己会不会动",
+    "D": "直接换人来做"
+   },
+   "answer": "A",
+   "second": "B",
+   "score": 2,
+   "faking": false,
+   "note": "最优 A 计 2 分；次优 B 计 1 分；其余 0 分"
+  },
+  {
+   "id": "Q24",
+   "dimension": "infl",
+   "stem": "外部合作方不愿按新的结算规则执行：",
+   "options": {
+    "A": "用对他更有利的算法举例说明",
+    "B": "搬出合同条款压过去",
+    "C": "拖着不结算",
+    "D": "让法务出面施压"
+   },
+   "answer": "A",
+   "second": "B",
+   "score": 2,
+   "faking": true,
+   "note": "最优 A 计 2 分；次优 B 计 1 分；其余 0 分；含「公认正确但不可自证」选项"
+  },
+  {
+   "id": "Q25",
+   "dimension": "empa",
+   "stem": "一位员工在电梯里红着眼不说话：",
+   "options": {
+    "A": "一句「看起来不太顺，方便的话说说」",
+    "B": "当作没看见",
+    "C": "追问他是不是工作的事",
+    "D": "当众直接问他怎么了"
+   },
+   "answer": "A",
+   "second": "C",
+   "score": 2,
+   "faking": false,
+   "note": "最优 A 计 2 分；次优 C 计 1 分；其余 0 分"
+  },
+  {
+   "id": "Q26",
+   "dimension": "empa",
+   "stem": "投诉的游客说话很冲，你第一反应是解释规则：",
+   "options": {
+    "A": "先认下对方实际受到的损失，再解释规则",
+    "B": "按流程解释规则",
+    "C": "反驳对方的情绪不合理",
+    "D": "转给主管处理"
+   },
+   "answer": "A",
+   "second": "B",
+   "score": 2,
+   "faking": false,
+   "note": "最优 A 计 2 分；次优 B 计 1 分；其余 0 分"
+  },
+  {
+   "id": "Q27",
+   "dimension": "empa",
+   "stem": "跨部门同事明显不想配合，但没说原因：",
+   "options": {
+    "A": "问一句「是不是我们这个安排给你添麻烦了」",
+    "B": "直接催进度",
+    "C": "找他的上级协调",
+    "D": "心里记住，以后少找这个人"
+   },
+   "answer": "A",
+   "second": "B",
+   "score": 2,
+   "faking": true,
+   "note": "最优 A 计 2 分；次优 B 计 1 分；其余 0 分；含「公认正确但不可自证」选项"
+  },
+  {
+   "id": "Q28",
+   "dimension": "empa",
+   "stem": "服务对象反复改需求，你觉得很烦：",
+   "options": {
+    "A": "想想他为什么反复改，并给一个固定入口",
+    "B": "按流程拒绝临时变更",
+    "C": "表面答应、实际拖着",
+    "D": "私下和同事议论这个客户"
+   },
+   "answer": "A",
+   "second": "B",
+   "score": 2,
+   "faking": false,
+   "note": "最优 A 计 2 分；次优 B 计 1 分；其余 0 分"
+  },
+  {
+   "id": "Q29",
+   "dimension": "empa",
+   "stem": "新人第一次独立接活做砸了，不敢说：",
+   "options": {
+    "A": "先接住他的情绪，再一起看事实",
+    "B": "当面把问题点清楚但不评价人",
+    "C": "替他先瞒下来",
+    "D": "在例会上讲出来让大家记住"
+   },
+   "answer": "A",
+   "second": "B",
+   "score": 2,
+   "faking": false,
+   "note": "最优 A 计 2 分；次优 B 计 1 分；其余 0 分"
+  },
+  {
+   "id": "Q30",
+   "dimension": "empa",
+   "stem": "客户在电话里快哭了：",
+   "options": {
+    "A": "先承接情绪，再给方案并说明会跟进",
+    "B": "直接说明补偿方案",
+    "C": "转给客服主管",
+    "D": "先挂断再回拨"
+   },
+   "answer": "A",
+   "second": "B",
+   "score": 2,
+   "faking": false,
+   "note": "最优 A 计 2 分；次优 B 计 1 分；其余 0 分"
+  },
+  {
+   "id": "Q31",
+   "dimension": "team",
+   "stem": "同事临时请假，他手上有一项和你的交付冲突：",
+   "options": {
+    "A": "先接下，同时说清交接方式和代价",
+    "B": "直接接下，先不说",
+    "C": "找第三方判断该不该接",
+    "D": "说自己手上的事更急，不接"
+   },
+   "answer": "A",
+   "second": "B",
+   "score": 2,
+   "faking": false,
+   "note": "最优 A 计 2 分；次优 B 计 1 分；其余 0 分"
+  },
+  {
+   "id": "Q32",
+   "dimension": "team",
+   "stem": "活动现场临时缺人，你手上也有事：",
+   "options": {
+    "A": "先去顶现场，同时安排人接你的活",
+    "B": "让现场同事自己协调",
+    "C": "打电话给上级求支援",
+    "D": "继续做自己手上的事"
+   },
+   "answer": "A",
+   "second": "B",
+   "score": 2,
+   "faking": false,
+   "note": "最优 A 计 2 分；次优 B 计 1 分；其余 0 分"
+  },
+  {
+   "id": "Q33",
+   "dimension": "team",
+   "stem": "你做了主要工作，成果在集体汇报里被带过：",
+   "options": {
+    "A": "复盘会上自然把分工讲清楚",
+    "B": "不提，也不在意",
+    "C": "在群里说这件事",
+    "D": "心里记着，等下次机会"
+   },
+   "answer": "A",
+   "second": "C",
+   "score": 2,
+   "faking": false,
+   "note": "最优 A 计 2 分；次优 C 计 1 分；其余 0 分"
+  },
+  {
+   "id": "Q34",
+   "dimension": "team",
+   "stem": "两个同事互相推一件跨部门的事：",
+   "options": {
+    "A": "主动接手并把两人拉到一起定分工",
+    "B": "让他们自己谈",
+    "C": "直接报给上级",
+    "D": "不参与，等他们谈好"
+   },
+   "answer": "A",
+   "second": "B",
+   "score": 2,
+   "faking": false,
+   "note": "最优 A 计 2 分；次优 B 计 1 分；其余 0 分"
+  },
+  {
+   "id": "Q35",
+   "dimension": "team",
+   "stem": "有人把不是你的责任推给你，而那件事你确实没做过：",
+   "options": {
+    "A": "当场澄清事实，并给出你的建议",
+    "B": "先接下来，再私下澄清",
+    "C": "忍着不说",
+    "D": "当场揭他的短"
+   },
+   "answer": "A",
+   "second": "B",
+   "score": 2,
+   "faking": true,
+   "note": "最优 A 计 2 分；次优 B 计 1 分；其余 0 分；含「公认正确但不可自证」选项"
+  },
+  {
+   "id": "Q36",
+   "dimension": "team",
+   "stem": "有一件没人愿意做的杂事需要有人认领：",
+   "options": {
+    "A": "认领，并说清完成时限和需要的支持",
+    "B": "等别人认领",
+    "C": "建议花钱外包",
+    "D": "抱怨几句再说"
+   },
+   "answer": "A",
+   "second": "B",
+   "score": 2,
+   "faking": false,
+   "note": "最优 A 计 2 分；次优 B 计 1 分；其余 0 分"
+  },
+  {
+   "id": "Q37",
+   "dimension": "comm",
+   "stem": "领导讲完需求，你复述时漏掉了一个关键约束：",
+   "options": {
+    "A": "用自己的话复述三要素并请领导确认",
+    "B": "先记下来，会后再问",
+    "C": "按自己的理解去做",
+    "D": "当场打断领导纠正"
+   },
+   "answer": "A",
+   "second": "B",
+   "score": 2,
+   "faking": false,
+   "note": "最优 A 计 2 分；次优 B 计 1 分；其余 0 分"
+  },
+  {
+   "id": "Q38",
+   "dimension": "comm",
+   "stem": "对方讲了三分钟，你发现他和你在讲两件事：",
+   "options": {
+    "A": "先对齐目标：「我们先确认一下要解决的是」",
+    "B": "继续讲完自己的部分",
+    "C": "猜他的意思先往下走",
+    "D": "打断他问到底要说什么"
+   },
+   "answer": "A",
+   "second": "B",
+   "score": 2,
+   "faking": false,
+   "note": "最优 A 计 2 分；次优 B 计 1 分；其余 0 分"
+  },
+  {
+   "id": "Q39",
+   "dimension": "comm",
+   "stem": "汇报讲了五分钟，领导只追问了一个数据：",
+   "options": {
+    "A": "直接给数据，并把结论放到最前面",
+    "B": "再完整讲一遍全过程",
+    "C": "觉得领导没听清，抱怨一句",
+    "D": "先把汇报收尾"
+   },
+   "answer": "A",
+   "second": "B",
+   "score": 2,
+   "faking": false,
+   "note": "最优 A 计 2 分；次优 B 计 1 分；其余 0 分"
+  },
+  {
+   "id": "Q40",
+   "dimension": "comm",
+   "stem": "对方情绪很大，你很想立刻反驳：",
+   "options": {
+    "A": "先复述确认，等他说完再回应",
+    "B": "先接住情绪，事实稍后再说",
+    "C": "当场把话顶回去",
+    "D": "什么都不说，先挂电话"
+   },
+   "answer": "A",
+   "second": "B",
+   "score": 2,
+   "faking": false,
+   "note": "最优 A 计 2 分；次优 B 计 1 分；其余 0 分"
+  },
+  {
+   "id": "Q41",
+   "dimension": "comm",
+   "stem": "你和同事对同一件事的结论不一样：",
+   "options": {
+    "A": "先问他依据在哪，再把两边事实摆出来",
+    "B": "直接说你的结论是对的",
+    "C": "让上级来定",
+    "D": "各做各的"
+   },
+   "answer": "A",
+   "second": "B",
+   "score": 2,
+   "faking": false,
+   "note": "最优 A 计 2 分；次优 B 计 1 分；其余 0 分"
+  },
+  {
+   "id": "Q42",
+   "dimension": "comm",
+   "stem": "给外部方讲完方案，对方没有任何反应：",
+   "options": {
+    "A": "停下来问「哪部分还需要我再说明一下」",
+    "B": "继续补充更多细节",
+    "C": "就此结束",
+    "D": "直接问是不是没听懂"
+   },
+   "answer": "A",
+   "second": "B",
+   "score": 2,
+   "faking": true,
+   "note": "最优 A 计 2 分；次优 B 计 1 分；其余 0 分；含「公认正确但不可自证」选项"
+  },
+  {
+   "id": "Q43",
+   "dimension": "self",
+   "stem": "你的方案被否定后，一整天都在想这件事：",
+   "options": {
+    "A": "知道这是自己的触发点，写下来做一次复盘",
+    "B": "尽量不去想",
+    "C": "觉得是对方小题大做",
+    "D": "马上找对方理论"
+   },
+   "answer": "A",
+   "second": "B",
+   "score": 2,
+   "faking": false,
+   "note": "最优 A 计 2 分；次优 B 计 1 分；其余 0 分"
+  },
+  {
+   "id": "Q44",
+   "dimension": "self",
+   "stem": "带团队时，你越来越习惯用「通知」的方式说话：",
+   "options": {
+    "A": "注意到语气变化并调整表达方式",
+    "B": "没有察觉",
+    "C": "认为是团队执行不力",
+    "D": "让大家有问题直接找下属"
+   },
+   "answer": "A",
+   "second": "D",
+   "score": 2,
+   "faking": false,
+   "note": "最优 A 计 2 分；次优 D 计 1 分；其余 0 分"
+  },
+  {
+   "id": "Q45",
+   "dimension": "self",
+   "stem": "月末复盘时，你想不起上个月自己具体做过什么：",
+   "options": {
+    "A": "知道问题出在没记录，开始固定记录",
+    "B": "觉得没什么好记的",
+    "C": "会翻聊天记录回忆",
+    "D": "觉得记了也没用"
+   },
+   "answer": "A",
+   "second": "C",
+   "score": 2,
+   "faking": false,
+   "note": "最优 A 计 2 分；次优 C 计 1 分；其余 0 分"
+  },
+  {
+   "id": "Q46",
+   "dimension": "self",
+   "stem": "下班后你常常反复回想白天说过的某句话：",
+   "options": {
+    "A": "把它当成信号，提前准备第二天的说法",
+    "B": "知道会这样，但改不了",
+    "C": "认为这是性格问题",
+    "D": "说给同事听，让他们评评理"
+   },
+   "answer": "A",
+   "second": "B",
+   "score": 2,
+   "faking": false,
+   "note": "最优 A 计 2 分；次优 B 计 1 分；其余 0 分"
+  },
+  {
+   "id": "Q47",
+   "dimension": "self",
+   "stem": "同事说你讲话有点冲，你有点意外：",
+   "options": {
+    "A": "回想最近几次发言并调整表达",
+    "B": "觉得是对方太敏感",
+    "C": "问同事具体指哪一次",
+    "D": "不当回事，正常说话而已"
+   },
+   "answer": "A",
+   "second": "C",
+   "score": 2,
+   "faking": false,
+   "note": "最优 A 计 2 分；次优 C 计 1 分；其余 0 分"
+  },
+  {
+   "id": "Q48",
+   "dimension": "self",
+   "stem": "在紧张的时候，你说话会明显变快：",
+   "options": {
+    "A": "知道这个规律，会提前刻意放慢",
+    "B": "知道，但控制不住",
+    "C": "觉得紧张本来就该快",
+    "D": "尽量避开需要紧张的场合"
+   },
+   "answer": "A",
+   "second": "D",
+   "score": 2,
+   "faking": false,
+   "note": "最优 A 计 2 分；次优 D 计 1 分；其余 0 分"
+  },
+  {
+   "id": "C01A",
+   "dimension": "conf",
+   "stem": "上级在全员会上指出你的报表有误。你会？",
+   "options": {
+    "A": "当场确认是哪一处有误并当场改",
+    "B": "会后单独找上级核对",
+    "C": "会上先不回应，会后再解释",
+    "D": "说明是口径问题不是你的问题"
+   },
+   "answer": "A",
+   "second": null,
+   "score": 0,
+   "consistency": true,
+   "pair": "C01",
+   "faking": false,
+   "note": "一致性题，不计分；A/B 属积极型行为，C/D 属消极型行为"
+  },
+  {
+   "id": "C01B",
+   "dimension": "conf",
+   "stem": "你带的团队出了一份有误的报表，你怎么向上级说明？",
+   "options": {
+    "A": "主动说明问题并给出改法",
+    "B": "私下先把数据核清楚再沟通",
+    "C": "等上级问起再说",
+    "D": "说明是同事填错了"
+   },
+   "answer": "A",
+   "second": null,
+   "score": 0,
+   "consistency": true,
+   "pair": "C01",
+   "faking": false,
+   "note": "一致性题，不计分；A/B 属积极型行为，C/D 属消极型行为"
+  },
+  {
+   "id": "C02A",
+   "dimension": "conf",
+   "stem": "员工在群里说「这活没法做」。你会？",
+   "options": {
+    "A": "先问清是什么卡住了",
+    "B": "私下找他聊",
+    "C": "在群里要求他补充原因",
+    "D": "认为是他态度有问题"
+   },
+   "answer": "A",
+   "second": null,
+   "score": 0,
+   "consistency": true,
+   "pair": "C02",
+   "faking": false,
+   "note": "一致性题，不计分；A/B 属积极型行为，C/D 属消极型行为"
+  },
+  {
+   "id": "C02B",
+   "dimension": "conf",
+   "stem": "新人第一次独立接活做砸了。你会？",
+   "options": {
+    "A": "先问清他卡在哪一步",
+    "B": "事后复盘再谈",
+    "C": "当众指出错误让他记住",
+    "D": "认为新人本来就该有人兜底"
+   },
+   "answer": "A",
+   "second": null,
+   "score": 0,
+   "consistency": true,
+   "pair": "C02",
+   "faking": false,
+   "note": "一致性题，不计分；A/B 属积极型行为，C/D 属消极型行为"
+  },
+  {
+   "id": "C03A",
+   "dimension": "conf",
+   "stem": "半年没联系的机构负责人找你办事。你会？",
+   "options": {
+    "A": "先问候并回顾上次合作",
+    "B": "直接说能不能办",
+    "C": "转给同事对接",
+    "D": "先打听对方最近怎么样"
+   },
+   "answer": "A",
+   "second": null,
+   "score": 0,
+   "consistency": true,
+   "pair": "C03",
+   "faking": false,
+   "note": "一致性题，不计分；A/B 属积极型行为，C/D 属消极型行为"
+  },
+  {
+   "id": "C03B",
+   "dimension": "conf",
+   "stem": "之前合作过的商户这次想改结算方式。你会？",
+   "options": {
+    "A": "先回顾当初怎么谈的，再谈新的",
+    "B": "按原合同原办法办",
+    "C": "找上级定",
+    "D": "拖着不回复"
+   },
+   "answer": "A",
+   "second": null,
+   "score": 0,
+   "consistency": true,
+   "pair": "C03",
+   "faking": false,
+   "note": "一致性题，不计分；A/B 属积极型行为，C/D 属消极型行为"
+  },
+  {
+   "id": "C04A",
+   "dimension": "conf",
+   "stem": "你的排期方案被两位负责人反对。你会？",
+   "options": {
+    "A": "带可选方案找他们谈",
+    "B": "强调制度必须执行",
+    "C": "私下打听他们为什么反对",
+    "D": "换方案避开他们"
+   },
+   "answer": "A",
+   "second": null,
+   "score": 0,
+   "consistency": true,
+   "pair": "C04",
+   "faking": false,
+   "note": "一致性题，不计分；A/B 属积极型行为，C/D 属消极型行为"
+  },
+  {
+   "id": "C04B",
+   "dimension": "conf",
+   "stem": "一线不愿意按新流程操作。你会？",
+   "options": {
+    "A": "拿试点数据一起改流程",
+    "B": "强调必须执行",
+    "C": "收集意见先缓一缓",
+    "D": "换一个执行力强的人去推"
+   },
+   "answer": "A",
+   "second": null,
+   "score": 0,
+   "consistency": true,
+   "pair": "C04",
+   "faking": false,
+   "note": "一致性题，不计分；A/B 属积极型行为，C/D 属消极型行为"
+  },
+  {
+   "id": "C05A",
+   "dimension": "conf",
+   "stem": "同事临时请假，任务没人做。你会？",
+   "options": {
+    "A": "接下并说清交接",
+    "B": "直接接下不说",
+    "C": "找第三方判断",
+    "D": "说自己更忙不接"
+   },
+   "answer": "A",
+   "second": null,
+   "score": 0,
+   "consistency": true,
+   "pair": "C05",
+   "faking": false,
+   "note": "一致性题，不计分；A/B 属积极型行为，C/D 属消极型行为"
+  },
+  {
+   "id": "C05B",
+   "dimension": "conf",
+   "stem": "别人把不是你的责任推给你。你会？",
+   "options": {
+    "A": "当场澄清并给出建议",
+    "B": "先接下来再私下澄清",
+    "C": "忍下来不说",
+    "D": "当场反击揭短"
+   },
+   "answer": "A",
+   "second": null,
+   "score": 0,
+   "consistency": true,
+   "pair": "C05",
+   "faking": false,
+   "note": "一致性题，不计分；A/B 属积极型行为，C/D 属消极型行为"
+  },
+  {
+   "id": "C06A",
+   "dimension": "conf",
+   "stem": "会议上领导否掉了你的方案。你会？",
+   "options": {
+    "A": "问清理由并调整",
+    "B": "会上沉默，会后再问",
+    "C": "马上为自己的方案辩护",
+    "D": "认为领导不懂业务"
+   },
+   "answer": "A",
+   "second": null,
+   "score": 0,
+   "consistency": true,
+   "pair": "C06",
+   "faking": false,
+   "note": "一致性题，不计分；A/B 属积极型行为，C/D 属消极型行为"
+  },
+  {
+   "id": "C06B",
+   "dimension": "conf",
+   "stem": "方案被否后你一整天心不在焉。你会？",
+   "options": {
+    "A": "复盘哪部分可以改",
+    "B": "不去想这件事",
+    "C": "找同事抱怨",
+    "D": "立刻重写一版证明自己没错"
+   },
+   "answer": "A",
+   "second": null,
+   "score": 0,
+   "consistency": true,
+   "pair": "C06",
+   "faking": false,
+   "note": "一致性题，不计分；A/B 属积极型行为，C/D 属消极型行为"
+  }
+ ],
+ "readme": "每维 6 道计分题，满分 12 分，折算 0–5 分。计分题中正确项 2 分、次优项 1 分、其余 0 分；一致性题 6 对共 12 题，不计入任何维度分，只用于观察同一情境两种问法下作答方向是否一致；自评 16 题每维 2 题、含 8 道反向题，只作对照参考、不计入总分。"
+}

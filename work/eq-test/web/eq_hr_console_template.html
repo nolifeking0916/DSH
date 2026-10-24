@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>情商在线测试 · HR 汇总台</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{--green:#1E4634;--green2:#2A5C42;--gold:#C9A55C;--cream:#F5F0E4;--paper:#FAF9F4;--ink:#1D2A23;--ink2:#42544B;--muted:#77867D;--line:#E6EAE7;--red:#C0453B;--red-bg:#FBEDEA;--good:#1B7A56;--good-bg:#E5F1EB;--sand:#8A7448;--sand-bg:#F4EEE0}
+  html,body{background:var(--paper)}
+  body{font-family:"PingFang SC","Hiragino Sans GB","Heiti SC",system-ui,sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased;line-height:1.7}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 18px}
+  .hero{padding:26px 0 22px;background:linear-gradient(112deg,#183C2C,#1E4634 45%,#2C6146);color:#fff}
+  .hero h1{font-size:25px;font-weight:800;letter-spacing:.03em}
+  .hero .sub{margin-top:6px;font-size:13.5px;color:rgba(255,255,255,.72)}
+  main{padding:20px 0 60px}
+  .card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-bottom:16px}
+  h2{font-size:19px;font-weight:800;margin-bottom:8px}
+  h3{font-size:15.5px;font-weight:800;margin:12px 0 7px}
+  .lead{font-size:14px;line-height:1.85;color:var(--ink2)}
+  .muted{font-size:12.5px;color:var(--muted);line-height:1.8}
+  textarea{width:100%;min-height:120px;border:1px solid var(--line);border-radius:10px;padding:11px 13px;font-family:ui-monospace,Menlo,monospace;font-size:12.5px;line-height:1.7;color:var(--ink)}
+  textarea:focus{outline:2px solid rgba(201,165,92,.6);border-color:var(--gold)}
+  button{font-family:inherit;font-size:14px;border:none;border-radius:10px;padding:10px 20px;cursor:pointer;font-weight:700}
+  .btn-primary{background:var(--green);color:#fff}.btn-ghost{background:transparent;color:var(--green);border:1px solid var(--green)}
+  .btn-gold{background:var(--gold);color:#3d2f10}
+  .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{background:var(--green);color:#fff;text-align:left;padding:8px 9px;font-weight:700;font-size:12.3px;white-space:nowrap}
+  td{padding:7px 9px;border-bottom:1px solid var(--line);line-height:1.6;color:var(--ink2);white-space:nowrap}
+  tr:nth-child(even) td{background:#FCFBF8}
+  td.name{font-weight:700;color:var(--ink)}
+  .tag{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11.5px;font-weight:700}
+  .t-good{background:var(--good-bg);color:var(--good)}.t-sand{background:var(--sand-bg);color:var(--sand)}.t-red{background:var(--red-bg);color:var(--red)}.t-neu{background:#EFF3F0;color:#4C5C55}
+  .tw{overflow:auto;border:1px solid var(--line);border-radius:12px}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+  .cand{border:1px solid var(--line);border-radius:13px;padding:14px 16px;background:#fff}
+  .cand .ch{display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap}
+  .cand .ch b{font-size:16px}
+  .cand .ch .tot{margin-left:auto;font-size:19px;font-weight:800;color:var(--green)}
+  svg.radar{width:100%;height:auto;display:block;max-width:420px}
+  .foot{text-align:center;font-size:12.5px;color:var(--muted);padding:24px 0 40px;line-height:1.9}
+  .hide{display:none!important}
+  .warn{border-left:4px solid var(--red);background:var(--red-bg);border-radius:0 10px 10px 0;padding:11px 14px;font-size:13px;line-height:1.8;color:#7A2B24}
+</style>
+</head>
+<body>
+<div class="hero"><div class="wrap">
+  <h1>情商在线测试 · HR 汇总台</h1>
+  <div class="sub">粘贴候选人回传的结果 JSON 或结果摘要行，自动算加权总分、判定与画像</div>
+</div></div>
+<main class="wrap">
+  <div class="card">
+    <h2>1 · 导入结果</h2>
+    <p class="lead">候选人点「下载结果文件（JSON）」后把文件内容整段粘进下面；也可以直接粘贴「结果摘要」文本行（每行一人）。数据只在本机浏览器里处理，不上传。</p>
+    <textarea id="in" placeholder='粘贴 JSON 数组，或每行一条结果摘要，例如：&#10;EQ测试 | 张三 | 身份证后4位 1234 | 八项得分(情绪稳定/冲突处理/...) = 4.2/2.4/... | 加权总分 3.36 | 自评与作答一致性 一致 | 情境题一致性 一致 | 提交时间 2026-10-24 10:20 | 测评编号 EQ-7F3A-K29QX'></textarea>
+    <div class="actions">
+      <button class="btn-primary" id="btn-parse">解析并汇总</button>
+      <button class="btn-ghost" id="btn-demo">载入示例数据</button>
+      <button class="btn-ghost" id="btn-clear">清空</button>
+    </div>
+    <div class="warn hide" id="err" style="margin-top:12px"></div>
+  </div>
+
+  <div class="card hide" id="sum-card">
+    <h2>2 · 汇总表</h2>
+    <div class="tw"><table id="tbl"><thead><tr>
+      <th>姓名</th><th>编号</th><th>后4位</th><th>提交时间</th><th>加权总分</th><th>判定</th><th>最低维</th><th>一致性</th>
+    </tr></thead><tbody></tbody></table></div>
+    <div class="actions"><button class="btn-gold" id="btn-csv">导出 CSV</button><button class="btn-ghost" id="btn-print">打印 / 存 PDF</button></div>
+    <p class="muted" style="margin-top:8px">判定口径：加权 ≥ 3.0 且 8 项均 ≥ 2.0 且无一致性矛盾 → 行；加权 2.4–3.0 或存在矛盾 → 有条件行；加权 &lt; 2.4 或任一项 &lt; 2.0 → 不行。核心维度（情绪稳定 / 冲突处理）任一 &lt; 2.0 直接判不行。</p>
+  </div>
+
+  <div class="card hide" id="card-card">
+    <h2>3 · 个人画像</h2>
+    <div class="cards" id="cards"></div>
+  </div>
+
+  <div class="foot">浙江云上文旅集团 · 集团行政人事部 ｜ 数据仅在本机处理；心理测评结果不得作为录用唯一依据</div>
+</main>
+
+<script>
+var DIMS=[
+ {key:"regu",name:"情绪稳定",outer:"A",outer_name:"情绪自控",weight:15},
+ {key:"conf",name:"冲突处理",outer:"C",outer_name:"冲突与协作",weight:15},
+ {key:"rela",name:"关系经营",outer:"D",outer_name:"关系与影响",weight:15},
+ {key:"infl",name:"影响力说服",outer:"D",outer_name:"关系与影响",weight:13},
+ {key:"empa",name:"同理心",outer:"B",outer_name:"同理沟通",weight:12},
+ {key:"team",name:"协作补位",outer:"C",outer_name:"冲突与协作",weight:11},
+ {key:"comm",name:"倾听表达",outer:"B",outer_name:"同理沟通",weight:10},
+ {key:"self",name:"自我觉察",outer:"A",outer_name:"情绪自控",weight:9}
+];
+var PASS=3.0, COLLAPSE=2.0, COND=2.4;
+function $(id){return document.getElementById(id);}
+function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+function band(v){ if(v>=4)return{n:"优势区",c:"t-good"}; if(v>=3.4)return{n:"稳健区",c:"t-good"}; if(v>=3)return{n:"达标区",c:"t-neu"}; if(v>=2.4)return{n:"带教区",c:"t-sand"}; return{n:"风险区",c:"t-red"}; }
+function verdictOf(scores, cons, selfCons){
+  var tot=0,min=99,lowKey=null;
+  DIMS.forEach(function(d){ var v=scores[d.key]||0; tot+=v*d.weight/100; if(v<min){min=v;lowKey=d.key;} });
+  tot=Math.round(tot*100)/100; min=Math.round(min*100)/100;
+  var v;
+  if(tot>=PASS && min>=COLLAPSE) v="行"; else if(tot>=COND && min>=COLLAPSE) v="有条件行"; else v="不行";
+  if((scores.regu<COLLAPSE||scores.conf<COLLAPSE)) v="不行";
+  var flag=(cons && cons!=="一致" && cons!=="无") || (selfCons==="需复核");
+  if(flag && v==="行") v="有条件行";
+  return {total:tot,min:min,lowKey:lowKey,verdict:v};
+}
+function parseInput(text){
+  var rows=[];
+  var t=text.trim();
+  if(t.charAt(0)==="{"||t.charAt(0)==="["){
+    var obj=JSON.parse(t);
+    var arr=Array.isArray(obj)?obj:[obj];
+    arr.forEach(function(o){
+      var sc={}, src=o.scores||{};
+      Object.keys(src).forEach(function(k){ sc[k]=(src[k]&&src[k].score!=null)?src[k].score:src[k]; });
+      rows.push({name:o.name||"(未填)",code:o.code||"",id4:(o.idLast4||(o.idMasked||"")).slice(-4),at:o.submittedAt||"",
+                 scores:sc,selfCons:o.selfConsistency||"-",cons:o.consistency||"-",verdict:o.verdict||""});
+    });
+    return rows;
+  }
+  t.split(/\n+/).forEach(function(line){
+    line=line.trim(); if(!line) return;
+    var m=line.match(/八项得分\s*\(([^)]*)\)\s*=\s*([0-9./]+)/);
+    if(!m) return;
+    var names=m[1].split(/\//).map(function(x){return x.trim();});
+    var vals=m[2].split("/").map(function(x){return parseFloat(x)||0;});
+    var sc={}; DIMS.forEach(function(d){ var i=names.indexOf(d.name); sc[d.key]= i>=0? (vals[i]||0):0; });
+    var idm=line.match(/身份证后4位\s*(\S+)/), totm=line.match(/加权总分\s*([0-9.]+)/);
+    var selfm=line.match(/自评与作答一致性\s*(\S+)/), consm=line.match(/情境题一致性\s*(\S+)/);
+    var atm=line.match(/提交时间\s*(.+?)\s*\|/), codem=line.match(/测评编号\s*(\S+)/);
+    var nm=line.split("|")[0].replace(/^EQ测试/,"").trim();
+    var v=verdictOf(sc, consm?consm[1]:"", selfm?selfm[1]:"");
+    rows.push({name:nm||"(未填)",code:codem?codem[1]:"",id4:idm?idm[1]:"",at:atm?atm[1]:"",
+               scores:sc,selfCons:selfm?selfm[1]:"-",cons:consm?consm[1]:"-",verdict:totm?v.verdict:""});
+  });
+  return rows;
+}
+function radarSvg(scores){
+  var n=DIMS.length,cx=230,cy=205,R=148,labels=[],vals=[];
+  DIMS.forEach(function(d){labels.push(d.name);vals.push(scores[d.key]||0);});
+  function pt(i,v,r){var ang=-Math.PI/2+2*Math.PI*i/n;var rr=r||R*(v/5);return[cx+rr*Math.cos(ang),cy+rr*Math.sin(ang)];}
+  var s=['<svg viewBox="0 0 460 430" class="radar">'];
+  for(var r=1;r<=5;r++){var pts=[];for(var i=0;i<n;i++){var p=pt(i,r);pts.push(p[0].toFixed(1)+","+p[1].toFixed(1));}s.push('<polygon points="'+pts.join(" ")+'" fill="none" stroke="#DCE4DF"/>');}
+  for(var i=0;i<n;i++){var a=pt(i,5),b=pt(i,0);s.push('<line x1="'+b[0].toFixed(1)+'" y1="'+b[1].toFixed(1)+'" x2="'+a[0].toFixed(1)+'" y2="'+a[1].toFixed(1)+'" stroke="#E6EAE7"/>');}
+  var pl=[];for(var i=0;i<n;i++){var p=pt(i,PASS);pl.push(p[0].toFixed(1)+","+p[1].toFixed(1));}
+  s.push('<polygon points="'+pl.join(" ")+'" fill="none" stroke="#C0453B" stroke-width="1.4" stroke-dasharray="6 4"/>');
+  var pv=[];for(var i=0;i<n;i++){var p=pt(i,vals[i]);pv.push(p[0].toFixed(1)+","+p[1].toFixed(1));}
+  s.push('<polygon points="'+pv.join(" ")+'" fill="#C9A55C" fill-opacity="0.28" stroke="#B08A3C" stroke-width="2"/>');
+  for(var i=0;i<n;i++){var p=pt(i,vals[i]);s.push('<circle cx="'+p[0].toFixed(1)+'" cy="'+p[1].toFixed(1)+'" r="3.6" fill="#B08A3C" stroke="#fff" stroke-width="1.5"/>');}
+  for(var i=0;i<n;i++){var p=pt(i,5,R+34),ang=-Math.PI/2+2*Math.PI*i/n,anchor="middle";
+    if(Math.cos(ang)>0.35)anchor="start";else if(Math.cos(ang)<-0.35)anchor="end";
+    s.push('<text x="'+p[0].toFixed(1)+'" y="'+(p[1]-2).toFixed(1)+'" font-size="10.5" font-weight="700" fill="#1D2A23" text-anchor="'+anchor+'">'+esc(labels[i])+'</text>');
+    s.push('<text x="'+p[0].toFixed(1)+'" y="'+(p[1]+11).toFixed(1)+'" font-size="9.5" fill="#6B7C74" text-anchor="'+anchor+'">'+vals[i].toFixed(1)+'</text>');}
+  s.push('</svg>');
+  return s.join("");
+}
+var ROWS=[];
+function render(){
+  var tb=$("tbl").querySelector("tbody"); tb.innerHTML="";
+  ROWS.forEach(function(r){
+    var v=verdictOf(r.scores, r.cons, r.selfCons);
+    var lowName=(DIMS.filter(function(d){return d.key===v.lowKey;})[0]||{}).name||"—";
+    var cls=v.verdict==="行"?"t-good":(v.verdict==="有条件行"?"t-sand":"t-red");
+    var tr=el("tr");
+    tr.innerHTML='<td class="name">'+esc(r.name)+'</td><td>'+esc(r.code)+'</td><td>'+esc(r.id4)+'</td><td>'+esc(r.at)+'</td>'+
+      '<td><b>'+v.total.toFixed(2)+'</b></td><td><span class="tag '+cls+'">'+v.verdict+'</span></td>'+
+      '<td>'+esc(lowName)+' '+v.min.toFixed(1)+'</td><td>'+esc(r.selfCons)+' / '+esc(r.cons)+'</td>';
+    tb.appendChild(tr);
+  });
+  var cb=$("cards"); cb.innerHTML="";
+  ROWS.forEach(function(r){
+    var v=verdictOf(r.scores, r.cons, r.selfCons);
+    var cls=v.verdict==="行"?"t-good":(v.verdict==="有条件行"?"t-sand":"t-red");
+    var c=el("div","cand");
+    var detail=DIMS.map(function(d){ var s=r.scores[d.key]||0; var b=band(s);
+      return '<tr><td>'+esc(d.name)+'</td><td>'+s.toFixed(1)+'</td><td><span class="tag '+b.c+'">'+b.n+'</span></td><td>'+d.weight+'%</td></tr>'; }).join("");
+    c.innerHTML='<div class="ch"><b>'+esc(r.name)+'</b><span class="tag '+cls+'">'+v.verdict+'</span><span class="tot">'+v.total.toFixed(2)+'</span></div>'+
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:center">'+radarSvg(r.scores)+
+      '<table><thead><tr><th>维度</th><th>分</th><th>档</th><th>权重</th></tr></thead><tbody>'+detail+'</tbody></table></div>'+
+      '<p class="muted" style="margin-top:8px">编号 '+esc(r.code)+' ｜ 后4位 '+esc(r.id4)+' ｜ '+esc(r.at)+' ｜ 自评 '+esc(r.selfCons)+' ｜ 情境一致性 '+esc(r.cons)+'</p>';
+    cb.appendChild(c);
+  });
+  $("sum-card").classList.remove("hide"); $("card-card").classList.remove("hide");
+}
+function el(tag,cls,html){var e=document.createElement(tag);if(cls)e.className=cls;if(html!=null)e.innerHTML=html;return e;}
+$("btn-parse").addEventListener("click", function(){
+  var err=$("err"); err.classList.add("hide");
+  try{
+    ROWS=parseInput($("in").value);
+    if(!ROWS.length) throw new Error("没解析出结果。请确认粘贴的是 JSON 文件内容，或每行一条结果摘要。");
+    render();
+  }catch(e){ err.classList.remove("hide"); err.textContent="解析失败："+e.message; }
+});
+$("btn-clear").addEventListener("click", function(){ $("in").value=""; ROWS=[]; $("sum-card").classList.add("hide"); $("card-card").classList.add("hide"); });
+$("btn-print").addEventListener("click", function(){ window.print(); });
+$("btn-csv").addEventListener("click", function(){
+  if(!ROWS.length) return;
+  var head=["姓名","编号","身份证后4位","提交时间","加权总分","判定","自评一致性","情境题一致性"].concat(DIMS.map(function(d){return d.name+"("+d.weight+"%)";}));
+  var lines=[head.join(",")];
+  ROWS.forEach(function(r){ var v=verdictOf(r.scores, r.cons, r.selfCons);
+    lines.push([r.name,r.code,r.id4,r.at,v.total.toFixed(2),v.verdict,r.selfCons,r.cons].concat(DIMS.map(function(d){return (r.scores[d.key]||0).toFixed(1);})).join(",")); });
+  var blob=new Blob(["\ufeff"+lines.join("\n")],{type:"text/csv;charset=utf-8"});
+  var a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="EQ测试汇总_"+new Date().toISOString().slice(0,10)+".csv"; a.click();
+});
+$("btn-demo").addEventListener("click", function(){
+  var demo=[
+   {name:"张三",code:"EQ-7F3A-K29QX",idMasked:"330101********1234",submittedAt:"2026-10-24 10:12",
+    scores:{regu:{score:4.2},conf:{score:2.4},rela:{score:3.6},infl:{score:3.0},empa:{score:3.6},team:{score:3.6},comm:{score:3.0},self:{score:3.5}},
+    selfConsistency:"一致",consistency:"一致"},
+   {name:"李四",code:"EQ-2B91-K3P7M",idMasked:"330101********5678",submittedAt:"2026-10-24 11:03",
+    scores:{regu:{score:3.0},conf:{score:3.4},rela:{score:2.8},infl:{score:2.6},empa:{score:3.8},team:{score:3.4},comm:{score:3.6},self:{score:2.9}},
+    selfConsistency:"需复核",consistency:"一致"}
+  ];
+  $("in").value=JSON.stringify(demo,null,2);
+  ROWS=parseInput($("in").value); render();
+});
+</script>
+</body>
+</html>

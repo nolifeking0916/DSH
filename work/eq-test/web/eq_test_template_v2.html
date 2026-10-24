@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>情商与关系管理在线测试 · 候选人版</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --green:#1E4634;--green2:#2A5C42;--gold:#C9A55C;--cream:#F5F0E4;
+    --paper:#FAF9F4;--ink:#1D2A23;--ink2:#42544B;--muted:#77867D;--line:#E6EAE7;
+    --red:#C0453B;--red-bg:#FBEDEA;--good:#1B7A56;--good-bg:#E5F1EB;--sand:#8A7448;--sand-bg:#F4EEE0;
+  }
+  html,body{background:var(--paper)}
+  body{font-family:"PingFang SC","Hiragino Sans GB","Heiti SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased;line-height:1.7}
+  .wrap{max-width:940px;margin:0 auto;padding:0 18px}
+  .hero{position:relative;overflow:hidden;padding:32px 0 28px;background:radial-gradient(900px 260px at 88% -60%,rgba(255,255,255,.13),transparent 62%),linear-gradient(112deg,#183C2C,#1E4634 45%,#2C6146);color:#fff}
+  .hero::after{content:"";position:absolute;inset:0;background-image:repeating-linear-gradient(115deg,rgba(255,255,255,.025) 0 1px,transparent 1px 60px);pointer-events:none}
+  .hero .wrap{position:relative;z-index:2}
+  .bar{width:6px;height:54px;border-radius:4px;background:linear-gradient(180deg,var(--gold),#E7D4A8);margin-bottom:14px}
+  h1{font-size:29px;letter-spacing:.04em;font-weight:800;line-height:1.25}
+  .sub{margin-top:8px;font-size:13.5px;color:rgba(255,255,255,.72)}
+  .steps{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+  .step{font-size:12px;padding:5px 11px;border-radius:20px;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.20);color:rgba(255,255,255,.85)}
+  .step.on{background:var(--gold);border-color:var(--gold);color:#3d2f10;font-weight:700}
+  .step.done{background:rgba(255,255,255,.18)}
+  main{padding:22px 0 60px}
+  .card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin-bottom:16px}
+  .card.tight{padding:15px 17px}
+  h2{font-size:21px;font-weight:800;margin-bottom:6px}
+  h3{font-size:16px;font-weight:800;margin:16px 0 8px}
+  h4{font-size:14.5px;font-weight:800;margin:0 0 4px}
+  .lead{font-size:14.5px;line-height:1.9;color:var(--ink2)}
+  .lead b{color:var(--ink)}
+  .muted{font-size:12.5px;color:var(--muted);line-height:1.8}
+  .terms{font-size:13.8px;line-height:1.95;color:var(--ink2)}
+  .terms p{margin-bottom:9px}
+  .terms b{color:var(--ink)}
+  .callout{border-left:4px solid var(--gold);background:var(--cream);border-radius:0 10px 10px 0;padding:12px 15px;font-size:13.8px;line-height:1.85;color:var(--ink2)}
+  .callout b{color:var(--green)}
+  .warn{border-left:4px solid var(--red);background:var(--red-bg);border-radius:0 10px 10px 0;padding:12px 15px;font-size:13.5px;line-height:1.8;color:#7A2B24}
+  ul.tick{margin:8px 0 0 18px;font-size:14px;line-height:1.95;color:var(--ink2)}
+  ul.tick li{margin-bottom:4px}
+  button{font-family:inherit;font-size:14.5px;border:none;border-radius:10px;padding:11px 22px;cursor:pointer;font-weight:700}
+  .btn-primary{background:var(--green);color:#fff}.btn-primary:hover{background:var(--green2)}
+  .btn-ghost{background:transparent;color:var(--green);border:1px solid var(--green)}
+  .btn-gold{background:var(--gold);color:#3d2f10}
+  .btn[disabled]{opacity:.45;cursor:not-allowed}
+  .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+  label.fld{display:block;font-size:13.5px;font-weight:700;color:var(--ink);margin:14px 0 6px}
+  input[type=text]{width:100%;max-width:340px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:15px;font-family:inherit;background:#fff;color:var(--ink)}
+  input:focus{outline:2px solid rgba(201,165,92,.6);border-color:var(--gold)}
+  .hint{font-size:12.5px;color:var(--muted);margin-top:5px}
+  .check{display:flex;gap:10px;align-items:flex-start;font-size:13.8px;line-height:1.8;color:var(--ink2);margin:10px 0}
+  .check input{width:18px;height:18px;margin-top:3px;flex:none;accent-color:var(--green)}
+  .barwrap{height:6px;background:var(--line);border-radius:4px;overflow:hidden;margin:10px 0 14px}
+  .barfill{height:100%;background:linear-gradient(90deg,var(--gold),var(--green3));width:0;transition:width .25s}
+  .q{border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:12px;background:#fff}
+  .q .qh{display:flex;gap:10px;align-items:baseline;margin-bottom:8px}
+  .q .qn{font-size:12px;font-weight:800;color:var(--gold);letter-spacing:.1em;flex:none}
+  .q .qt{font-size:14.8px;font-weight:700;line-height:1.75}
+  .opt{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border-radius:9px;margin-bottom:4px;cursor:pointer;border:1px solid transparent}
+  .opt:hover{background:#FBFAF6}
+  .opt input{width:17px;height:17px;margin-top:3px;flex:none;accent-color:var(--green)}
+  .opt span{font-size:14px;line-height:1.75;color:var(--ink2)}
+  .opt.sel{background:var(--cream);border-color:rgba(201,165,92,.55)}
+  .opt.sel span{color:var(--ink)}
+  .writebox{margin:8px 0 6px;padding:9px 11px;background:#FBFAF6;border:1px dashed var(--line);border-radius:9px}
+  .writebox label{font-size:12.5px;color:var(--muted);display:block;margin-bottom:5px}
+  .writebox textarea{width:100%;min-height:50px;border:none;background:transparent;font-family:inherit;font-size:13.8px;resize:vertical;color:var(--ink);line-height:1.7}
+  .writebox textarea:focus{outline:none}
+  .scale{display:flex;gap:6px;align-items:center;margin-top:6px;flex-wrap:wrap}
+  .scale .sc{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11.5px;color:var(--muted);cursor:pointer}
+  .scale .sc input{width:17px;height:17px;accent-color:var(--green)}
+  .tag{display:inline-block;padding:2px 9px;border-radius:20px;font-size:12px;font-weight:700;white-space:nowrap}
+  .t-good{background:var(--good-bg);color:var(--good)}
+  .t-neu{background:#EFF3F0;color:#4C5C55}
+  .t-sand{background:var(--sand-bg);color:var(--sand)}
+  .t-red{background:var(--red-bg);color:var(--red)}
+  .t-gold{background:#F6EFDD;color:#8A6C2E}
+  .dims{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  .dimc{background:#fff;border:1px solid var(--line);border-top:4px solid var(--green);border-radius:12px;padding:13px 14px}
+  .dimc .code{font-size:11px;font-weight:800;letter-spacing:.14em;color:var(--gold)}
+  .dimc h4{font-size:16px;margin:3px 0 2px}
+  .dimc .subs{font-size:12px;color:var(--muted);margin-bottom:6px}
+  .dimc .sc{font-size:25px;font-weight:800;color:var(--green)}
+  .dimc .sc small{font-size:12px;color:var(--muted);font-weight:600}
+  .radarwrap{display:grid;grid-template-columns:1.1fr 1fr;gap:16px;align-items:start}
+  svg.radar{width:100%;height:auto;display:block}
+  .rows{display:grid;gap:9px}
+  .row{border:1px solid var(--line);border-radius:11px;padding:12px 14px;background:#fff}
+  .row .rh{display:flex;align-items:center;gap:10px;margin-bottom:6px;flex-wrap:wrap}
+  .row .rh b{font-size:15.5px}
+  .row .rh .num{margin-left:auto;font-size:20px;font-weight:800;color:var(--green)}
+  .row p{font-size:13.8px;line-height:1.9;color:var(--ink2)}
+  .row .act{margin-top:8px;font-size:13.2px;color:#4A3F26;background:var(--cream);border-radius:8px;padding:9px 11px;line-height:1.8}
+  .sumline{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;line-height:1.85;background:#F7F5EE;border:1px dashed var(--line);border-radius:10px;padding:11px 13px;word-break:break-all;color:#33443B}
+  .foot{text-align:center;font-size:12.5px;color:var(--muted);padding:26px 0 40px;line-height:1.9}
+  .hide{display:none !important}
+  .pill{display:inline-block;font-size:12px;padding:3px 10px;border-radius:20px;background:#F3F1E9;color:#6A6047}
+  .twocol{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media (max-width:760px){
+    h1{font-size:23px}
+    .dims{grid-template-columns:repeat(2,1fr)}
+    .radarwrap,.twocol{grid-template-columns:1fr}
+    .card{padding:16px 15px}
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="wrap">
+    <div class="bar"></div>
+    <h1>情商与关系管理在线测试</h1>
+    <div class="sub">浙江云上文旅集团 · 集团行政人事部 ｜ 测管理情境下的行为反应，不测性格、不测智力</div>
+    <div class="steps" id="steps">
+      <span class="step" data-s="intro">1 说明</span>
+      <span class="step" data-s="consent">2 知情同意</span>
+      <span class="step" data-s="info">3 信息</span>
+      <span class="step" data-s="self">4 自评</span>
+      <span class="step" data-s="sjt">5 情境题</span>
+      <span class="step" data-s="result">6 结果</span>
+    </div>
+  </div>
+</div>
+
+<main class="wrap">
+
+  <!-- 1 说明 -->
+  <section id="s-intro">
+    <div class="card">
+      <h2>这份测试测什么</h2>
+      <p class="lead">本测试关注的是：<b>在管理情境里，你的典型反应是什么</b>。具体包括——</p>
+      <ul class="tick">
+        <li>被当众质疑、被误解、被冒犯时，你如何反应；</li>
+        <li>出现分歧时，你把事情摆到台面上，还是先绕开；</li>
+        <li>和上级、平级、下属、外部合作方打交道时，你靠什么建立信任；</li>
+        <li>任务压力大、来不及、别人不配合时，你是否还能把事推进。</li>
+      </ul>
+      <p class="lead" style="margin-top:12px">题目全部是<b>具体工作情境的行为选择题</b>，不涉及性格类型、不涉及智力、不涉及任何医学或心理诊断。作答约 <b>25–30 分钟</b>，可中途退出并保留进度。</p>
+      <div class="callout" style="margin-top:14px"><b>请用真实的工作经验作答。</b>本测试没有「标准好答案」，它比较的是不同选择在真实协作中的成本与收益；刻意选「看起来最正确」的选项，反而会让你拿到的画像偏离真实的你。</div>
+      <div class="actions">
+        <button class="btn-primary" id="btn-start">开始测试</button>
+        <button class="btn-ghost hide" id="btn-resume">继续上次作答</button>
+        <button class="btn-ghost" id="btn-clear-all">清除本机数据</button>
+      </div>
+      <p class="muted" style="margin-top:10px" id="resume-note"></p>
+    </div>
+  </section>
+
+  <!-- 2 知情同意 -->
+  <section id="s-consent" class="hide">
+    <div class="card">
+      <h2>本次测试的知情同意</h2>
+      <p class="lead" style="margin-bottom:10px">下面这段说明这次测评是什么、结果谁会看到、怎么使用。请逐条阅读，勾选下方确认框后再开始。</p>
+      <div class="card tight" style="background:#FBFAF6">
+        <div class="terms">
+          <p><b>一、测试目的。</b>本次测试测量的是您在管理情境下的情绪识别与关系处理行为倾向，也就是在出现分歧、承受压力、被否定或需要推动他人时，您的典型反应方式。它不测量性格，不测量智力，不属于临床心理评估，也不对您的心理健康状况作出任何判断。</p>
+          <p><b>二、谁能看到结果。</b>结果由浙江云上文旅集团人力资源部 2–3 名工作人员（含用人部门负责人）查看并讨论，用于招聘环节的评估。除上述人员外，结果不向其他人提供。</p>
+          <p><b>三、结果用途。</b>结果作为面试与背景调查的参考材料之一，与您的简历、工作经历、面谈记录一起综合判断。它不是录用结论的唯一依据，招聘决策由具备相应权限的评审集体作出。</p>
+          <p><b>四、是否参加。</b>您可以不参加，也可以中途退出，不影响您在本次招聘中的任何评价，也不会影响您已提交的其他材料。退出前点击页面上的「清除本机数据」，本机保存的作答与结果即被删除。</p>
+          <p><b>五、数据处理。</b>本次作答与结果只保存在您当前使用的这台电脑的浏览器里，不上传服务器，集团无法通过本页面实时读取您的答案。结果需要由您主动复制或下载后回传给 HR。页面提供「清除本机数据」入口，测试结束后可随时点击删除全部本地记录。</p>
+          <p><b>六、身份证号码用途。</b>仅用于身份核对与防止重复提交，不作其他用途，不随结果摘要回传。输入后即在您的电脑上完成校验，随后立即丢弃，页面与本机只保留末 4 位；页面任何位置只展示前 6 位与后 4 位，中间 10 位以星号显示。</p>
+          <p><b>七、异议复核。</b>如对结果有异议，可在提交后 5 个工作日内通过集团人力资源部提出复核申请，我们将核对作答记录与计分口径并书面答复。</p>
+          <p><b>八、非诊断声明。</b>本测试不用于诊断，不替代任何医学或心理咨询，也不构成对任何人格或心理状态的判断。</p>
+        </div>
+      </div>
+      <label class="check"><input type="checkbox" id="consent-box"><span>我已阅读并理解以上八条说明，<b>自愿参加</b>本次测试。</span></label>
+      <div class="actions">
+        <button class="btn-primary" id="btn-consent-ok" disabled>同意并开始测试</button>
+        <button class="btn-ghost" data-back="intro">暂不参加</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 信息 -->
+  <section id="s-info" class="hide">
+    <div class="card">
+      <h2>基本信息</h2>
+      <p class="lead">用于身份核对与结果归档，仅保存在本机。</p>
+      <label class="fld" for="in-name">姓名</label>
+      <input type="text" id="in-name" autocomplete="off" placeholder="请输入真实姓名">
+      <label class="fld" for="in-id">身份证号码（18 位）</label>
+      <input type="text" id="in-id" autocomplete="off" inputmode="numeric" maxlength="18" placeholder="请输入 18 位身份证号码">
+      <p class="hint" id="id-hint">仅用于身份核对与防重复提交：输入后在您电脑上完成校验，随即丢弃；本机只保留末 4 位，页面显示前 6 位与后 4 位。</p>
+      <label class="fld" for="in-code">测评编号</label>
+      <input type="text" id="in-code" readonly>
+      <p class="hint">编号格式 EQ-日期-随机码-校验码，不含姓名与身份证任何位。请把编号与结果摘要一并回传，便于核对。</p>
+      <div class="warn hide" id="id-warn"></div>
+      <div class="actions">
+        <button class="btn-primary" id="btn-info-ok">进入自评部分</button>
+        <button class="btn-ghost" data-back="consent">返回</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 自评 -->
+  <section id="s-self" class="hide">
+    <div class="card">
+      <h2>第一部分 · 自我参照（16 题）</h2>
+      <p class="lead">这一部分<b>不计入总分</b>，只用来对照你后面的情境作答，看两处是否一致——一致性本身就是一条信息。请按平时的自己作答。</p>
+      <div class="barwrap"><div class="barfill" id="self-bar"></div></div>
+      <p class="muted" id="self-count"></p>
+      <div id="self-list"></div>
+      <div class="actions">
+        <button class="btn-primary" id="btn-self-ok">进入情境题</button>
+        <button class="btn-ghost" id="btn-self-skip">跳过自评（仅做情境题）</button>
+        <button class="btn-ghost" data-back="info">返回</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 情境题 -->
+  <section id="s-sjt" class="hide">
+    <div class="card">
+      <h2>第二部分 · 情境判断（{{BANK_META}}）</h2>
+      <p class="lead">每题给一个工作情境和四个做法，选<b>你最可能真实发生</b>的那一个。每题先写一句话（写下你打算怎么做），再选——写下动作能让你不靠印象作答。选项顺序每台设备不同，这是正常现象。</p>
+      <div class="barwrap"><div class="barfill" id="sjt-bar"></div></div>
+      <p class="muted" id="sjt-count"></p>
+      <div id="sjt-list"></div>
+      <div class="actions">
+        <button class="btn-primary" id="btn-sjt-ok">提交并生成结果</button>
+        <button class="btn-ghost" data-back="self">返回</button>
+      </div>
+      <div class="warn hide" id="sjt-warn" style="margin-top:12px"></div>
+    </div>
+  </section>
+
+  <!-- 6 结果 -->
+  <section id="s-result" class="hide">
+    <div class="card">
+      <h2>你的测试结果</h2>
+      <p class="lead" id="res-lead"></p>
+      <div class="dims" id="res-outer" style="margin-top:14px"></div>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">八项能力画像</h3>
+      <div class="radarwrap">
+        <div id="res-radar"></div>
+        <div>
+          <p class="lead" style="font-size:13.8px">图中三条线：<b>金色</b>是你的得分，<b>红色虚线</b>是合格线 3.0 分，<b>绿色虚线</b>是同类岗位在岗者的参照水平。看形状比看面积更有意义：某一维明显内凹，说明那一维是你当前最容易出问题的场景。</p>
+          <p class="muted" style="margin-top:8px">分档口径：3.5 分以上为优势；3.0–3.4 为达标；3.0 分以下为待提升。</p>
+        </div>
+      </div>
+      <h3>逐项说明</h3>
+      <div class="rows" id="res-rows"></div>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">这份结果能说明什么</h3>
+      <ul class="tick">
+        <li>本次作答中，您在八个管理情境维度上体现出的反应倾向，以及这些倾向之间的相对高低。</li>
+        <li>哪些场景里您的处理方式稳定、可预期，哪些场景里您更可能需要额外准备或支持。</li>
+        <li>一份可以带到实际工作中用的练习清单，帮您把「知道」变成「做到」。</li>
+      </ul>
+      <h3>这份结果不能说明什么</h3>
+      <ul class="tick">
+        <li>分数受当天的状态、精力和作答意愿影响，同一个人在不同时间作答可能得到不同结果；本结果不代表长期稳定水平。</li>
+        <li>如果您的自我评价与本次作答不一致，页面会在对应维度标注「需复核」，意思是该维度的描述需要结合您的真实经历再确认，而不是直接采信任何一方。</li>
+        <li>分数不预测您在具体岗位上的绩效，也不代表您适合或不适合某一类工作。</li>
+        <li>本结果不能替代面试、面谈或实际工作中的观察，请把它与您真实的工作场景对照着看。</li>
+      </ul>
+      <p class="muted" style="margin-top:10px">本测试为自编行为情境题，不属临床量表、非常模量表，结果只解释为「本次作答下的行为倾向」，不构成录用结论，也不作任何症状或障碍判断。</p>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">下一步建议</h3>
+      <div id="res-advice"></div>
+      <p class="muted" style="margin-top:8px">以上建议来自本次作答结果，是练习方向，不是考核要求。</p>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">请把结果回传给 HR</h3>
+      <p class="lead">复制下面这行摘要发给 HR 即可（其中<b>不含录用结论</b>，结论由 HR 按统一口径计算）。</p>
+      <div class="sumline" id="res-summary"></div>
+      <div class="actions">
+        <button class="btn-primary" id="btn-copy">复制结果摘要</button>
+        <button class="btn-gold" id="btn-download">下载结果文件（JSON）</button>
+        <button class="btn-ghost" id="btn-print">打印 / 存为 PDF</button>
+        <button class="btn-ghost" id="btn-hr">HR 视图</button>
+      </div>
+      <p class="muted" style="margin-top:8px" id="copy-note"></p>
+      <div class="hide" id="hr-box" style="margin-top:14px">
+        <h3>HR 视图（内部）</h3>
+        <div id="hr-content"></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">本机数据</h3>
+      <p class="lead">你的作答与结果只存在这台设备上。回传完成后，建议清除本机数据。HR 侧归档保留不超过 1 年。</p>
+      <div class="actions"><button class="btn-ghost" id="btn-clear">清除本机数据</button></div>
+    </div>
+  </section>
+
+</main>
+
+<div class="foot">
+  浙江云上文旅集团 · 集团行政人事部 ｜ 本页为纯本地单文件网页，作答内容不上传服务器<br>
+  心理测评结果不得作为录用唯一依据；本测试不构成医学或心理诊断
+</div>
+
+<script id="bank" type="application/json">%%BANK_JSON%%</script>
+<script>
+/* ============================ 配置 ============================ */
+var CFG = {
+  passLine: 3.0,      // 合格线（候选人页分档 / 内部判定同用）
+  advantageLine: 3.5, // 优势档下限
+  collapse: 2.0,      // 内部塌陷线（仅 HR 侧）
+  condLine: 2.4,      // 内部「有条件行」下限
+  p50: {self:2.7, regu:2.6, empa:2.8, comm:2.9, conf:2.7, rela:2.9, infl:2.7, team:3.0},
+  hrPass: "yunsang-hr",
+  draftKey: "eq_test_draft_v2",
+  doneKey: "eq_test_done_v2"
+};
+var BANK = JSON.parse(document.getElementById("bank").textContent);
+var DIMS = BANK.dimensions;
+var CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";  /* 去掉易混字符 I O 0 1 l */
+
+/* 候选人可见的逐项措辞：8 维 × 优势 / 达标 / 待提升 */
+var DIMCOPY = {
+  regu: {
+    good:"在被当众质疑或压力最大的节点，您的第一反应是接着把事情往下推，而不是先处理情绪；事后也不把情绪带回流程里。连续投诉、临时加码这类场景中，您的交付节奏通常不受影响。",
+    ok:"当时能把情绪收住、把事情处理完，但事后会反复回想，情绪没有完全落地。压力过去之后，容易在非正式的场合向亲近的人提起这件事。",
+    low:"压力上来时情绪容易外溢，当场的话和语气会明显变硬，事后也可能迁怒到无关的人和事上。类似的高压场景里，您有时会先停下来，事务推进随之变慢。",
+    act:"每周挑 3 个必然会遇到的投诉或催促场景，回应前先写一行「我现在最在意的点是什么」，事后把实际说出口的第一句与它对照，记 3 次。"
+  },
+  conf: {
+    good:"分歧出现时，您倾向把它摆到台面上、在有第三方或规则在场的场合讲清楚，事后合作效率没有明显下降。冲突之后，双方的分工和节奏通常能较快回到正常状态。",
+    ok:"分歧在私下沟通后大多能解决，但一旦需要在公开或跨部门的场合处理，您更倾向往后拖一拖；情绪容易从私下的对话里带进流程。在众人面前直接表态的场合相对少。",
+    low:"遇到利益不一致时，您较少正面处理分歧，更多选择回避、绕开或事后再说，有时会在私下与第三方议论。当同一个分歧被反复提起时，协作节奏会明显变慢。",
+    act:"把下一次分歧处理成一次公开沟通：提前 1 天写 3 句——争议点是什么、双方各自诉求是什么、你的方案是什么；在双方都在的会上先讲你的方案再请对方讲，会后 24 小时内补一句书面结论。"
+  },
+  rela: {
+    good:"无论对上、对平级还是对下属，您都保持着稳定的信任基础，需要推动事情时通常借得到力。您会记得并回应对方过往提过的关注点，关系不是等到有事才联系。",
+    ok:"关系维持得体，合作多依靠既有流程和上级的推动，主动维护的动作相对少。您与人相处能保持礼貌和分寸，但交情尚未深到可以在关键处直接求助。",
+    low:"您的关系偏「办事导向」，事情办完联系就少，人情与立场之间有时会缠在一起。对方或同事提醒过之后，您的做法有时仍保持原样。",
+    act:"每周主动联系 1 位半年以上没联系的合作方，只问近况或他上次提到的一件具体事，不带事务目的；连续做 8 周，看这条线是否随时能联系得上。"
+  },
+  infl: {
+    good:"在存在反对意见时，您能用事实加上对方在意的点来说服人，并给反对者留台阶，因此方案往往能推得动。推动过程中您会照顾对方的利益关切，而不只强调制度要求。",
+    ok:"说服效果更多来自职级、流程与已有的推动力，面对利益受损方时您的说服力度会下降。方案能否落地，取决于对方是否配合，而不是完全由您掌控。",
+    low:"推动事情时，您较多使用命令式或情绪化的施压方式；遇到推不动的情况，容易绕道、抱怨或干脆放弃。这类做法在团队内部容易积累阻力。",
+    act:"挑一件你推动不动的事项，按「他的顾虑—我能给的事实—对他有什么好处」写成三段，附一个可让步项，去谈一次，并记录对方真正的顾虑是什么。"
+  },
+  empa: {
+    good:"对方说出诉求之前，您往往已经察觉到情绪的转向，并能据此调整做法；面对立场不同的各方，您能分别说出他们的合理关切。同事情绪上的异常，您通常能较早发现并主动回应。",
+    ok:"您能理解对方明确说出来的诉求，但对情绪和话外意思的识别偏慢，常常要等对方点破才反应过来。在压力较大时，对他人情绪变化的关注容易让位给事情本身。",
+    low:"当对方用带情绪的方式表达时，您容易把它当成噪音处理，回应的重点仍放在事情对不对上。对方因此产生的反应和后续成本，在当时不容易被算进您的判断里。",
+    act:"每天练一次「先问后给」：给方案或结论前，先用一句话复述对方的诉求和情绪，对方点头后再开口，一周至少 3 次。"
+  },
+  team: {
+    good:"同事临时缺位时，您会主动接过超出职责范围的事，同时把代价和归属说清楚。协作中您不抢功也不甩锅，团队为配合付出的额外成本较低。",
+    ok:"配合度好，但多数情况下等指派才动；补位时边界说得比较软，容易被默认成理所当然地承接。别人也不好判断您究竟能接多少事。",
+    low:"接手他人事务时，边界有时比较模糊，团队无法预期您的安排；事情顺利时功劳的表述也可能偏多。责任不清时，容易出现互相推诿的情况。",
+    act:"下次接下超出职责的事时，同时说清三句：这周会多占我多少时间、这件事的成果记在谁名下、做完是否需要调整你手上的安排。"
+  },
+  comm: {
+    good:"对方说完后，您能用对方的语言把结论复述准确，说明您听懂了对方真正的诉求；对方表达完之后能自然地接下去讲。您的表达让别人不用反复确认，就知道信息已经到位。",
+    ok:"您能把话听完，但复述时会有偏差；表达偏信息堆叠，对方常需要再问一遍才确认自己被理解。关键信息要靠二次确认才能落地。",
+    low:"对方话没说完您就接上了自己的结论；表达方式会让对方明显不适，或转入防御姿态。信息在传递中容易变形，需要后续反复修正。",
+    act:"每次超过 10 分钟的沟通结束后，用对方的原话复述一遍结论并请对方确认；同时给对方留一条书面结论。"
+  },
+  self: {
+    good:"您能主动复盘自己的情绪触发点，说得出「当时心里第一反应是什么」，并据此调整下一次的做法；您的自我评价与实际表现基本一致。",
+    ok:"您知道自己情绪波动大的场景，但描述比较笼统，改进动作偶发出现、难以持续。调整常常靠事后提醒，而不是靠自己提前察觉。",
+    low:"遇到问题时您较多归因于外部环境或他人，追问几次仍停在「我没错」的判断上。自我评价与实际表现之间存在差距，而且不容易自己察觉。",
+    act:"每周挑 1 件事后仍有情绪的事，写 100 字复盘：我当时的触发点是什么、我当时的身体反应是什么、下次我会先做哪一步。"
+  }
+};
+
+/* ============================ 工具 ============================ */
+function $(id){return document.getElementById(id);}
+function el(tag, cls, html){var e=document.createElement(tag); if(cls)e.className=cls; if(html!=null)e.innerHTML=html; return e;}
+function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+function hash32(str){var h=2166136261>>>0; str=String(str); for(var i=0;i<str.length;i++){h^=str.charCodeAt(i); h=Math.imul(h,16777619)>>>0;} return (h & 0x3FFFFFFF)>>>0;}
+function pad(n){return String(n).padStart(2,"0");}
+function stamp(d){d=d||new Date(); return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())+" "+pad(d.getHours())+":"+pad(d.getMinutes());}
+function todayStr(d){d=d||new Date(); return ""+d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate());}
+function maskId(id){ if(!id||id.length<10) return (id||""); return id.slice(0,6)+"********"+id.slice(-4); }
+function validId(id){
+  if(!/^\d{17}[\dXx]$/.test(id)) return "身份证号格式不正确（应为 18 位）";
+  var w=[7,9,10,5,8,4,2,1,6,3,7,9,10,5,8,4,2], c="10X98765432", s=0;
+  for(var i=0;i<17;i++) s+=parseInt(id[i],10)*w[i];
+  if(c[s%11]!==id[17].toUpperCase()) return "身份证号校验位不正确，请核对";
+  var y=+id.slice(6,10), m=+id.slice(10,12), d=+id.slice(12,14);
+  if(y<1950||y>new Date().getFullYear()) return "身份证号中的出生年份不合理";
+  if(m<1||m>12||d<1||d>31) return "身份证号中的出生日期不合理";
+  return "";
+}
+function candidateBand(v){
+  if(v>=CFG.advantageLine) return {name:"优势", cls:"t-good", key:"good"};
+  if(v>=CFG.passLine) return {name:"达标", cls:"t-neu", key:"ok"};
+  return {name:"待提升", cls:"t-sand", key:"low"};
+}
+function internalBand(v){
+  if(v>=4) return {name:"优势区", cls:"t-good"};
+  if(v>=3.4) return {name:"稳健区", cls:"t-good"};
+  if(v>=3) return {name:"达标区", cls:"t-neu"};
+  if(v>=2.4) return {name:"带教区", cls:"t-sand"};
+  return {name:"风险区", cls:"t-red"};
+}
+/* 解码题目：正确选项与分值经过编码，页面不直接给出答案 */
+function decodeItem(q){
+  var key=hash32(q.id+"|"+q.dimension+"|4");
+  var v=(parseInt(q.c,16) ^ key)>>>0;
+  var bestIdx=v%4, t=Math.floor(v/4), s1=t%4, s2=Math.floor(t/4)%4;
+  return {ans:"ABCD"[bestIdx],
+          second:(s1>0? "ABCD"[s1-1] : null),
+          third:(s2>0? "ABCD"[s2-1] : null)};
+}
+function randomCode(n){
+  var arr=new Uint32Array(n), out="";
+  if(window.crypto&&window.crypto.getRandomValues){ window.crypto.getRandomValues(arr); }
+  else { for(var i=0;i<n;i++) arr[i]=Math.floor(Math.random()*4294967296); }
+  for(var i=0;i<n;i++) out+=CHARS[arr[i]%CHARS.length];
+  return out;
+}
+function makeCode(){
+  var d=todayStr(), base="EQ-"+d;
+  var rnd, code, chk;
+  do{
+    rnd=randomCode(6);
+    chk=hash32(base+"-"+rnd).toString(16).toUpperCase().slice(0,4);
+    while(chk.length<4) chk="0"+chk;
+    code=base+"-"+rnd+"-"+chk;
+  }while(localStorage.getItem(CFG.draftKey+"_codes") && (localStorage.getItem(CFG.draftKey+"_codes")||"").indexOf(code)>=0);
+  return code;
+}
+
+/* ============================ 状态 ============================ */
+var ST = {consent:false, name:"", idLast4:"", idHash:"", code:"", self:{}, sjt:{}, notes:{}, perm:{}, startedAt:0, submitted:false};
+
+function saveDraft(){ try{ localStorage.setItem(CFG.draftKey, JSON.stringify(ST)); }catch(e){} }
+function loadDraft(){ try{ var s=localStorage.getItem(CFG.draftKey); return s?JSON.parse(s):null; }catch(e){ return null; } }
+function clearAll(){ try{ localStorage.removeItem(CFG.draftKey); localStorage.removeItem(CFG.doneKey); }catch(e){} }
+
+/* ============================ 页面切换 ============================ */
+var SECS=["intro","consent","info","self","sjt","result"];
+function show(name){
+  SECS.forEach(function(s){ $("s-"+s).classList.toggle("hide", s!==name); });
+  var idx=SECS.indexOf(name);
+  Array.prototype.forEach.call(document.querySelectorAll("#steps .step"), function(st){
+    var i=SECS.indexOf(st.getAttribute("data-s"));
+    st.classList.toggle("on", i===idx); st.classList.toggle("done", i<idx);
+  });
+  window.scrollTo({top:0});
+}
+
+/* ============================ 选项乱序 ============================ */
+function buildPerm(){
+  if(ST.perm && Object.keys(ST.perm).length) return;
+  ST.perm={};
+  BANK.sjt.forEach(function(q){
+    if(q.consistency) return;           /* 一致性题保持顺序：A/B 积极、C/D 消极 */
+    var arr=["A","B","C","D"];
+    for(var i=arr.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=arr[i]; arr[i]=arr[j]; arr[j]=t; }
+    ST.perm[q.id]=arr;
+  });
+  saveDraft();
+}
+function permOf(q){ return (q.consistency) ? ["A","B","C","D"] : (ST.perm[q.id]||["A","B","C","D"]); }
+function origLetter(q, displayLetter){ var p=permOf(q); var i=p.indexOf(displayLetter); return i>=0? p[i] : displayLetter; }
+
+/* ============================ 渲染：自评 ============================ */
+function renderSelf(){
+  var box=$("self-list"); box.innerHTML="";
+  BANK.self_items.forEach(function(it){
+    var q=el("div","q");
+    q.innerHTML='<div class="qh"><span class="qn">'+esc(it.id)+'</span><span class="qt">'+esc(it.text)+'</span></div>';
+    var sc=el("div","scale");
+    for(var v=BANK.self_scale.min; v<=BANK.self_scale.max; v++){
+      var lab=el("label","sc");
+      lab.innerHTML='<input type="radio" name="self_'+esc(it.id)+'" value="'+v+'"><span>'+v+'</span>';
+      lab.querySelector("input").addEventListener("change", function(e){ ST.self[it.id]=+e.target.value; saveDraft(); updateSelfCount(); });
+      if(ST.self[it.id]===v) lab.querySelector("input").checked=true;
+      sc.appendChild(lab);
+    }
+    q.appendChild(sc);
+    q.appendChild(el("p","muted","1 = 完全不符合　7 = 完全符合"));
+    box.appendChild(q);
+  });
+  updateSelfCount();
+}
+function updateSelfCount(){
+  var done=Object.keys(ST.self).length, total=BANK.self_items.length;
+  $("self-count").textContent="已作答 "+done+" / "+total+" 题";
+  $("self-bar").style.width=(total? Math.round(done/total*100):0)+"%";
+}
+
+/* ============================ 渲染：情境题 ============================ */
+function renderSjt(){
+  var box=$("sjt-list"); box.innerHTML="";
+  BANK.sjt.forEach(function(it,i){
+    var q=el("div","q");
+    q.innerHTML='<div class="qh"><span class="qn">'+pad(i+1)+'</span><span class="qt">'+esc(it.stem)+'</span></div>';
+    var wb=el("div","writebox");
+    wb.innerHTML='<label>先写一句：我会怎么做（建议写下再选）</label><textarea data-note="'+esc(it.id)+'" placeholder="例：我会先私下找他确认是不是沟通上有误会，再一起看排期依据。">'+esc(ST.notes[it.id]||"")+'</textarea>';
+    q.appendChild(wb);
+    var opts=el("div","opts");
+    permOf(it).forEach(function(k){
+      var o=el("label","opt");
+      o.innerHTML='<input type="radio" name="q_'+esc(it.id)+'" value="'+k+'"><span><b>'+k+'.</b> '+esc(it.options[k])+'</span>';
+      o.querySelector("input").addEventListener("change", function(e){
+        ST.sjt[it.id]=e.target.value; saveDraft(); updateSjtCount();
+        Array.prototype.forEach.call(o.parentNode.children, function(c){c.classList.remove("sel");});
+        o.classList.add("sel");
+      });
+      if(ST.sjt[it.id]===k){ o.querySelector("input").checked=true; o.classList.add("sel"); }
+      opts.appendChild(o);
+    });
+    q.appendChild(opts);
+    wb.querySelector("textarea").addEventListener("input", function(e){ ST.notes[it.id]=e.target.value; saveDraft(); });
+    box.appendChild(q);
+  });
+  updateSjtCount();
+}
+function updateSjtCount(){
+  var done=Object.keys(ST.sjt).length, total=BANK.sjt.length;
+  $("sjt-count").textContent="已作答 "+done+" / "+total+" 题";
+  $("sjt-bar").style.width=(total? Math.round(done/total*100):0)+"%";
+}
+
+/* ============================ 计分 ============================ */
+function compute(){
+  var dims={}, total=0;
+  DIMS.forEach(function(d){
+    var items=BANK.sjt.filter(function(q){return q.dimension===d.key && !q.consistency;});
+    var max=items.length*2, sum=0, answered=0;
+    items.forEach(function(q){
+      var disp=ST.sjt[q.id]; if(!disp) return; answered++;
+      var dec=decodeItem(q), orig=origLetter(q,disp);
+      if(orig===dec.ans) sum+=2;
+      else if(dec.second && orig===dec.second) sum+=1;
+      else if(dec.third && orig===dec.third) sum+=1;
+    });
+    var score=max? Math.round(sum/max*5*100)/100 : 0;
+    dims[d.key]={score:score, raw:sum, max:max, answered:answered, items:items.length};
+  });
+
+  /* 一致性检查（同一情境两种问法） */
+  var pairs={}, consItems=BANK.sjt.filter(function(q){return q.consistency;});
+  consItems.forEach(function(q){ (pairs[q.pair]=pairs[q.pair]||[]).push(q); });
+  var consDetail=[], consOk=0, consTotal=0;
+  Object.keys(pairs).forEach(function(p){
+    var list=pairs[p], vals=list.map(function(q){return ST.sjt[q.id];});
+    if(vals.some(function(v){return !v;})){ consDetail.push({pair:p, state:"未答完"}); return; }
+    var cls=vals.map(function(v){return (v==="A"||v==="B")?"pos":"neg";});
+    consTotal++;
+    if(cls[0]===cls[1]){ consOk++; consDetail.push({pair:p, state:"一致"}); }
+    else consDetail.push({pair:p, state:"需复核"});
+  });
+  var consState = consTotal===0 ? "无" : (consOk===consTotal ? "一致" : (consOk>0 ? "部分需复核" : "需复核"));
+
+  /* 自评对照 */
+  var selfDims={}, devList=[];
+  DIMS.forEach(function(d){
+    var items=BANK.self_items.filter(function(x){return x.dimension===d.key;});
+    if(!items.length || !Object.keys(ST.self).length) return;
+    var vals=items.map(function(x){ var v=ST.self[x.id]; if(v==null) return null; return x.reverse? (8-v):v; }).filter(function(v){return v!=null;});
+    if(!vals.length) return;
+    var avg=vals.reduce(function(a,b){return a+b;},0)/vals.length;
+    var norm=Math.round((avg-1)/6*5*100)/100;
+    selfDims[d.key]=norm;
+    var gapBand = candidateBand(norm).key===candidateBand(dims[d.key].score).key ? 0 : 1;
+    var gap = (candidateBand(norm).key==="good" && candidateBand(dims[d.key].score).key==="low") ? 2 : 0;
+    var dev=Math.abs(norm-dims[d.key].score);
+    if(gap>=2 || dev>1.5){
+      devList.push({key:d.key,name:d.name,self:norm,sjt:dims[d.key].score,dev:Math.round(dev*100)/100});
+      dims[d.key].capped=true;
+      dims[d.key].score=Math.min(dims[d.key].score,3);   /* 需复核维度按上限 3 分计 */
+    }
+  });
+
+  /* 伪装信号：同向全选 / 作答过快 */
+  var letters={}, scoredN=0;
+  BANK.sjt.forEach(function(q){ if(q.consistency) return; var d=ST.sjt[q.id]; if(!d) return; var o=origLetter(q,d); letters[o]=(letters[o]||0)+1; scoredN++; });
+  var maxLetter=0, maxCount=0;
+  Object.keys(letters).forEach(function(k){ if(letters[k]>maxCount){maxCount=letters[k]; maxLetter=k;} });
+  var sameRatio = scoredN? maxCount/scoredN : 0;
+  var elapsed = ST.startedAt? Math.round((Date.now()-ST.startedAt)/1000) : 0;
+  var fast = elapsed>0 && elapsed<180;
+  var fakeSignal = sameRatio>=0.6 || fast;
+  if(fakeSignal){ DIMS.forEach(function(d){ dims[d.key].score=Math.min(dims[d.key].score,3); dims[d.key].capped=true; }); }
+
+  /* 汇总与判定 */
+  DIMS.forEach(function(d){ total += dims[d.key].score*d.weight/100; });   /* 0–5 制加权平均：Σ(分×权重%)/100 */
+  total=Math.round(total*100)/100;
+  var minD=Math.min.apply(null, DIMS.map(function(d){return dims[d.key].score;}));
+  minD=Math.round(minD*100)/100;
+  var verdict, verdictNote;
+  if(total>=CFG.passLine && minD>=CFG.collapse && consState!=="需复核" && consState!=="部分需复核" && devList.length===0 && !fakeSignal){
+    verdict="行"; verdictNote="加权总分与各项下限均达到岗位要求，建议录用并按带教项跟进";
+  } else if(total>=CFG.condLine && minD>=CFG.collapse){
+    verdict="有条件行"; verdictNote="总分达到基本要求，但存在需要带教或复核的项，建议试岗 / 带教 90 天后复评";
+  } else {
+    verdict="不行"; verdictNote="存在明显未达岗位要求的项目";
+  }
+  if(consState!=="一致" && consState!=="无" && verdict==="行"){ verdict="有条件行"; verdictNote="同一情境两种问法给出相反方向的选择，需在面谈中复核后再定档"; }
+  if(devList.length && verdict==="行"){ verdict="有条件行"; verdictNote="自评与情境作答差距较大，需在面谈中复核后再定档"; }
+  if(fakeSignal && verdict==="行"){ verdict="有条件行"; verdictNote="检测到同向作答或作答过快信号，结果仅供参考，需复核"; }
+
+  var outer={}, outerScore={};
+  DIMS.forEach(function(d){ (outer[d.outer]=outer[d.outer]||[]).push(d.key); });
+  Object.keys(outer).forEach(function(o){
+    var keys=outer[o];
+    outerScore[o]=Math.round(keys.reduce(function(a,k){return a+dims[k].score;},0)/keys.length*100)/100;
+  });
+
+  return {dims:dims,total:total,pct:Math.round(total*20*10)/10,verdict:verdict,verdictNote:verdictNote,
+          minD:minD,cons:consState,consDetail:consDetail,selfState:(!Object.keys(ST.self).length?"未作答":(devList.length?"需复核":"一致")),
+          selfDims:selfDims,devList:devList,outer:outerScore,outerKeys:outer,
+          fakeSignal:fakeSignal,sameRatio:Math.round(sameRatio*100)/100,elapsed:elapsed};
+}
+
+/* ============================ 雷达图 ============================ */
+function radarSvg(res){
+  var n=DIMS.length,cx=400,cy=330,R=232,labels=[],vals=[],p50=[];
+  DIMS.forEach(function(d){ labels.push(d.name); vals.push(res.dims[d.key].score); p50.push(CFG.p50[d.key]); });
+  function pt(i,v,r){ var ang=-Math.PI/2+2*Math.PI*i/n, rr=r||R*(v/5); return [cx+rr*Math.cos(ang), cy+rr*Math.sin(ang)]; }
+  var s=['<svg viewBox="0 0 800 700" class="radar" role="img" aria-label="八项能力画像">'];
+  for(var r=1;r<=5;r++){ var pts=[]; for(var i=0;i<n;i++){var p=pt(i,r); pts.push(p[0].toFixed(1)+","+p[1].toFixed(1));} s.push('<polygon points="'+pts.join(" ")+'" fill="none" stroke="#DCE4DF"/>'); }
+  for(var i=0;i<n;i++){ var a=pt(i,5), b=pt(i,0); s.push('<line x1="'+b[0].toFixed(1)+'" y1="'+b[1].toFixed(1)+'" x2="'+a[0].toFixed(1)+'" y2="'+a[1].toFixed(1)+'" stroke="#E6EAE7"/>'); }
+  [1,3,5].forEach(function(v){ var p=pt(0,v); s.push('<text x="'+(p[0]-8).toFixed(1)+'" y="'+(p[1]+4).toFixed(1)+'" font-size="11" fill="#9AA8A1" text-anchor="end">'+v+'</text>'); });
+  var pl=[]; for(var i=0;i<n;i++){var p=pt(i,CFG.passLine); pl.push(p[0].toFixed(1)+","+p[1].toFixed(1));}
+  s.push('<polygon points="'+pl.join(" ")+'" fill="none" stroke="#C0453B" stroke-width="1.6" stroke-dasharray="6 4"/>');
+  var pl2=[]; for(var i=0;i<n;i++){var p=pt(i,p50[i]); pl2.push(p[0].toFixed(1)+","+p[1].toFixed(1));}
+  s.push('<polygon points="'+pl2.join(" ")+'" fill="#3D7A5B" fill-opacity="0.07" stroke="#3D7A5B" stroke-width="1.3" stroke-dasharray="3 3"/>');
+  var pl3=[]; for(var i=0;i<n;i++){var p=pt(i,vals[i]); pl3.push(p[0].toFixed(1)+","+p[1].toFixed(1));}
+  s.push('<polygon points="'+pl3.join(" ")+'" fill="#C9A55C" fill-opacity="0.28" stroke="#B08A3C" stroke-width="2.3"/>');
+  for(var i=0;i<n;i++){ var p=pt(i,vals[i]); s.push('<circle cx="'+p[0].toFixed(1)+'" cy="'+p[1].toFixed(1)+'" r="4.6" fill="#B08A3C" stroke="#fff" stroke-width="1.8"/>'); }
+  for(var i=0;i<n;i++){
+    var p=pt(i,5,R+52), ang=-Math.PI/2+2*Math.PI*i/n, anchor="middle";
+    if(Math.cos(ang)>0.35) anchor="start"; else if(Math.cos(ang)<-0.35) anchor="end";
+    s.push('<text x="'+p[0].toFixed(1)+'" y="'+(p[1]-4).toFixed(1)+'" font-size="14" font-weight="700" fill="#1D2A23" text-anchor="'+anchor+'">'+esc(labels[i])+'</text>');
+    s.push('<text x="'+p[0].toFixed(1)+'" y="'+(p[1]+14).toFixed(1)+'" font-size="11.5" fill="#6B7C74" text-anchor="'+anchor+'">'+vals[i].toFixed(1)+' 分</text>');
+  }
+  s.push('<g transform="translate(40,676)">');
+  var items=[["#B08A3C","你的得分",2.3,""],["#C0453B","合格线 3.0",1.6,"6 4"],["#3D7A5B","同类岗位在岗者参照",1.3,"3 3"]], ox=0;
+  items.forEach(function(it){ s.push('<line x1="'+ox+'" y1="0" x2="'+(ox+26)+'" y2="0" stroke="'+it[0]+'" stroke-width="'+it[2]+'"'+(it[3]?' stroke-dasharray="'+it[3]+'"':'')+'/>'); s.push('<text x="'+(ox+33)+'" y="4" font-size="12" fill="#42544B">'+it[1]+'</text>'); ox+=33+it[1].length*12+26; });
+  s.push('</g></svg>');
+  return s.join("");
+}
+
+/* ============================ 结果渲染 ============================ */
+function renderResult(res){
+  var name=ST.name||"您";
+  var scores=DIMS.map(function(d){return d.name+" "+res.dims[d.key].score.toFixed(1);}).join("、");
+  var lead='本次测试呈现的是您在本次作答中体现出的行为倾向，不是对您个人的评价结论，也不构成录用结论。<br>'+
+    '<b>'+esc(name)+'</b>，您的加权总分为 <b>'+res.total.toFixed(2)+'</b> 分（百分制 '+res.pct+'）；八个维度的得分依次是：'+esc(scores)+'。<br>'+
+    '下面每一项都按「在什么情况下、您通常会怎么做」来描述，供您对照自己在真实工作中的做法参考；标为「待提升」的部分，是这次最值得练的两三项。';
+  $("res-lead").innerHTML=lead;
+
+  var outerBox=$("res-outer"); outerBox.innerHTML="";
+  ["A","B","C","D"].forEach(function(oc){
+    var d=DIMS.filter(function(x){return x.outer===oc;})[0]; if(!d) return;
+    var keys=res.outerKeys[oc], sc=res.outer[oc], b=candidateBand(sc);
+    var names=keys.map(function(k){ var f=DIMS.filter(function(x){return x.key===k;})[0]; return f.name; }).join(" + ");
+    var c=el("div","dimc");
+    c.innerHTML='<div class="code">对外维度 '+oc+'</div><h4>'+esc(d.outer_name)+'</h4><div class="subs">'+esc(names)+'</div>'+
+                '<div class="sc">'+sc.toFixed(2)+' <small>/ 5.0</small></div>'+
+                '<div style="margin-top:6px"><span class="tag '+b.cls+'">'+b.name+'</span></div>';
+    outerBox.appendChild(c);
+  });
+
+  $("res-radar").innerHTML=radarSvg(res);
+
+  var rows=$("res-rows"); rows.innerHTML="";
+  DIMS.slice().sort(function(a,b){return res.dims[b.key].score-res.dims[a.key].score;}).forEach(function(d){
+    var sc=res.dims[d.key].score, b=candidateBand(sc), copy=DIMCOPY[d.key]||{};
+    var text = b.key==="good"?copy.good:(b.key==="ok"?copy.ok:copy.low);
+    var r=el("div","row");
+    r.innerHTML='<div class="rh"><b>'+esc(d.name)+'</b><span class="pill">'+esc(d.outer_name)+'</span>'+
+                '<span class="tag '+b.cls+'">'+b.name+'</span><span class="num">'+sc.toFixed(1)+'<small style="font-size:12px;color:#77867D"> / 5.0</small></span></div>'+
+                '<p>'+esc(text)+'</p>'+
+                '<div class="act">练习动作：'+esc(copy.act||"")+'</div>';
+    rows.appendChild(r);
+  });
+
+  var sorted=DIMS.slice().sort(function(a,b){return res.dims[a.key].score-res.dims[b.key].score;});
+  var low1=sorted[0], low2=sorted[1], high=sorted[sorted.length-1];
+  var adv='';
+  adv+='<div class="card tight" style="background:#FBFAF6;margin-bottom:10px"><b>建议一｜先补最短的一块。</b> '+esc(name)+'，本次 '+esc(low1.name)+' 是您得分最低的维度（'+res.dims[low1.key].score.toFixed(1)+' 分，百分制 '+Math.round(res.dims[low1.key].score*20)+'）。未来 30 天，请按下面的「'+esc(low1.name)+'·练习动作」练 4 次，每次留一条记录，30 天后回看记录，看做法是否稳定。<div class="act" style="margin-top:7px;font-size:13.2px;background:#F5F0E4;border-radius:8px;padding:8px 11px;line-height:1.8">'+esc(DIMCOPY[low1.key].act)+'</div></div>';
+  adv+='<div class="card tight" style="background:#FBFAF6;margin-bottom:10px"><b>建议二｜再补第二块。</b> 次低的是 '+esc(low2.name)+'（'+res.dims[low2.key].score.toFixed(1)+' 分），同样用 30 天、每周 1–2 次的节奏做「'+esc(low2.name)+'·练习动作」。两项不要同时开始，先把第一项练到稳定，再加第二项。<div class="act" style="margin-top:7px;font-size:13.2px;background:#F5F0E4;border-radius:8px;padding:8px 11px;line-height:1.8">'+esc(DIMCOPY[low2.key].act)+'</div></div>';
+  adv+='<div class="card tight" style="background:#FBFAF6"><b>建议三｜把长板变成习惯。</b> '+esc(high.name)+' 是您本次最稳定的一项（'+res.dims[high.key].score.toFixed(1)+' 分）。建议把它变成可交接的做法：把您在这件事上的具体步骤写成 5 行清单，给一位同事或新人照着做一次，看对方是否接得住。</div>';
+  $("res-advice").innerHTML=adv;
+
+  var order=DIMS.map(function(d){return d.name;});
+  var vals=DIMS.map(function(d){return res.dims[d.key].score.toFixed(1);});
+  $("res-summary").textContent="EQ测试 | "+ST.name+" | 身份证后4位 "+ST.idLast4+" | 八项得分("+order.join("/")+") = "+vals.join("/")+
+      " | 加权总分 "+res.total.toFixed(2)+" | 自评一致性 "+res.selfState+" | 情境题一致性 "+res.cons+" | 提交时间 "+stamp()+" | 测评编号 "+ST.code;
+
+  var hr=$("hr-content");
+  var t='<div class="card tight" style="background:#FBFAF6"><b>判定：</b><span class="tag '+(res.verdict==="行"?"t-good":(res.verdict==="有条件行"?"t-sand":"t-red"))+'">'+res.verdict+'</span> <span class="muted">'+esc(res.verdictNote)+'</span></div>';
+  t+='<table style="margin-top:10px"><thead><tr><th>子维度</th><th>权重</th><th>均分</th><th>贡献</th><th>最低分检查</th><th>内部档位</th><th>自评对照</th></tr></thead><tbody>';
+  DIMS.forEach(function(d){
+    var s=res.dims[d.key], b=internalBand(s.score), sv=res.selfDims[d.key];
+    t+='<tr><td><b>'+esc(d.name)+'</b></td><td>'+d.weight+'%</td><td>'+s.score.toFixed(2)+'</td><td>'+(s.score*d.weight/100).toFixed(2)+'</td>'+
+       '<td>'+(s.score<CFG.collapse?"塌陷":"正常")+'</td><td><span class="tag '+b.cls+'">'+b.name+'</span></td>'+
+       '<td>'+(sv==null?"—":sv.toFixed(2)+(Math.abs(sv-s.score)>1.5?"（差 "+Math.abs(sv-s.score).toFixed(1)+"，需复核）":""))+'</td></tr>';
+  });
+  t+='</tbody></table>';
+  t+='<p class="muted" style="margin-top:8px">加权总分 '+res.total.toFixed(2)+'（百分制 '+res.pct+'）｜合格线 '+CFG.passLine+'｜最低子维 '+res.minD+
+     '｜情境题一致性 '+res.cons+'｜自评一致性 '+res.selfState+'｜作答用时 '+(res.elapsed/60).toFixed(1)+' 分钟</p>';
+  if(res.devList.length){ t+='<div class="warn" style="margin-top:8px"><b>自评与作答背离：</b>'+res.devList.map(function(x){return x.name+"（自评 "+x.self+" / 作答 "+x.sjt+"）";}).join("；")+'，需在面谈中核实；该维按上限 3 分计。</div>'; }
+  if(res.consDetail.filter(function(c){return c.state==="需复核";}).length){
+    t+='<div class="warn" style="margin-top:8px"><b>情境题一致性矛盾：</b>'+res.consDetail.filter(function(c){return c.state==="需复核";}).map(function(c){return c.pair;}).join("；")+'，同一情境两种问法给出相反方向的选择，需复核作答意愿。</div>';
+  }
+  if(res.fakeSignal){
+    t+='<div class="warn" style="margin-top:8px"><b>伪装信号：</b>'+(res.sameRatio>=0.6?"同向作答占比 "+res.sameRatio+"%":"")+(res.elapsed&&res.elapsed<180?"；作答用时 "+res.elapsed+" 秒（偏快）":"")+'。全部维度按上限 3 分计，需复核。</div>';
+  }
+  hr.innerHTML=t;
+}
+
+/* ============================ 提交 ============================ */
+function submit(){
+  var missing=BANK.sjt.filter(function(q){return !ST.sjt[q.id];}).length;
+  if(missing>0){
+    var w=$("sjt-warn"); w.classList.remove("hide");
+    w.innerHTML="还有 <b>"+missing+"</b> 题未作答，未作答按 0 分计，会明显拉低总分。请回到上面补齐后再提交。";
+    return;
+  }
+  var res=compute();
+  ST.submitted=true; saveDraft();
+  try{ localStorage.setItem(CFG.doneKey, JSON.stringify({code:ST.code,name:ST.name,at:stamp(),res:res})); }catch(e){}
+  renderResult(res);
+  show("result");
+}
+
+/* ============================ 事件 ============================ */
+$("btn-start").addEventListener("click", function(){ ST.startedAt=Date.now(); saveDraft(); show("consent"); });
+$("consent-box").addEventListener("change", function(e){ $("btn-consent-ok").disabled=!e.target.checked; ST.consent=e.target.checked; saveDraft(); });
+$("btn-consent-ok").addEventListener("click", function(){ if(!ST.consent){alert("请先勾选知情同意");return;} show("info"); });
+
+$("in-name").addEventListener("input", function(e){ ST.name=e.target.value.trim(); saveDraft(); });
+$("in-id").addEventListener("input", function(e){
+  var v=e.target.value.replace(/\s/g,"").toUpperCase(); e.target.value=v;
+  var warn=$("id-warn");
+  if(v.length===18){ var err=validId(v); if(err){ warn.classList.remove("hide"); warn.textContent=err; } else { warn.classList.add("hide"); } }
+  else warn.classList.add("hide");
+});
+$("btn-info-ok").addEventListener("click", function(){
+  var n=ST.name, id=$("in-id").value.trim().toUpperCase();
+  if(!n){ alert("请填写姓名"); return; }
+  if(!id){ alert("请填写身份证号码"); return; }
+  var err=validId(id);
+  if(err){ var w=$("id-warn"); w.classList.remove("hide"); w.textContent=err; return; }
+  ST.idLast4=id.slice(-4);          /* 只留后 4 位，原文即丢弃 */
+  ST.idHash=hash32(id).toString(16);
+  ST.name=n;
+  if(!ST.code) ST.code=makeCode();
+  $("in-code").value=ST.code; saveDraft();
+  show("self");
+});
+$("btn-self-ok").addEventListener("click", function(){
+  var total=BANK.self_items.length, done=Object.keys(ST.self).length;
+  if(done<total){ if(!confirm("自评还有 "+(total-done)+" 题未作答，未作答不计入对照。继续？")) return; }
+  show("sjt");
+});
+$("btn-self-skip").addEventListener("click", function(){ ST.self={}; saveDraft(); show("sjt"); });
+$("btn-sjt-ok").addEventListener("click", submit);
+
+$("btn-copy").addEventListener("click", function(){
+  var t=$("res-summary").textContent;
+  var ta=document.createElement("textarea"); ta.value=t; document.body.appendChild(ta); ta.select();
+  var ok=false; try{ ok=document.execCommand("copy"); }catch(e){ ok=false; }
+  document.body.removeChild(ta);
+  $("copy-note").textContent= ok? "已复制，请粘贴给 HR。":"复制失败，请手动选中上面的文字复制。";
+});
+$("btn-download").addEventListener("click", function(){
+  var res=compute();
+  var payload={tool:"EQ在线测试",version:BANK.meta.version,code:ST.code,name:ST.name,idLast4:ST.idLast4,
+               submittedAt:stamp(),scores:res.dims,weightedTotal:res.total,pct:res.pct,verdict:res.verdict,
+               consistency:res.cons,selfConsistency:res.selfState,selfScores:res.selfDims,
+               fakingSignal:res.fakeSignal,elapsedSec:res.elapsed,notes:ST.notes,answers:ST.sjt};
+  var blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
+  var a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="EQ测试结果_"+ST.code+".json"; a.click();
+});
+$("btn-print").addEventListener("click", function(){ window.print(); });
+$("btn-hr").addEventListener("click", function(){
+  var p=prompt("请输入 HR 视图口令");
+  if(p===CFG.hrPass){ $("hr-box").classList.remove("hide"); $("hr-box").scrollIntoView({behavior:"smooth"}); }
+  else if(p!=null) alert("口令不正确");
+});
+function doClear(){ if(!confirm("清除本机保存的作答与结果？清除后无法恢复。")) return; clearAll(); location.reload(); }
+$("btn-clear").addEventListener("click", doClear);
+$("btn-clear-all").addEventListener("click", doClear);
+Array.prototype.forEach.call(document.querySelectorAll("[data-back]"), function(b){
+  b.addEventListener("click", function(){ show(b.getAttribute("data-back")); });
+});
+
+/* ============================ 初始化 ============================ */
+(function init(){
+  var draft=loadDraft();
+  if(draft){ ST=Object.assign(ST,draft); $("btn-resume").classList.remove("hide");
+    $("resume-note").textContent="检测到本机有未完成的作答（情境题已答 "+Object.keys(ST.sjt||{}).length+" 题），可继续。";
+    if(ST.name) $("in-name").value=ST.name;
+    if(ST.code) $("in-code").value=ST.code;
+  }
+  buildPerm(); renderSelf(); renderSjt();
+  show("intro");
+})();
+</script>
+</body>
+</html>

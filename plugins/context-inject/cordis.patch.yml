@@ -1,0 +1,31 @@
+# Bundle patch: 一次 pre-step 同时注入「经验 + 技能 + 记忆」，并关掉原来的两个注入插件。
+- insert:
+    - id: context-inject
+      name: '@local/context-inject'
+      config:
+        enabled: true
+        apiBase: https://memos.memtensor.cn/api/openmem/v1
+        userId: HR
+        apiKeyEnv: MEMOS_API_KEY
+        apiKey: mpg-hBClucRHzmRk7ML2Y9Qa148iZjAdl94JMsWH9QAR
+        kbId: basef0649423-0dab-4fc0-8c91-a585f66c0ba5
+        patternsDir: /Users/leto/.dsh/wiki/patterns
+        # 一次请求里同时取记忆事实、偏好、技能（KB），统一排序与预算
+        relativity: 0.45
+        skillThreshold: 0.5
+        shortQuerySkillThreshold: 0.6
+        maxMem: 4
+        maxSkills: 5
+        maxPatterns: 3
+        # 服务端候选池上限：给足才拿得到 skill 视图（4 会把 skill_detail_list 挤空），客户端再截断
+        serverLimit: 25
+        budgetChars: 800
+        timeoutMs: 1800
+        injectStep: 1
+        debugLog: /tmp/context-inject.log
+
+# 顶层裸条目＝按 id 覆盖已存在条目
+- id: memos-autoinject
+  disabled: true
+- id: wikiskill-inject
+  disabled: true

@@ -1,6 +1,0 @@
-{
-  "meta": {
-    "title": "Unified Context Inject",
-    "description": "Fetches wiki patterns, skill index and MemOS memories in a single request per turn and injects them as one budgeted, source-labeled context block."
-  }
-}

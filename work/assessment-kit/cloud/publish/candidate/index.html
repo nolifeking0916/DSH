@@ -1247,7 +1247,7 @@ window.REP = (function () {
       '<div class="terms">' + terms + "</div>" +
       limitBlock +
       '<div style="border-top:1px solid var(--line);padding-top:var(--sp-3)">' +
-      '<label class="check"><input type="checkbox" id="c-box"><span>我已阅读并理解以上八条说明，<b>自愿参加</b>本次测试。</span></label>' +
+      '<label class="check"><input type="checkbox" id="c-box" onchange="document.getElementById(\'c-ok\').disabled=!this.checked"><span>我已阅读并理解以上八条说明，<b>自愿参加</b>本次测试。</span></label>' +
       '<div style="display:flex;gap:var(--sp-2);margin-top:var(--sp-3)">' +
       '<button class="btn btn-primary" id="c-ok" style="flex:2" disabled onclick="APP.toQuiz()">' + esc(C.agreeBtn) + "</button>" +
       '<button class="btn btn-quiet" style="flex:1" onclick="APP.go(\'start\')">' + esc(C.quitBtn) + "</button>" +

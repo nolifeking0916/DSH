@@ -48,6 +48,10 @@ python3 pilot/analyze_annotations.py \
 [`ingest_real_说明.md`](ingest_real_说明.md)，标注工具见
 [`analyze_annotations_说明.md`](analyze_annotations_说明.md)。
 
+标注表本身不用手拼：`pilot/标注/` 下的四张表由 `python3 pilot/make_annotation_sheets.py`
+从题库生成（题库变了要重跑），**不含 anchor / rationale**；换位审计的映射只在
+`pilot/标注/锚定审计密钥_只给分析方.json` 里，**那份不要发给标注员**。
+
 > 录入的**硬错误是全量阻断**：一行写错整批不写。建议每收一份就转一次，
 > 别攒到最后。`ingest_report.json` 里的**提醒项**不阻断（缺层级、缺部门、
 > `actual_min` 与起止时刻矛盾等），归档前扫一眼。
@@ -111,6 +115,9 @@ python3 pilot/analyze.py --selftest-ci
 |---|---|
 | `preflight.py` | **发卷前预检**（成品/新鲜度/口径/四个门/两个工具自检/模板生成）|
 | `export_from_db.py` | **云端作答 → 流水线**的数据桥（导出 JSON → `real_samples.json` + 第 13 条的两个数）|
+| `make_annotation_sheets.py` | **双人标注 / 锚定审计的盲版工作表**：从题库生成 96×2 标注表 + 24×2 换位审计表（剥掉 anchor / rationale），并把填好的表合并成 `analyze_annotations.py` 的输入 |
+| `标注/` | 生成好的盲版表（xlsx + csv）、换位审计密钥（**只给分析方**）、给标注员的一页说明 |
+| `analyze_annotations.py` | **双人标注 / 仲裁 / 锚定审计的机器判定**（分歧率 ≤ 15%、命中率 ≥ 80%）：只判定不裁决 |
 | `施测动作清单_一份被试_20261025.md` | **施测人现场照着做的一页纸**（发卷/批次计时/收卷/登记/交接/异常）|
 | `录入链路演练_20261025.md` | 用手抄风格的假表撞录入工具的演练记录（非真人数据）|
 | `simulate.py` | 合成样本生成器：HR 画像注入真值、装分与社会赞许项、异常作答注入、α 自检对照数据集 |

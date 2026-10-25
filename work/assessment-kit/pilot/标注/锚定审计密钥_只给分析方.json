@@ -1,0 +1,152 @@
+{
+  "generated_at": "2026-10-25T18:01:17+08:00",
+  "source_items": "items/m1_items.json",
+  "source_sha256": "2f571f7f814086080bd827bfe9be75881c3d85a4f02b378b706eac0dbe39749f",
+  "rule": "每题把原有效端换到另一侧显示（a/b 互换）；命中 = 换位后仍选中同一个行为（choice == swapped_anchor）",
+  "items": [
+    {
+      "qid": "INT-05",
+      "dim": "INT",
+      "orig_anchor": "a",
+      "swapped_anchor": "b"
+    },
+    {
+      "qid": "INT-12",
+      "dim": "INT",
+      "orig_anchor": "b",
+      "swapped_anchor": "a"
+    },
+    {
+      "qid": "INT-09",
+      "dim": "INT",
+      "orig_anchor": "a",
+      "swapped_anchor": "b"
+    },
+    {
+      "qid": "INT-17",
+      "dim": "INT",
+      "orig_anchor": "a",
+      "swapped_anchor": "b"
+    },
+    {
+      "qid": "INT-07",
+      "dim": "INT",
+      "orig_anchor": "a",
+      "swapped_anchor": "b"
+    },
+    {
+      "qid": "INT-11",
+      "dim": "INT",
+      "orig_anchor": "a",
+      "swapped_anchor": "b"
+    },
+    {
+      "qid": "SNT-15",
+      "dim": "SNT",
+      "orig_anchor": "a",
+      "swapped_anchor": "b"
+    },
+    {
+      "qid": "SNT-05",
+      "dim": "SNT",
+      "orig_anchor": "a",
+      "swapped_anchor": "b"
+    },
+    {
+      "qid": "SNT-07",
+      "dim": "SNT",
+      "orig_anchor": "a",
+      "swapped_anchor": "b"
+    },
+    {
+      "qid": "SNT-08",
+      "dim": "SNT",
+      "orig_anchor": "b",
+      "swapped_anchor": "a"
+    },
+    {
+      "qid": "SNT-13",
+      "dim": "SNT",
+      "orig_anchor": "a",
+      "swapped_anchor": "b"
+    },
+    {
+      "qid": "SNT-03",
+      "dim": "SNT",
+      "orig_anchor": "a",
+      "swapped_anchor": "b"
+    },
+    {
+      "qid": "TFS-03",
+      "dim": "TFS",
+      "orig_anchor": "b",
+      "swapped_anchor": "a"
+    },
+    {
+      "qid": "TFS-04",
+      "dim": "TFS",
+      "orig_anchor": "a",
+      "swapped_anchor": "b"
+    },
+    {
+      "qid": "TFS-12",
+      "dim": "TFS",
+      "orig_anchor": "b",
+      "swapped_anchor": "a"
+    },
+    {
+      "qid": "TFS-15",
+      "dim": "TFS",
+      "orig_anchor": "a",
+      "swapped_anchor": "b"
+    },
+    {
+      "qid": "TFS-16",
+      "dim": "TFS",
+      "orig_anchor": "b",
+      "swapped_anchor": "a"
+    },
+    {
+      "qid": "TFS-02",
+      "dim": "TFS",
+      "orig_anchor": "b",
+      "swapped_anchor": "a"
+    },
+    {
+      "qid": "JPS-08",
+      "dim": "JPS",
+      "orig_anchor": "b",
+      "swapped_anchor": "a"
+    },
+    {
+      "qid": "JPS-16",
+      "dim": "JPS",
+      "orig_anchor": "b",
+      "swapped_anchor": "a"
+    },
+    {
+      "qid": "JPS-04",
+      "dim": "JPS",
+      "orig_anchor": "b",
+      "swapped_anchor": "a"
+    },
+    {
+      "qid": "JPS-07",
+      "dim": "JPS",
+      "orig_anchor": "a",
+      "swapped_anchor": "b"
+    },
+    {
+      "qid": "JPS-11",
+      "dim": "JPS",
+      "orig_anchor": "a",
+      "swapped_anchor": "b"
+    },
+    {
+      "qid": "JPS-15",
+      "dim": "JPS",
+      "orig_anchor": "a",
+      "swapped_anchor": "b"
+    }
+  ]
+}

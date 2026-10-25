@@ -67,6 +67,71 @@ def read_dump(path):
 
 
 # --------------------------------------------------------------- 单行体检
+def parse_pg_array(value):
+    """把 PostgreSQL 的数组字面量 "{0,1,NULL}" 解析成 Python 列表。
+
+    从 SQL 导出时数组列回来的就是这种字面量（带引号的元素按 PG 规则转义）；
+    驱动直接给列表时原样返回。
+    """
+    if value is None or isinstance(value, list):
+        return value
+    s = str(value).strip()
+    if s.startswith("["):
+        try:
+            return json.loads(s)
+        except Exception:
+            return value
+    if not (s.startswith("{") and s.endswith("}")):
+        return value
+    inner = s[1:-1]
+    if not inner.strip():
+        return []
+    parts = []
+    cur = ""
+    inq = False
+    for ch in inner:
+        if ch == '"':
+            inq = not inq
+            continue
+        if ch == "," and not inq:
+            parts.append(cur.strip())
+            cur = ""
+            continue
+        cur += ch
+    parts.append(cur.strip())
+    out = []
+    for t in parts:
+        if t.upper() == "NULL":
+            out.append(None)
+            continue
+        try:
+            out.append(int(t))
+        except ValueError:
+            out.append(t)
+    return out
+
+
+def parse_jsonb(value):
+    """JSONB 列从 SQL 导出时是字符串，要还原成对象。"""
+    if isinstance(value, str):
+        try:
+            return json.loads(value)
+        except Exception:
+            return value
+    return value
+
+
+def normalize_row(row):
+    """把 SQL 导出的行规整成工具内部用的形状（数组 / JSONB 还原）。"""
+    out = dict(row)
+    if "m1_raw" in out:
+        out["m1_raw"] = parse_pg_array(out["m1_raw"])
+    for k in ("m1_scores", "m2_result", "m3_result", "limit_hint"):
+        if k in out:
+            out[k] = parse_jsonb(out[k])
+    return out
+
+
 def check_row(row, item_count):
     """返回 (hard_errors, soft_warnings)。硬错误 = 整批阻断（与 ingest_real.py 同一纪律）。"""
     hard = []
@@ -110,6 +175,11 @@ def to_respondent(row, item_count):
     raw = [None if v is None else int(v) for v in row["m1_raw"]]
     nulls = sum(1 for v in raw if v is None)
     dur = row.get("duration_ms")
+    if isinstance(dur, str):
+        try:
+            dur = int(dur)
+        except Exception:
+            dur = None
     times = [int(round(dur / item_count))] * item_count if isinstance(dur, (int, float)) and dur else None
     resp = {
         "id": row["code"],
@@ -141,8 +211,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--dump", metavar="PATH", help="从云端导出的响应表 JSON")
     ap.add_argument("--out-dir", default=os.path.join(HERE, "out"), help="产物目录")
-    ap.add_argument("--exclude-unanswered", action="store_true",
-                    help="把有未答题的份数写进 excluded_ids.json（默认只报告、不剔除）")
+    ap.add_argument("--keep-unanswered", action="store_true",
+                    help="保留有未答题的份子进统计（默认剔除：维护者 2026-10-25 裁定 Q2=A）")
     ap.add_argument("--allow-partial", action="store_true",
                     help="允许带硬错误的行被跳过而不是整批阻断（默认：整批阻断、零输出）")
     ap.add_argument("--selftest", action="store_true", help="用造假数据自检搬运链路")
@@ -162,7 +232,7 @@ def main():
         print("用法：--dump PATH 或 --selftest")
         return 2
 
-    rows = read_dump(args.dump)
+    rows = [normalize_row(r) for r in read_dump(args.dump)]
     hard_all = []
     soft_all = []
     seen = {}
@@ -196,8 +266,10 @@ def main():
     incomplete = n - complete
     limit_hint_rows = [r["id"] for r in respondents if r.get("limit_hint")]
 
+    # Q2=A（维护者 2026-10-25）：有未答题的份子**整份剔除**，逐份登记。
+    # 要保留就显式加 --keep-unanswered。
     excluded = []
-    if args.exclude_unanswered:
+    if not args.keep_unanswered:
         excluded = [r["id"] for r in respondents if r["unanswered_count"] > 0]
 
     samples = {
@@ -230,7 +302,7 @@ def main():
         "unanswered_total": sum(r["unanswered_count"] for r in respondents),
         "limit_hint_rows": limit_hint_rows,
         "excluded_ids": excluded,
-        "exclude_unanswered_applied": bool(args.exclude_unanswered),
+        "exclude_unanswered_applied": not args.keep_unanswered,
         "hard_error_rows": hard_all,
         "soft_warning_rows": soft_all,
         "per_respondent": [

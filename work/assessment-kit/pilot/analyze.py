@@ -381,15 +381,19 @@ def detect_anomalies(r, nominal_min=12.0):
     阈值都是**临时值**：真人的逐题作答时间还没采集过，这里先用合成数据把规则
     跑通并给出召回/精确率；真人试测拿到真实时长分布后必须重新标定。
     """
-    resp, times = r["responses"], r["times_ms"]
+    resp = r["responses"]
+    times = r.get("times_ms") or []
     flags = []
     n = len(resp)
-    total_min = sum(times) / 60000.0
-    per_item_s = total_min * 60.0 / n
-    if per_item_s < 3.0:
-        flags.append("平均每题 < 3 秒")
-    if total_min < nominal_min * 0.40:
-        flags.append("总时长不足名义时长 40%")
+    # 逐题耗时可能没有（自助链接模式服务端拿不到逐题时间）；
+    # 没有就不做这两条**时长类**粗筛，而不是当成 0 秒去报警。
+    if times and len(times) == n:
+        total_min = sum(times) / 60000.0
+        per_item_s = total_min * 60.0 / n
+        if per_item_s < 3.0:
+            flags.append("平均每题 < 3 秒")
+        if total_min < nominal_min * 0.40:
+            flags.append("总时长不足名义时长 40%")
     same = max(sum(1 for x in resp if x == 0), sum(1 for x in resp if x == 1)) / n
     if same > 0.90:
         flags.append("同侧作答 > 90%")

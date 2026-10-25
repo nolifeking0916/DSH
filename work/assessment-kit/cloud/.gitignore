@@ -1,0 +1,6 @@
+# 云端构建产物与「服务端专属载荷」不进仓（可由 cloud/build_keys.py 重新生成）
+out/
+*.zip
+functions/assessment/keys.json
+functions/assessment/report.js
+functions/assessment/copy.js

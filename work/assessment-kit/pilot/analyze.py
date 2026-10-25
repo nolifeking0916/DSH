@@ -112,6 +112,215 @@ def split_half(matrix):
     return {"odd_sum": so, "even_sum": se, "r": r, "spearman_brown": sb}
 
 
+# ------------------------------------------- 区间（Feldt 型解析式 + 重抽样）
+# 口径出处（仓内既有笔记，本轮不新查）：
+#   research/样本量与信度推断边界_20261025.md §1.2（区间式，与 R 的 psych::alpha.ci 同式）
+#     §1.4（唯一站得住的判定写法：整段区间在阈值同一侧）
+#   research/信度结论写法_三选一_20261025.md §2.1（票 #29 裁定的 A 案报告模板）
+# 仓内不依赖 scipy：F 分布分位数用正则化不完全贝塔 + 二分求解。
+
+def _betacf(a, b, x, itmax=300, eps=3.0e-16, fpmin=1.0e-300):
+    """连分式（Numerical Recipes 的 betacf）。"""
+    qab = a + b
+    qap = a + 1.0
+    qam = a - 1.0
+    c = 1.0
+    d = 1.0 - qab * x / qap
+    if abs(d) < fpmin:
+        d = fpmin
+    d = 1.0 / d
+    h = d
+    for m in range(1, itmax + 1):
+        m2 = 2 * m
+        aa = m * (b - m) * x / ((qam + m2) * (a + m2))
+        d = 1.0 + aa * d
+        if abs(d) < fpmin:
+            d = fpmin
+        c = 1.0 + aa / c
+        if abs(c) < fpmin:
+            c = fpmin
+        d = 1.0 / d
+        h *= d * c
+        aa = -(a + m) * (qab + m) * x / ((a + m2) * (qap + m2))
+        d = 1.0 + aa * d
+        if abs(d) < fpmin:
+            d = fpmin
+        c = 1.0 + aa / c
+        if abs(c) < fpmin:
+            c = fpmin
+        d = 1.0 / d
+        de = d * c
+        h *= de
+        if abs(de - 1.0) < eps:
+            break
+    return h
+
+
+def betainc(a, b, x):
+    """正则化不完全贝塔函数 I_x(a, b)。"""
+    if x <= 0.0:
+        return 0.0
+    if x >= 1.0:
+        return 1.0
+    lbeta = math.lgamma(a + b) - math.lgamma(a) - math.lgamma(b)
+    if x < (a + 1.0) / (a + b + 2.0):
+        return math.exp(lbeta + a * math.log(x) + b * math.log1p(-x)) * _betacf(a, b, x) / a
+    return 1.0 - math.exp(lbeta + b * math.log1p(-x) + a * math.log(x)) * _betacf(b, a, 1.0 - x) / b
+
+
+def f_cdf(x, d1, d2):
+    """F 分布的累积分布。"""
+    if x <= 0.0:
+        return 0.0
+    return betainc(d1 / 2.0, d2 / 2.0, d1 * x / (d1 * x + d2))
+
+
+def f_quantile(p, d1, d2, iters=200):
+    """F 分布分位数（对 CDF 二分求解）。"""
+    lo = 0.0
+    hi = 1.0
+    while f_cdf(hi, d1, d2) < p and hi < 1.0e12:
+        hi *= 2.0
+    for _ in range(iters):
+        mid = (lo + hi) / 2.0
+        if f_cdf(mid, d1, d2) < p:
+            lo = mid
+        else:
+            hi = mid
+    return (lo + hi) / 2.0
+
+
+def alpha_ci_feldt(alpha_hat, n, k, conf=0.95):
+    """α 的置信区间（Feldt 型解析式，等价于 R 的 psych::alpha.ci）。
+
+    下界 = 1 − (1−α̂)·qF(1−(1−conf)/2, n−1, (n−1)(k−1))
+    上界 = 1 − (1−α̂)·qF((1−conf)/2, n−1, (n−1)(k−1))
+    """
+    if not (alpha_hat == alpha_hat) or n < 3 or k < 2:
+        return None
+    d1 = float(n - 1)
+    d2 = float((n - 1) * (k - 1))
+    half = (1.0 - conf) / 2.0
+    q_low = f_quantile(half, d1, d2)        # 小分位 → 区间上界
+    q_high = f_quantile(1.0 - half, d1, d2)  # 大分位 → 区间下界
+    return (1.0 - (1.0 - alpha_hat) * q_high, 1.0 - (1.0 - alpha_hat) * q_low)
+
+
+def alpha_verdict(ci, threshold=ALPHA_MIN):
+    """按「整段区间在阈值同一侧」下结论——票 #29 A 案唯一站得住的写法。
+
+    三态：整段在阈值之上 / 整段在阈值之下 / 跨线（不确定，本轮不判定达标与否）。
+    """
+    if not ci:
+        return {"verdict": "区间不可得（样本量或题数不足）", "class": "undetermined"}
+    lo, hi = ci
+    if lo > threshold:
+        return {"verdict": "整段区间在 %.2f 之上（稳健达标）" % threshold, "class": "above"}
+    if hi < threshold:
+        return {"verdict": "整段区间在 %.2f 之下（内部一致性明显不足，需补题或合并维度）" % threshold,
+                "class": "below"}
+    return {"verdict": "区间跨线（结论只能是「不确定」，本轮不判定达标与否）", "class": "crossing"}
+
+
+def percentile(values, p):
+    """线性插值分位数（与 percentile_cutpoints 同一口径）。"""
+    v = sorted(values)
+    if not v:
+        return float("nan")
+    k = (p / 100.0) * (len(v) - 1)
+    f = math.floor(k)
+    c = math.ceil(k)
+    return v[int(k)] if f == c else v[f] + (v[c] - v[f]) * (k - f)
+
+
+def split_half_ci(matrix, conf=0.95, reps=1000, seed=20261025):
+    """分半信度的 95% 区间（重抽样；本项目没有可用的解析式）。
+
+    口径出处：research/信度结论写法_三选一_20261025.md §2.1（分半区间须由重抽样给出）。
+    """
+    n = len(matrix)
+    if n < 4:
+        return None
+    rng = random.Random(seed)
+    vals = []
+    for _ in range(reps):
+        m = [matrix[rng.randrange(n)] for _ in range(n)]
+        v = split_half(m)["spearman_brown"]
+        if v == v:
+            vals.append(v)
+    if len(vals) < 20:
+        return None
+    half = (1.0 - conf) / 2.0
+    return (percentile(vals, half * 100.0), percentile(vals, (1.0 - half) * 100.0))
+
+
+def alpha_gate(n, k, threshold=ALPHA_MIN, side="above"):
+    """求「区间整段落在阈值同一侧」所需的 α̂ 门限（二分）。
+
+    对应 research/样本量与信度推断边界_20261025.md §1.4 的那两张门限表。
+    """
+    def f(ah):
+        ci = alpha_ci_feldt(ah, n, k)
+        return (ci[0] - threshold) if side == "above" else (ci[1] - threshold)
+
+    lo, hi = 0.0, 1.0
+    for _ in range(80):
+        mid = (lo + hi) / 2.0
+        fm = f(mid)
+        if side == "above":
+            # f 随 α̂ 单调增：f(mid) ≥ 0 说明 mid 已在根之上
+            if fm >= 0:
+                hi = mid
+            else:
+                lo = mid
+        else:
+            # f 随 α̂ 单调增：f(mid) ≤ 0 说明还没到根，根更大
+            if fm <= 0:
+                lo = mid
+            else:
+                hi = mid
+    return (lo + hi) / 2.0
+
+
+# 自检基准：仓内笔记的公开表（口径出处见上）
+CI_SELFTEST_TABLE = [
+    (40, 0.72, 24, 0.578, 0.831), (60, 0.72, 24, 0.607, 0.813),
+    (80, 0.72, 24, 0.623, 0.802), (100, 0.72, 24, 0.634, 0.794),
+    (150, 0.72, 24, 0.651, 0.781), (200, 0.72, 24, 0.661, 0.773),
+    (250, 0.72, 24, 0.667, 0.768), (300, 0.72, 24, 0.672, 0.764),
+    (500, 0.72, 24, 0.683, 0.754), (1000, 0.72, 24, 0.694, 0.745),
+    (60, 0.74, 24, 0.635, 0.826), (80, 0.74, 24, 0.650, 0.816),
+    (300, 0.74, 24, 0.696, 0.781),
+]
+CI_GATE_TABLE = [
+    (60, 0.7864, 0.5509), (80, 0.7770, 0.5767), (100, 0.7703, 0.5931),
+    (200, 0.7524, 0.6297), (300, 0.7438, 0.6443), (500, 0.7348, 0.6581),
+]
+
+
+def run_ci_selftest(tol=0.001):
+    """自检：区间实现能否复现仓内笔记的表（复现不了 ⇒ 实现不可用）。
+
+    容差 0.001：笔记里的表是**三位小数**，舍入本身带来 ±0.0005（笔记 §1.4 也这么记）。
+    """
+    worst = 0.0
+    for n, ah, k, elo, ehi in CI_SELFTEST_TABLE:
+        lo, hi = alpha_ci_feldt(ah, n, k)
+        d = max(abs(lo - elo), abs(hi - ehi))
+        worst = max(worst, d)
+        print("区间 n=%-5d a_hat=%.2f k=%d  实算[%.4f, %.4f]  笔记[%.3f, %.3f]  偏差 %.5f  %s" % (
+            n, ah, k, lo, hi, elo, ehi, d, "OK" if d <= tol else "不一致"))
+    for n, gabove, gbelow in CI_GATE_TABLE:
+        ga = alpha_gate(n, 24, side="above")
+        gb = alpha_gate(n, 24, side="below")
+        da, db = abs(ga - gabove), abs(gb - gbelow)
+        worst = max(worst, da, db)
+        print("门限 n=%-5d 之上 实算 %.4f / 笔记 %.4f（差 %.4f）  之下 实算 %.4f / 笔记 %.4f（差 %.4f）" % (
+            n, ga, gabove, da, gb, gbelow, db))
+    print("最大绝对偏差 %.5f（容差 %.4f）→ %s" % (worst, tol, "通过" if worst <= tol else "不通过"))
+    return worst <= tol
+
+
 def percentile_cutpoints(values):
     """按参照分布切点：P90 顶尖 / P70 优秀 / P45 良好 / P25 合格。"""
     v = sorted(values)
@@ -250,7 +459,11 @@ def main():
     ap.add_argument("--real", metavar="PATH", help="真人作答文件（格式见真人试测作业包 §6）")
     ap.add_argument("--scored", metavar="PATH", help="计分结果文件，默认 pilot/out/scored.json")
     ap.add_argument("--exclude", metavar="PATH", help="要剔除的样本 id 清单（人工确认后的异常样本）")
+    ap.add_argument("--selftest-ci", action="store_true",
+                    help="自检：区间实现能否复现仓内笔记 §1.2 / §1.4 的表（不读数据、不写文件）")
     args = ap.parse_args()
+    if args.selftest_ci:
+        sys.exit(0 if run_ci_selftest() else 1)
     real_mode = bool(args.real)
 
     with open(os.path.join(ROOT, "items", "m1_items.json"), encoding="utf-8") as f:
@@ -341,16 +554,56 @@ def main():
             mat.append(row)
         a = cronbach_alpha(mat)
         sh = split_half(mat)
+        ci = alpha_ci_feldt(a, len(mat), len(cols))
+        sb_ci = split_half_ci(mat)
+        vd = alpha_verdict(ci)
         rel[d] = {
             "n": len(mat), "k": len(cols),
-            "alpha": round(a, 4), "alpha_pass": bool(a >= ALPHA_MIN),
+            "alpha": round(a, 4),
+            "alpha_ci95": [round(ci[0], 4), round(ci[1], 4)] if ci else None,
+            "alpha_ci_halfwidth": round((ci[1] - ci[0]) / 2.0, 4) if ci else None,
+            "alpha_verdict": vd["verdict"], "alpha_verdict_class": vd["class"],
+            "alpha_pass": bool(a >= ALPHA_MIN),
+            "alpha_pass_meaning": "点比较留痕，不是判定；判定看 alpha_verdict（票 #29 A 案）",
             "split_half_r": round(sh["r"], 4),
             "split_half_sb": round(sh["spearman_brown"], 4),
+            "split_half_ci95": [round(sb_ci[0], 4), round(sb_ci[1], 4)] if sb_ci else None,
             "split_pass": bool(sh["spearman_brown"] >= SPLIT_MIN),
             "data_kind": "real" if real_mode else "simulated",
         }
     res["reliability"] = rel
     res["excluded_ids"] = sorted(exclude)
+    res["reliability_report_rule"] = (
+        "第一轮按票 #29 裁定的 A 案：报 α̂ 与 95%% 区间，不判达标与否；"
+        "只有区间整段落在 %.2f 同一侧才写结论（alpha_verdict）。" % ALPHA_MIN)
+
+    # ---- C2. 第 13 条的两个数：完成整卷比例 / 省略作答比例 ----
+    # 口径出处：票 #26 第 13 条 + research/限时口径与计时效应_20261024.md（Standards 4.14）。
+    # D3（到点只提示、不自动交卷）之后，「被自动交卷截断的份数」恒为 0，
+    # 这两个数变成「有多少人自己结束了」与「有多少人留了空题」，不再被截断污染。
+    n_all = len(samples["respondents"])
+    comp = {"n_total": n_all, "complete": 0, "incomplete": 0, "unanswered_total": 0,
+            "limit_hint_rows": [], "per_respondent": []}
+    for r in samples["respondents"]:
+        resp = r.get("responses") or []
+        ans = sum(1 for x in resp if isinstance(x, (int, float)) and not isinstance(x, bool) and x in (0, 1))
+        miss = len(resp) - ans
+        comp["unanswered_total"] += miss
+        if ans == len(resp) and len(resp) > 0:
+            comp["complete"] += 1
+        else:
+            comp["incomplete"] += 1
+        row = {"id": r.get("id"), "answered": ans, "total": len(resp), "unanswered": miss}
+        hint = r.get("limit_hint")
+        if hint:
+            row["limit_hint"] = hint
+            comp["limit_hint_rows"].append(row)
+        comp["per_respondent"].append(row)
+    comp["complete_ratio"] = round(comp["complete"] / n_all, 4) if n_all else None
+    comp["incomplete_ratio"] = round(comp["incomplete"] / n_all, 4) if n_all else None
+    comp["note"] = ("第 13 条：完成整卷比例 = 整卷答完的份数占比；省略作答比例 = 有未答题的份数占比。"
+                    "D3（到点只提示、不自动交卷）后不再有「被自动截断」的份数。")
+    res["completion"] = comp
 
     # ---- D. α 自检对照：已知信度水平的数据集，α 计算器必须排对序 ----
     st_rows = []
@@ -518,13 +771,32 @@ def main():
     for d in DIMS:
         r = res["reliability"][d]
         tag = "" if real_mode else "(模拟)"
-        print("  %s α%s=%.3f  分半SB%s=%.3f  α判定=%s 分半判定=%s" % (
-            d, tag, r["alpha"], tag, r["split_half_sb"],
-            "过" if r["alpha_pass"] else "不过",
-            "过" if r["split_pass"] else "不过"))
-    print("  α 自检对照：%s（%s）" % (
+        if real_mode:
+            ci = r["alpha_ci95"]
+            sci = r["split_half_ci95"]
+            print("  %s α%s=%.3f 95%%区间[%s]  分半SB%s=%.3f 95%%区间[%s]  → %s" % (
+                d, tag, r["alpha"],
+                ("%.3f, %.3f" % (ci[0], ci[1])) if ci else "不可得",
+                tag, r["split_half_sb"],
+                ("%.3f, %.3f" % (sci[0], sci[1])) if sci else "不可得",
+                r["alpha_verdict"]))
+        else:
+            print("  %s α%s=%.3f  分半SB%s=%.3f  α点比较=%s 分半点比较=%s（合成数据，非信效度证据）" % (
+                d, tag, r["alpha"], tag, r["split_half_sb"],
+                "过" if r["alpha_pass"] else "不过",
+                "过" if r["split_pass"] else "不过"))
+    cp = res["completion"]
+    print("  第13条：完成整卷 %d/%d（%s）  省略作答 %d/%d（%s）  未答题合计 %d  到点提示后仍作答 %d 份" % (
+        cp["complete"], cp["n_total"],
+        ("%.1f%%" % (cp["complete_ratio"] * 100)) if cp["complete_ratio"] is not None else "—",
+        cp["incomplete"], cp["n_total"],
+        ("%.1f%%" % (cp["incomplete_ratio"] * 100)) if cp["incomplete_ratio"] is not None else "—",
+        cp["unanswered_total"], len(cp["limit_hint_rows"])))
+    st_rows = res["alpha_selftest"]["rows"]
+    print("  α 自检对照：%s%s" % (
         res["alpha_selftest"]["verdict"],
-        " / ".join("%s α=%.3f" % (r["tag"], r["alpha_avg"]) for r in res["alpha_selftest"]["rows"])))
+        ("（%s）" % " / ".join("%s α=%.3f" % (r["tag"], r["alpha_avg"]) for r in st_rows))
+        if st_rows else ""))
     for d in DIMS:
         dd = res["distribution_simulated"][d]
         print("  %s 分布：均值 %.2f 标准差 %.2f 范围 %d–%d 绝对锚点档位 %s" % (

@@ -61,16 +61,48 @@ python3 pilot/preflight.py
 依次查：成品在不在（+ sha256）· 成品是否比产品源旧 · 当前限时口径是 B 还是 A/C ·
 四个自检门 · 两个工具自检 · 生成回收登记表模板。任一项不过 → 退出码 1，别发卷。
 
+## 云端作答 → 流水线（云上版 #33 的数据桥）
+
+云端把每份作答存成一行（CloudBase PG 的 `public.responses`）。PG 实例是 **SHARED 租户、
+本机连不上**，所以搬运走「一条 SQL 导出 JSON → 本地转成流水线要的形状」：
+
+```bash
+# 1. 从云端导出（一条 SQL）
+#    select code, respondent_name, id_last4, group_name, level, dept,
+#           started_at, submitted_at, duration_ms, m1_raw, unanswered_m1, limit_hint
+#    from public.responses order by id;
+# 2. 搬运 + 体检
+python3 pilot/export_from_db.py --dump pilot/out/responses_dump.json --out-dir pilot/out/
+# 3. 计分 + 统计（与离线三条同一条路）
+node    pilot/run_pilot.mjs pilot/out/real_samples.json
+python3 pilot/analyze.py --real pilot/out/real_samples.json --scored pilot/out/scored.json
+```
+
+搬运工具同时产出**第 13 条要的两个数**：完成整卷比例、省略作答比例。
+硬错误（长度≠96、非 0/1 的值、code 重复、缺 m1_raw）**整批阻断、零输出**；
+有未答题的份子**默认只报告不剔除**（要剔除加 `--exclude-unanswered` —— 这一条是 #26 待拍的口径题）。
+
+## 区间与判定的自检
+
+```bash
+python3 pilot/analyze.py --selftest-ci
+```
+
+区间实现（α 的 95% 区间，Feldt 型解析式）必须**复现仓内笔记的公开表**：
+`research/样本量与信度推断边界_20261025.md` §1.2 的区间表与 §1.4 的门限表。
+复现不了 ⇒ 实现不可用（脚本退出码 1）。
+
 ## 文件
 
 | 文件 | 干什么 |
 |---|---|
 | `preflight.py` | **发卷前预检**（成品/新鲜度/口径/四个门/两个工具自检/模板生成）|
+| `export_from_db.py` | **云端作答 → 流水线**的数据桥（导出 JSON → `real_samples.json` + 第 13 条的两个数）|
 | `施测动作清单_一份被试_20261025.md` | **施测人现场照着做的一页纸**（发卷/批次计时/收卷/登记/交接/异常）|
 | `录入链路演练_20261025.md` | 用手抄风格的假表撞录入工具的演练记录（非真人数据）|
 | `simulate.py` | 合成样本生成器：HR 画像注入真值、装分与社会赞许项、异常作答注入、α 自检对照数据集 |
 | `run_pilot.mjs` | **驱动成品真实计分**：从 `dist/` 里抽 `window.__DATA__`，跑 `src/modules/report.js` 的 `window.REP`；整卷端到端出报告 HTML |
-| `analyze.py` | α / 分半信度 / 分布 / 极端题 / 锚定审计演练 / 真值回收 / 异常盲检 / 校准演示 / 相关性检查 / 与 Node 的交叉验算 |
+| `analyze.py` | α / 分半信度 / 分布 / 极端题 / 锚定审计演练 / 真值回收 / 异常盲检 / 校准演示 / 相关性检查 / 与 Node 的交叉验算 / **α 与分半的 95% 区间**（Feldt 解析式 + 重抽样）/ **第 13 条的两个数** |
 | `verify_report_pdf.py` | 报告打印验收：Chrome headless 出 A4 → `pdftotext` 抽文本层 → 8 项断言 |
 
 ## 三条纪律

@@ -53,9 +53,9 @@ GREEN2 = "2A5C42"  # 次级绿
 GOLD = "C9A55C"    # 金：分隔线 / 强调（浅底不作文字色）
 CREAM = "F5F0E4"   # 米白：深底上的文字 / 浅块底
 PAPER = "FAF9F4"   # 纸白
-INK = "1D2A23"     # 正文
-INK2 = "42544B"    # 次级文字
-LINE = "E6EAE7"    # 分隔线
+INK = "16241C"     # 正文（与视觉模板 src/report_template.css 的 --label 同值）
+INK2 = "3C4B43"    # 次级文字（--label-secondary）
+LINE = "E3E8E4"    # 分隔线（--separator）
 SAND = "6E5B36"    # 浅底上的小字（6.20:1）
 
 LV = {  # 等级底色（tokens.css 的 --lv-*-bg）
@@ -66,9 +66,13 @@ LV_INK = {
     "顶尖": GREEN, "优秀": "1B7A56", "良好": GREEN2,
     "合格": SAND, "待提升": "8E2F26",
 }
-CN_FONT = "Songti SC"       # 正文
-CN_HEAD = "Heiti SC"        # 标题 / 表头
-EN_FONT = "Georgia"         # 数字
+# 字族 ≤ 2（Apple HIG Typography「字族越少越好」）：
+# 正文与标题同用一套苹方（层级靠字重与字号，不靠换字体），
+# 数字用 Georgia —— 本身就是等宽数字，表格里的数字不会左右跳。
+# ⚠️ 授权红线：网页端不可内嵌 SF 字体文件；Word 里写系统字体名即可，不分发字体。
+CN_FONT = "PingFang SC"     # 正文
+CN_HEAD = "PingFang SC"     # 标题 / 表头（靠字重区分层级）
+EN_FONT = "Georgia"         # 数字（等宽数字）
 ORDER = ["待提升", "合格", "良好", "优秀", "顶尖"]
 
 FOOT_LINES = [
@@ -237,14 +241,14 @@ def h1(doc, text, num=None):
     pf.space_after = Pt(2)
     pf.keep_with_next = True
     if num:
-        run_fmt(p.add_run(num + "  "), size=16, bold=True, color=GOLD, cn=CN_HEAD)
-    run_fmt(p.add_run(text), size=16, bold=True, color=GREEN, cn=CN_HEAD)
+        run_fmt(p.add_run(num + "  "), size=16.5, bold=True, color=GOLD, cn=CN_HEAD)
+    run_fmt(p.add_run(text), size=16.5, bold=True, color=GREEN, cn=CN_HEAD)
     rule(doc, GOLD, 8, after=10)
     return p
 
 
 def h2(doc, text):
-    p = para(doc, text, size=12, bold=True, color=GREEN, cn=CN_HEAD, before=12, after=6)
+    p = para(doc, text, size=12.75, bold=True, color=GREEN, cn=CN_HEAD, before=12, after=6)
     keep_next(p)
     return p
 
@@ -357,9 +361,9 @@ def radar_svg(dims, W=560, H=430):
         # 两者在同一条半径上分开，绝不互相压字（第一版数值横着偏移、刻度数字标在
         # 顶部纵轴上，两处都会撞）。
         lp = pt(i, R + 34)
-        out.append('<text x="%.1f" y="%.1f" font-size="11.5" fill="#1D2A23" '
-                   'text-anchor="middle" font-family="Heiti SC">%s</text>'
-                   % (lp[0], lp[1], esc(d["short"])))
+        out.append('<text x="%.1f" y="%.1f" font-size="11.5" fill="#16241C" '
+                   'text-anchor="middle" font-family="%s">%s</text>'
+                   % (lp[0], lp[1], RADAR_FONT, esc(d["short"])))
         # 水平轴上的两个顶点（左右两侧）：维度名很长、且沿半径向外推会落到名字底下，
         # 所以数值改放在顶点的**正上方**（图形内侧的空白处），与名字彻底分开。
         if abs(p[1] - cy) < 12:
@@ -370,10 +374,14 @@ def radar_svg(dims, W=560, H=430):
             vx, vy = cx + math.cos(ang) * vr, cy + math.sin(ang) * vr
             anchor = "start" if p[0] > cx + 6 else ("end" if p[0] < cx - 6 else "middle")
             vy += 4 if vy > cy else (-8 if vy < cy else 4)
-        out.append('<text x="%.1f" y="%.1f" font-size="11" fill="#42544B" text-anchor="%s" '
-                   'font-family="Georgia">P%d</text>' % (vx, vy, anchor, d["pct"]))
+        out.append('<text x="%.1f" y="%.1f" font-size="11" fill="#3C4B43" text-anchor="%s" '
+                   'font-family="%s">P%d</text>' % (vx, vy, anchor, RADAR_FONT, d["pct"]))
     return ('<svg xmlns="http://www.w3.org/2000/svg" width="%d" height="%d" '
             'viewBox="0 0 %d %d">%s</svg>' % (W, H, W, H, "".join(out)))
+
+
+# 雷达图字体：与报告正文同一套系统栈（Apple 设备自动 SF Pro；不内嵌任何字体文件）
+RADAR_FONT = "system-ui, -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif"
 
 
 def esc(s):
@@ -870,6 +878,21 @@ p{margin:0 0 2.2mm}
 """
 
 
+# ============================================================ 视觉模板
+# 视觉与排版走 src/report_template.css —— 按 Apple HIG → Web 规范写的模板
+# （字阶、语义色、4/8 间距节奏、深色模式、打印样式；依据与检查表见该文件头）。
+# 旧的内联 CSS 保留在 HTML_CSS 里作对照，勿再往里加规则。
+TEMPLATE_CSS_PATH = os.path.join(ROOT, "src", "report_template.css")
+
+
+def template_css(runhead=""):
+    """读视觉模板，并把跑头文案填进 @page 的 @top-right（每页都带身份，且不压正文）。"""
+    with open(TEMPLATE_CSS_PATH, encoding="utf-8") as f:
+        css = f.read()
+    safe = str(runhead).replace("\\", "\\\\").replace('"', '\\"')
+    return css.replace("__RUNHEAD__", safe)
+
+
 def lv_class(grade):
     # 「无总档」（第一项，ADR-0010）不是一个等级，不套等级色
     if grade in ("无总档", "—", ""):
@@ -892,10 +915,11 @@ def render_html(data, m1, m2, m3, compose, m1meta, radar_png):
     A = o.append
     A("<!DOCTYPE html><html lang=\"zh-CN\"><head><meta charset=\"UTF-8\">")
     A("<title>施测人报告 · %s</title>" % h(data.get("name") or ""))
-    A("<style>%s</style></head><body>" % HTML_CSS)
-    A('<div class="runhead">施测人报告 ｜ %s ｜ 编号 %s%s</div>' % (
+    runhead = "施测人报告 ｜ %s ｜ 编号 %s%s" % (
         h(data.get("name") or "—"), h((data.get("code") or "")[:18]),
-        (" ｜ 末4位 " + h(data["idLast4"])) if data.get("idLast4") else ""))
+        (" ｜ 末4位 " + h(data["idLast4"])) if data.get("idLast4") else "")
+    A("<style>%s</style></head><body>" % template_css(runhead))
+    A('<div class="runhead">%s</div>' % runhead)
 
     # ---------------- 封面
     A('<div class="cover"><div class="brand">云上文旅集团 · 核心人才系列测试</div>'

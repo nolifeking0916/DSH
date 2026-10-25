@@ -1,0 +1,422 @@
+/* ============================================================================
+   施测人报告 · 视觉模板（Apple HIG → Web）
+   ---------------------------------------------------------------------------
+   依据（唯一信源：Apple 官方 Human Interface Guidelines 与 Safari/Web 文档）
+     · 排版字号与字阶 ...... https://developer.apple.com/design/human-interface-guidelines/typography
+     · 语义色角色 .......... https://developer.apple.com/design/human-interface-guidelines/color
+     · 材质（玻璃只给控件） . https://developer.apple.com/design/human-interface-guidelines/materials
+     · 布局与层级 .......... https://developer.apple.com/design/human-interface-guidelines/layout
+     · 动效 ............... https://developer.apple.com/design/human-interface-guidelines/motion
+     · 可访问性 ........... https://developer.apple.com/design/human-interface-guidelines/accessibility
+     · 网页侧最接近的官方文档 https://developer.apple.com/documentation/webkit/optimizing-your-website-for-safari
+   本文件是「模板」：只管视觉与排版，不含任何数据；数据与判读文字由
+   src/build_report_docx.py 填进同一批 class 名里。
+
+   ── 步 1 · 诊断（旧模板的问题清单）────────────────────────────────────────
+     1. 字族 6 套（Songti SC / Source Han Serif SC / Georgia / Heiti SC /
+        Source Han Sans SC / PingFang SC）⇒ 违反「字族越少越好」；
+        同一页里正文宋体、标题黑体、数字 Georgia 三套并置，层级靠字体切换
+        而不是靠字号与字重。
+     2. 字号单位混用：正文 10.5pt、注释 9.5pt、图注 9pt、页脚 7pt
+        ⇒ 7pt = 9.3px，低于「说明性文字 ≥ 11px」的下限。
+     3. 颜色全是硬编码十六进制（#1D2A23 / #42544B / #E6EAE7 / #C9A55C…），
+        没有语义角色 ⇒ 换深色模式只能整体反色，等于没有模式。
+     4. 间距随手写（2.2mm / 3mm / 4mm / 5mm / 6mm）⇒ 不成网格，扫视成本高。
+     5. 表格用整框 + 斑马底，密度高、噪声大。
+     6. 层级只靠字号（h1 16pt / h2 12pt / .note 9.5pt），字重与颜色没有参与。
+
+   ── 步 2 · 定尺度 ──────────────────────────────────────────────────────────
+     这是一份**桌面文档**（施测人在电脑上看 + A4 打印签字），不是移动 Web
+     ⇒ 按 HIG「以桌面密度为准」，取 macOS 字阶骨架，正文 14px（Apple 13pt
+     偏紧，14px 是视觉等价的舒适读法，属【推导】基线）。
+     打印尺寸换算：Chrome 按 96dpi 打印 CSS px ⇒ 14px = 10.5pt，与旧版一致。
+
+   ── 步 3 · token ─────────────────────────────────────────────────────────
+     语义角色沿用 HIG（Label / Secondary label / Separator / Accent…），
+     色值按集团 VI 适配（深绿 + 金 + 米白）。
+     间距走 4px 基准的 4/8 节奏（Apple 未公开 Web 间距体系，属【推导】）。
+
+   ── 步 4 · 组件 ─────────────────────────────────────────────────────────
+     表格、卡片、徽章、封面、跑头、跑尾（见下）。
+
+   ── 步 5 · 检查表结论 ───────────────────────────────────────────────────
+     A 排版  ✔ 正文 14px / 说明文字 ≥ 11px（页脚 11.3px）；字族 1 套；
+               只用 400/500/600/700；层级 = 字号 + 字重 + 颜色；
+               大标题负字距 −12/1000em、小字 0；数字 tabular-nums。
+     B 颜色  ✔ 全部走语义 token，无硬编码；深色模式单独调过（不是反色）；
+               正文对比度 ≥ 7:1；等级徽章同时有文字（不靠颜色单独传达）。
+     C 材质  ✔ 内容层不放玻璃/模糊（Apple：玻璃只给控件层）；本模板不用玻璃。
+     D 布局  ✔ 最重要的结论在顶部；缩进表示从属、对齐表示相关；
+               间距全部来自同一套 scale；@page 页边距是纸张物理量，用 mm，
+               版内间距用 px 4/8 节奏（两者职责不同，不是随手写）。
+     F 可访问性 ✔ 打印放大到 200% 仍重排；图表有配套数据表；
+               徽章有文字；页脚页码走 @page margin box（不压正文）。
+     G 文案  ✔ 本模板不含文案；文案规则由 build_report_docx.py 负责。
+     H 动效  ✔ 静态文档，无动效（不需要 prefers-reduced-motion）。
+     I 暗色  ✔ 提供两套值；打印时强制浅色（纸就是白的）。
+   ========================================================================= */
+
+:root {
+  /* ── 字体：一套系统栈 ──────────────────────────────────────────────────
+     【Apple 规范】字族越少越好；避免 Light/Thin 字重。
+     ⚠️ 授权红线：SF Pro / SF Mono 许可限定「仅用于 iOS / OS X / tvOS 应用」，
+     禁止嵌入产品或放到网络上 ⇒ 网页端只能用系统栈
+     （system-ui / -apple-system 在 Apple 设备上自动就是 SF Pro，零授权成本）。 */
+  --font-sans:
+    system-ui, -apple-system, BlinkMacSystemFont, "Helvetica Neue",
+    "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+
+  /* ── 字阶（macOS 骨架 · 桌面文档）────────────────────────────────────────
+     【Apple 规范】macOS 内建：Large Title 26/32 · Title1 22/26 · Title2 17/22
+     · Title3 15/20 · Headline 13/16 · Body 13/16 · Callout 12/15
+     · Subhead 11/14 · Footnote 10/13 · Caption1 10/13。
+     【推导】正文取 14px（13pt 偏紧）；说明性文字下限 11px。 */
+  --text-large-title: 26px; --lead-large-title: 32px;
+  --text-title-1:     22px; --lead-title-1:     26px;
+  --text-title-2:     17px; --lead-title-2:     22px;
+  --text-title-3:     15px; --lead-title-3:     20px;
+  --text-headline:    13px; --lead-headline:    17px;
+  --text-body:        14px; --lead-body:        20px;
+  --text-callout:     13px; --lead-callout:     18px;
+  --text-subhead:     12px; --lead-subhead:     16px;
+  --text-footnote:    11px; --lead-footnote:    15px;
+  --text-caption:     11px; --lead-caption:     13px;
+
+  /* 【Apple 规范】SF Pro 的 tracking 随字号变化：12px→0 · 14px→−11 · 17px→−26
+     · 22px→−12 / 1000em。网页用 letter-spacing 近似即可。 */
+  --tracking-large-title: -0.012em;
+  --tracking-title-1:     -0.012em;
+  --tracking-title-2:     -0.012em;
+  --tracking-body:        -0.011em;
+  --tracking-caption:      0.004em;
+
+  /* ── 语义色（角色照 HIG，色值按集团 VI 适配）────────────────────────────
+     【Apple 规范】同一颜色不要表达两种含义；不要只靠颜色区分对象或状态；
+     强调色优先给「背景」而不是给文字。 */
+  --label:           #16241C;   /* 主要文字 */
+  --label-secondary: #3C4B43;   /* 次要文字 */
+  --label-tertiary:  #6B7A72;   /* 三级文字 / 图注 */
+  --separator:       #E3E8E4;   /* 分隔线 */
+  --separator-opaque:#D2DAD4;
+  --surface:         #FFFFFF;
+  --surface-raised:  #F7F8F6;   /* 抬起的面（表头以外的分组、斑马） */
+  --surface-sunken:  #F1F4F1;   /* 下沉的面（键列） */
+  --brand:           #1E4634;   /* 集团深绿：品牌与强调的背景 */
+  --brand-ink:       #F5F0E4;   /* 深绿底上的文字（米白） */
+  --brand-ink-dim:   #C8D3C9;   /* 深绿底上的次要文字 */
+  --accent:          #C9A55C;   /* 集团金：只给背景/分隔线，不给小字 */
+  --accent-ink:      #6E5B36;   /* 金在浅底上的可读文字版 */
+  --status-good:     #1B7A56; --status-good-bg:     #E7F2EB;
+  --status-plain:    #3C4B43; --status-plain-bg:    #EFF2EF;
+  --status-caution:  #6E5B36; --status-caution-bg:  #F5EFE1;
+  --status-alert:    #8E2F26; --status-alert-bg:    #FBEDEA;
+
+  /* ── 间距：4px 基准的 4/8 节奏（Apple 未公开 Web 间距体系，属【推导】）── */
+  --sp-1: 4px;  --sp-2: 8px;  --sp-3: 12px; --sp-4: 16px;
+  --sp-5: 20px; --sp-6: 24px; --sp-8: 32px; --sp-10: 40px; --sp-12: 48px;
+
+  --radius-sm: 6px; --radius-md: 10px; --radius-pill: 11px;
+  --shadow-1: 0 1px 2px rgb(0 0 0 / .05);
+  --shadow-2: 0 1px 2px rgb(0 0 0 / .04), 0 6px 18px rgb(0 0 0 / .06);
+}
+
+/* ── 深色模式：单独调过的一套，不是反色 ─────────────────────────────────
+   【Apple 规范】浅色 / 深色 / 增强对比三种情境都要成立。 */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --label:           #EAF0EB;
+    --label-secondary: #B6C2B9;
+    --label-tertiary:  #8C9A91;
+    --separator:       #2A3830;
+    --separator-opaque:#3A4A41;
+    --surface:         #121A16;
+    --surface-raised:  #18221C;
+    --surface-sunken:  #0E1511;
+    --brand:           #17402F;
+    --brand-ink:       #F2EEE2;
+    --brand-ink-dim:   #A9BCAE;
+    --accent:          #C9A55C;
+    --accent-ink:      #D9BC7E;
+    --status-good:     #59C48F; --status-good-bg:     #14301F;
+    --status-plain:    #B6C2B9; --status-plain-bg:    #1D2721;
+    --status-caution:  #D9BC7E; --status-caution-bg:  #2B2415;
+    --status-alert:    #E08A80; --status-alert-bg:    #2E1A17;
+    --shadow-1: 0 1px 2px rgb(0 0 0 / .4);
+    --shadow-2: 0 1px 2px rgb(0 0 0 / .35), 0 6px 18px rgb(0 0 0 / .45);
+  }
+}
+
+/* ============================================================================
+   基础
+   ========================================================================= */
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font-sans);
+  font-size: var(--text-body);
+  line-height: var(--lead-body);
+  letter-spacing: var(--tracking-body);
+  color: var(--label);
+  background: var(--surface);
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+  padding-top: 34px;      /* 给跑头让位 */
+  padding-bottom: 40px;   /* 给跑尾让位 */
+  /* 阅读行长：46em ≈ 46 个汉字/行（屏幕上是舒服的窄栏；
+     打印时 A4 正文宽 172mm ≈ 650px ≈ 46em，正好铺满纸面，不留白边）。 */
+  max-width: 46em;
+  margin-inline: auto;
+}
+
+/* 数字列等宽（推导基线：数字在表格里要对齐） */
+.num, .kv td, .tbl td, .tbl th { font-variant-numeric: tabular-nums; }
+
+h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: var(--tracking-title-2); }
+p { margin: 0 0 var(--sp-3); }
+
+/* ============================================================================
+   跑头（候选人身份）与跑尾（合规声明）
+   ========================================================================= */
+.runhead {
+  position: fixed; top: 0; left: 0; right: 0;
+  display: flex; justify-content: flex-end; align-items: baseline; gap: var(--sp-2);
+  padding: var(--sp-2) 0;
+  font-size: var(--text-caption);
+  line-height: var(--lead-caption);
+  letter-spacing: var(--tracking-caption);
+  color: var(--label-tertiary);
+  border-bottom: 1px solid var(--separator);
+  background: var(--surface);
+}
+.tailnote {
+  margin-top: var(--sp-6);
+  padding-top: var(--sp-3);
+  border-top: 1px solid var(--separator);
+  font-size: var(--text-footnote);
+  line-height: var(--lead-footnote);
+  color: var(--label-secondary);
+}
+
+/* ============================================================================
+   封面：品牌带 + 大标题 + 身份
+   【Apple 规范】按重要度排序：最重要的靠近顶部与起始侧。
+   ========================================================================= */
+.cover {
+  background: var(--brand);
+  color: var(--brand-ink);
+  border-radius: var(--radius-md);
+  padding: var(--sp-8) var(--sp-6) var(--sp-6);
+  margin-bottom: var(--sp-6);
+  box-shadow: var(--shadow-2);
+}
+.cover .brand {
+  font-size: var(--text-caption);
+  line-height: var(--lead-caption);
+  letter-spacing: 0.14em;                 /* 品牌小字用正字距 */
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.cover .title {
+  font-size: var(--text-large-title);
+  line-height: var(--lead-large-title);
+  letter-spacing: var(--tracking-large-title);
+  font-weight: 700;
+  margin: var(--sp-3) 0 var(--sp-2);
+}
+.cover .sub {
+  font-size: var(--text-callout);
+  line-height: var(--lead-callout);
+  color: var(--brand-ink-dim);
+}
+
+/* ============================================================================
+   关键信息表（候选人 / 编号 / 末4位 / 日期 …）
+   ========================================================================= */
+.kv { width: 100%; border-collapse: collapse; margin: 0 0 var(--sp-6); }
+.kv td {
+  border-bottom: 1px solid var(--separator);
+  padding: var(--sp-3) var(--sp-4);
+  vertical-align: top;
+  font-size: var(--text-body);
+  line-height: var(--lead-body);
+}
+.kv td.k {
+  width: 132px;
+  background: var(--surface-sunken);
+  font-weight: 600;
+  color: var(--label-secondary);
+  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+}
+
+/* ============================================================================
+   章节标题
+   ========================================================================= */
+h1 {
+  font-size: var(--text-title-1);
+  line-height: var(--lead-title-1);
+  letter-spacing: var(--tracking-title-1);
+  color: var(--brand);
+  margin: 0 0 var(--sp-4);
+  padding-bottom: var(--sp-2);
+  border-bottom: 2px solid var(--accent);   /* 强调色给分隔线，不给小字 */
+  break-after: avoid;
+}
+h2 {
+  font-size: var(--text-title-2);
+  line-height: var(--lead-title-2);
+  letter-spacing: var(--tracking-title-2);
+  color: var(--label);
+  margin: var(--sp-6) 0 var(--sp-3);
+  break-after: avoid;
+}
+h3 {
+  font-size: var(--text-title-3);
+  line-height: var(--lead-title-3);
+  font-weight: 600;
+  color: var(--label);
+}
+.lead { color: var(--label-secondary); margin-bottom: var(--sp-5); }
+.note { font-size: var(--text-subhead); line-height: var(--lead-subhead); color: var(--label-secondary); }
+.sec { break-before: page; }
+
+/* ============================================================================
+   表格：发丝线 + 深绿表头
+   ========================================================================= */
+.tbl {
+  width: 100%;
+  border-collapse: collapse;
+  margin: var(--sp-3) 0 var(--sp-5);
+  font-size: var(--text-callout);
+  line-height: var(--lead-callout);
+}
+.tbl th {
+  background: var(--brand);
+  color: var(--brand-ink);
+  text-align: left;
+  padding: var(--sp-2) var(--sp-3);
+  font-weight: 600;
+  font-size: var(--text-subhead);
+  letter-spacing: 0.02em;
+}
+.tbl td {
+  border-bottom: 1px solid var(--separator);
+  padding: var(--sp-2) var(--sp-3);
+  vertical-align: top;
+}
+.tbl tr { break-inside: avoid; }
+.tbl tbody tr:nth-child(even) td { background: var(--surface-raised); }
+.tbl td.r, .tbl th.r { text-align: right; }
+.tbl td.c, .tbl th.c { text-align: center; }
+
+/* 等级徽章：底纹 + 文字（不靠颜色单独传达）；胶囊硬规则 —— 横向内边距 ≥ 圆角半径 */
+.lv {
+  display: inline-block;
+  padding: 2px 12px;
+  border-radius: var(--radius-pill);
+  font-weight: 600;
+  font-size: var(--text-subhead);
+  line-height: 18px;
+  white-space: nowrap;
+}
+.lv-T, .lv-A { background: var(--status-good-bg);    color: var(--status-good); }
+.lv-B       { background: var(--status-plain-bg);   color: var(--status-plain); }
+.lv-C       { background: var(--status-caution-bg); color: var(--status-caution); }
+.lv-D       { background: var(--status-alert-bg);   color: var(--status-alert); }
+
+/* ============================================================================
+   解读块 / 追问清单
+   ========================================================================= */
+.callout {
+  background: var(--surface-raised);
+  border: 1px solid var(--separator);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  padding: var(--sp-4) var(--sp-5);
+  margin: var(--sp-4) 0 var(--sp-5);
+}
+.dim { margin: var(--sp-5) 0; }
+.dim h3 {
+  font-size: var(--text-title-3);
+  line-height: var(--lead-title-3);
+  margin: 0 0 var(--sp-2);
+  break-after: avoid;
+}
+.dim dl { margin: 0; }
+.dim dt {
+  float: left; clear: left;
+  width: 88px;
+  font-size: var(--text-subhead);
+  line-height: var(--lead-subhead);
+  color: var(--label-secondary);
+  font-weight: 600;
+}
+.dim dd { margin: 0 0 var(--sp-2) 96px; }
+.qs { counter-reset: q; }
+.qs li { margin: 0 0 var(--sp-2) var(--sp-5); }
+
+/* ============================================================================
+   雷达图与图注
+   ========================================================================= */
+.radar { text-align: center; margin: var(--sp-4) 0; }
+.radar img { width: 100%; max-width: 470px; }
+.cap {
+  font-size: var(--text-caption);
+  line-height: var(--lead-caption);
+  letter-spacing: var(--tracking-caption);
+  color: var(--label-tertiary);
+  text-align: center;
+  margin-top: var(--sp-2);
+}
+
+/* ============================================================================
+   打印：A4、页边距、页脚与页码（走 @page margin box，物理上不可能压正文）
+   ========================================================================= */
+@page {
+  size: A4;
+  margin: 18mm 18mm 20mm 20mm;
+  /* 跑头也走 @page margin box：它在**页边距区**里，每页都在，且物理上压不到正文
+     （旧版用 position:fixed，正文会顶上来；这里换掉）。
+     __RUNHEAD__ 由 src/build_report_docx.py 在生成时替换成「施测人报告 ｜ 姓名 ｜ 编号 ｜ 末4位」。 */
+  @top-right {
+    content: "__RUNHEAD__";
+    font-family: var(--font-sans);
+    font-size: 8.5pt;                 /* ≈ 11.3px：说明性文字 ≥ 11px */
+    color: var(--label-tertiary);
+    vertical-align: top;
+  }
+  @bottom-left {
+    content: "本报告由本地单文件测评结果生成，不上传服务器\A不得作为录用唯一依据；不构成医学或心理诊断；不设淘汰线";
+    font-family: var(--font-sans);
+    font-size: 8.5pt;                 /* ≈ 11.3px：说明性文字 ≥ 11px */
+    line-height: 1.45;
+    color: var(--label-tertiary);
+    vertical-align: bottom;
+  }
+  @bottom-right {
+    content: "第 " counter(page) " / " counter(pages) " 页";
+    font-family: var(--font-sans);
+    font-size: 8.5pt;
+    color: var(--label-tertiary);
+    vertical-align: bottom;
+  }
+}
+
+/* 打印时强制浅色：纸就是白的，深色模式只给屏幕 */
+@media print {
+  :root {
+    --label: #16241C; --label-secondary: #3C4B43; --label-tertiary: #6B7A72;
+    --separator: #E3E8E4; --separator-opaque: #D2DAD4;
+    --surface: #FFFFFF; --surface-raised: #F7F8F6; --surface-sunken: #F1F4F1;
+    --brand: #1E4634; --brand-ink: #F5F0E4; --brand-ink-dim: #C8D3C9;
+    --accent: #C9A55C; --accent-ink: #6E5B36;
+    --status-good: #1B7A56; --status-good-bg: #E7F2EB;
+    --status-plain: #3C4B43; --status-plain-bg: #EFF2EF;
+    --status-caution: #6E5B36; --status-caution-bg: #F5EFE1;
+    --status-alert: #8E2F26; --status-alert-bg: #FBEDEA;
+  }
+  /* 打印时跑头由 @page 的 @top-right 承担，页内那个隐藏，避免重复出现 */
+  .runhead { display: none; }
+  .cover { box-shadow: none; }
+  body { padding-top: 0; }
+}

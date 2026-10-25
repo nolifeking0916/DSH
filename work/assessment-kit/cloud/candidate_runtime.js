@@ -132,15 +132,15 @@
     });
   }
 
-  /* 完成页：云版口径。没有分数、没有等级、没有回传话术。 */
+  /* 完成页：云版口径。**候选人只看到两个词：「已完成」与「成功提交」**（维护者 2026-10-25 定）。
+     没有分数、没有等级、没有回传话术、也不解释流程。
+     复核 / 更正 / 删除的入口在**作答前的告知卡第 7 条**里已经给过，完成页不再重复。 */
   function doneHtml(s) {
     var status;
     if (st.sent) {
-      status = "<div class=\"panel\"><p class=\"hint\">" +
-        (st.dup ? "本次作答此前已经提交过了，结果由集团人力资源部保管。" : "本次作答已提交，结果由集团人力资源部保管。") +
-        "</p></div>";
+      status = "<div class=\"panel\"><p class=\"hint\">成功提交</p></div>";
     } else if (st.sending) {
-      status = "<div class=\"panel\"><p class=\"hint\">正在提交…</p></div>";
+      status = "<div class=\"panel\"><p class=\"hint\">提交中…</p></div>";
     } else if (st.err) {
       status = "<div class=\"panel\"><p class=\"hint\">提交未成功：" + esc(st.err) + "</p>" +
         "<button class=\"btn btn-primary btn-full\" style=\"margin-top:var(--sp-2)\" onclick=\"window.__cloudRetry()\">重新提交</button>" +
@@ -148,14 +148,13 @@
            但 paint() 换掉整块 .sheet 会把它抹掉 ⇒ 这里补回来） */
         "<button class=\"btn btn-quiet btn-full\" style=\"margin-top:var(--sp-2)\" onclick=\"APP.download()\">下载结果文件（JSON）</button></div>";
     } else {
-      status = "<div class=\"panel\"><p class=\"hint\">准备提交…</p></div>";
+      status = "<div class=\"panel\"><p class=\"hint\">提交中…</p></div>";
     }
     var limit = (s && s.limitHint)
       ? "<div class=\"warn\" style=\"margin:var(--sp-3) 0 0\">限时到点时你已作答 " + s.limitHint.answered + " / " + s.limitHint.total + " 题，之后继续作答并自行交卷。</div>"
       : "";
     return "<div class=\"done-seal\">\u2713</div>" +
       "<h2 style=\"font-size:var(--fs-6);text-align:center\">已完成</h2>" +
-      "<p class=\"hint\" style=\"max-width:330px;margin:var(--sp-2) auto 0;text-align:center\">本次结果已由集团人力资源部保管；本页面不显示你的结果。如需查询、更正或要求删除，请联系集团人力资源部。</p>" +
       limit + status;
   }
 

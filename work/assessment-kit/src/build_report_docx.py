@@ -691,6 +691,7 @@ def build_context(data):
 
     o2 = data["m2"]
     wmap = {d["key"]: d for d in eq["dimensions"]}
+    key_of_name = {x.get("name"): x.get("key") for x in (eq.get("dimensions") or [])}
     dims2 = []
     for d in o2["dims"]:
         w = wmap.get(d["key"], {})
@@ -699,7 +700,8 @@ def build_context(data):
         if d.get("selfAvg") is not None:
             read += "自我参照折算 %.2f / 5.00，与情境折算 %.2f / 5.00 %s。" % (
                 d["selfAvg"], d["avg"], "差异 < 1.0" if not d.get("flag") else "差异 ≥ 1.0")
-        dims2.append({"name": d["name"], "outer_name": w.get("outer_name", ""),
+        dims2.append({"key": (d.get("key") or key_of_name.get(d.get("name")) or d.get("name")),
+                       "name": d["name"], "outer_name": w.get("outer_name", ""),
                        "weight": w.get("weight", 0), "score": d["score"], "max": d["max"],
                        "grade": d["grade"], "flag": d.get("flag"), "read": read})
     m2 = {"dims": dims2, "total": o2["total"], "grade": o2["grade"],
@@ -731,9 +733,10 @@ def build_context(data):
         return ("顶尖" if v >= 4.5 else "优秀" if v >= 3.75 else "良好" if v >= 3.0
                 else "合格" if v >= 2.25 else "待提升")
 
-    items = [{"name": "第一项 · " + m1items["meta"]["title"], "grade": m1["short"]["grade"]},
-             {"name": "第二项 · 情境测试", "grade": m2["grade"]},
-             {"name": "第三项 · 推理测试", "grade": m3["grade"]}]
+    # 三类的名字（报告里不再出现「第一项/第二项/第三项」）
+    items = [{"name": "人格特质", "grade": m1["short"]["grade"]},
+             {"name": "情景处理", "grade": m2["grade"]},
+             {"name": "逻辑分析能力", "grade": m3["grade"]}]
     avg = sum(ORDER.index(i["grade"]) for i in items) / 3.0
     cgrade = band_composite(avg)
     cshort = sorted(items, key=lambda i: ORDER.index(i["grade"]))[0]
@@ -758,33 +761,33 @@ def compose_text(compose, m1, m2, m3, m1meta):
         "这位候选人三项的综合评估为%s。综合评估是三项等级（顶尖 5 / 优秀 4 / 良好 3 / 合格 2 / "
         "待提升 1）等权平均后切的档，不产生总分，也不是任何形式的淘汰线。" % grade)
     paras.append(
-        "三项里最弱的是%s（%s）；第一项（行为倾向）不合成总档，最弱的一维在「%s」（%s）——"
+        "三类测试里最弱的是%s（%s）；人格特质（工作方式倾向）不合成总档，最弱的一维在「%s」（%s）——"
         "这一维更值得在面试里展开：%s"
         % (short.get("name", "—"), short.get("grade", "—"),
            short_dim["name"], short_dim["grade"],
            (sk.get("behavior", "") or "结合具体工作场景核实其真实工作顺序。")))
     paras.append(
-        "第二项（情境反应）加权 %.2f / 5.00，等级%s；%s第三项（推理与判断）落在参考分布第 %s 百分位"
+        "情景处理加权 %.2f / 5.00，等级%s；%s逻辑分析能力落在参考分布第 %s 百分位"
         "（T 分 %s），等级%s。%s"
         % (m2["total"], m2["grade"],
            ("其中 %s 需人工确认。" % "、".join(m2["need_review"])) if m2["need_review"] else "",
            m3["pct"], m3["t"], m3["grade"],
-           "第三项与前两项预期弱相关，同涨同跌时应复核题目是否重叠，而不是直接加分。"))
+           "逻辑分析能力与前两类预期弱相关，同涨同跌时应复核题目是否重叠，而不是直接加分。"))
     paras.append(
         "结论口径：以上只说明这位候选人在常规工作方式、具体管理情境、陌生问题推理三个切面上的表现倾向，"
         "不说明能力高低，不诊断性格，也不作录用评分项。录用决策应由简历、专业技能、面谈与工作样本"
         "等多源证据支撑；测评与面试冲突时以面试与工作样本为主，并记录冲突原因。")
 
     qs = []
-    qs.append("围绕第一项的短板「%s」：请他复盘一个最近三个月里，%s的具体场景——当时怎么做的、"
+    qs.append("围绕人格特质的短板「%s」：请他复盘一个最近三个月里，%s的具体场景——当时怎么做的、"
               "为什么这么排、代价是什么。" % (short_dim["name"],
                                             (sk.get("behavior", "") or "该维度判据").split("；")[0][:46]))
     if m2["need_review"]:
-        qs.append("第二项里 %s 这几维，他的自我描述和现场选择不一致：请他给一个真实案例，"
+        qs.append("情景处理里 %s 这几维，他的自我描述和现场选择不一致：请他给一个真实案例，"
                   "看两种答案各自对应什么处境。" % "、".join(m2["need_review"]))
     need = [c for c in m2["consistency"] if "需复核" in c.get("status", "")]
     if need:
-        qs.append("第二项一致性检查里 %s 这几对同一情境选了不同方向：说明倾向在两可情境下不稳定，"
+        qs.append("情景处理的一致性检查里 %s 这几对同一情境选了不同方向：说明倾向在两可情境下不稳定，"
                   "请他说明两种情境各自发生了什么。" % "、".join(c["pair"] for c in need))
     for s in compose["skew"]:
         qs.append("%s 这一项与综合评估相差 2 级以上（结构性偏科）：请他描述一次该维度明显拖后腿的经历，"
@@ -792,10 +795,10 @@ def compose_text(compose, m1, m2, m3, m1meta):
     m3low = sorted(m3["dims"], key=lambda d: d["rate"])[:1]
     if m3low:
         d = m3low[0]
-        qs.append("第三项里「%s」正确率 %d%%（八维中最低）：请他讲一道当时判断错的题，"
+        qs.append("逻辑分析能力里「%s」正确率 %d%%（八维中最低）：请他讲一道当时判断错的题，"
                   "看他复盘时会不会改结论、还是为原答案找理由。" % (d["name"], d["rate"]))
     qs.append("对照他简历上的最近一段经历，请他讲一个「本来可以更早发现、但没有」的问题，"
-              "看他是先复盘事实还是先归因（对应第一项「关注重点」）。")
+              "看他是先复盘事实还是先归因（对应人格特质的「关注重点」）。")
     compose["paragraphs"] = paras
     compose["questions"] = qs
     compose["headline"] = "%s；最短板：%s（%s）" % (grade, short.get("name", "—"), short.get("grade", "—"))
@@ -1101,6 +1104,28 @@ def render_html(data, m1, m2, m3, compose, m1meta, radar_png):
     return "".join(o)
 
 
+def render_html_blocks_page(data, blocks, radar_png=None):
+    """用内容块拼出单文件 HTML（零外链，Chrome 打印成 PDF）。"""
+    import base64
+    radar_b64 = ""
+    if radar_png and os.path.exists(radar_png):
+        with open(radar_png, "rb") as f:
+            radar_b64 = base64.b64encode(f.read()).decode("ascii")
+    import report_sections as RS
+    runhead = "施测人报告 ｜ %s ｜ 编号 %s%s" % (
+        h(data.get("name") or "—"), h((data.get("code") or "")[:18]),
+        (" ｜ 末4位 " + h(data["idLast4"])) if data.get("idLast4") else "")
+    o = []
+    A = o.append
+    A("<!DOCTYPE html><html lang=\"zh-CN\"><head><meta charset=\"UTF-8\">")
+    A("<title>施测人报告 · %s</title>" % h(data.get("name") or ""))
+    A("<style>%s</style></head><body>" % template_css(runhead))
+    A('<div class="runhead">%s</div>' % runhead)
+    A(RS.render_html_blocks(blocks, radar_b64))
+    A("</body></html>")
+    return "".join(o)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--json", default=os.path.join(ROOT, "pilot", "out", "模拟试测_结果JSON_样例.json"))
@@ -1110,6 +1135,18 @@ def main():
     data = json.load(open(args.json, encoding="utf-8"))
     m1, m2, m3, compose, m1meta = build_context(data)
     compose = compose_text(compose, m1, m2, m3, m1meta)
+
+    # 话术（云端规则库，按分数匹配）与可信度（本次作答能不能信）
+    import report_sections as RS
+    profile = RS.build_profile(data, m1, m2, m3, compose, data.get("m1_raw"))
+    narrative = RS.fetch_narrative(profile)
+    cred = RS.credibility(data, m1, m2, m3, m1_raw=data.get("m1_raw"),
+                          m2_answers=data.get("m2_answers"),
+                          m3_answers=data.get("m3_answers"))
+    print("话术来源：%s（人格特质 %d 条 / 情景处理 %d 条 / 逻辑分析 %d 条 / 总评 %d 条）"
+          % (narrative.get("source"),
+             len(narrative.get("personality") or {}), len(narrative.get("situation") or {}),
+             len(narrative.get("reasoning") or {}), len(narrative.get("overall") or [])))
 
     os.makedirs(args.outdir, exist_ok=True)
     code = (data.get("code") or "REPORT").replace("/", "-")
@@ -1128,15 +1165,12 @@ def main():
     except Exception as e:  # 雷达图失败不阻塞报告
         print("雷达图生成失败（不影响报告）：%s" % e)
 
+    # 内容块只写一遍，Word 与 HTML 两套渲染器共用（同源同数）
+    blocks = RS.build_blocks(data, m1, m2, m3, compose, m1meta, narrative, cred, radar_png)
+
     doc = setup_doc()
     add_header_footer(doc, data)
-    cover(doc, data, m1, m2, m3, compose)
-    page_break(doc)
-    chapter_results(doc, data, m1, m2, m3, compose, radar_png)
-    page_break(doc)
-    chapter_analysis(doc, m1, m2, m3, m1meta)
-    page_break(doc)
-    chapter_judgement(doc, compose, m1, m2, m3, m1meta)
+    RS.render_docx_blocks(doc, blocks, radar_png)
     doc.save(docx_path)
     print("Word：%s" % docx_path)
 
@@ -1144,7 +1178,7 @@ def main():
     # （连 HTML→PDF 都回退到希伯来字体），导出的 PDF 全是豆腐块；.docx 本身没问题，
     # Word/Pages 有中文字体。PDF 改由 Chrome 打印 HTML 双胞胎（Chrome 的中文渲染没问题）。
     html_path = os.path.join(args.outdir, base + ".html")
-    html = render_html(data, m1, m2, m3, compose, m1meta, radar_png)
+    html = render_html_blocks_page(data, blocks, radar_png)
     with open(html_path, "w", encoding="utf-8") as f:
         f.write(html)
     print("HTML：%s（单文件 · 零外链）" % html_path)

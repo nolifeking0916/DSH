@@ -76,6 +76,57 @@ function reply(status, body) {
   };
 }
 
+/* ============================================================ 判读话术库匹配
+   规则表 report_narrative：(module, dimension, band, pole, kind) ⇒ text
+   profile = {
+     personality: { INT: {band, pole, pole_label, score}, ... },
+     situation:   { regu: {band, score}, ... },
+     reasoning:   { DED: {band, rate}, ... },
+     overall:     { grade, kinds: ["profile","fit","potential","strength","caution"] }
+   }
+   匹配顺序：精确（档位 + 极）→ 同档不区分极 → __all__ 通用条。
+   **不按候选人编号取**：调用方只传分数画像，不碰 responses 表 ⇒ 不泄露任何人的数据。 */
+function pickRule(rules, module, dimension, band, pole, kind) {
+  const cands = rules.filter((r) => r.module === module && r.dimension === dimension
+    && (kind === null || kind === undefined || r.kind === kind));
+  const tries = [];
+  if (band && band !== "__all__") {
+    tries.push({ band: band, pole: pole || "__any__" });
+    tries.push({ band: band, pole: "__any__" });
+  }
+  tries.push({ band: "__all__", pole: "__any__" });
+  for (const t of tries) {
+    const hit = cands.find((r) => r.band === t.band && r.pole === t.pole);
+    if (hit) return hit;
+  }
+  return null;
+}
+
+function matchNarrative(rules, profile) {
+  const out = { personality: {}, situation: {}, reasoning: {}, overall: [] };
+  for (const key of Object.keys(profile.personality || {})) {
+    const d = profile.personality[key] || {};
+    const r = pickRule(rules, "personality", d.dimension || key, d.band, d.pole, null);
+    if (r) out.personality[key] = { text: r.text, title: r.title, pole_label: r.pole_label || d.pole_label || null, band: d.band, pole: d.pole };
+  }
+  for (const key of Object.keys(profile.situation || {})) {
+    const d = profile.situation[key] || {};
+    const r = pickRule(rules, "situation", d.dimension || key, d.band, null, null);
+    if (r) out.situation[key] = { text: r.text, title: r.title, band: d.band };
+  }
+  for (const key of Object.keys(profile.reasoning || {})) {
+    const d = profile.reasoning[key] || {};
+    const r = pickRule(rules, "reasoning", d.dimension || key, d.band, null, null);
+    if (r) out.reasoning[key] = { text: r.text, title: r.title, band: d.band };
+  }
+  const ov = profile.overall || {};
+  for (const kind of (ov.kinds || [])) {
+    const r = pickRule(rules, "overall", "__overall__", ov.grade, "__any__", kind);
+    if (r) out.overall.push({ kind: kind, title: r.title, text: r.text });
+  }
+  return out;
+}
+
 exports.main = async (event) => {
   const method = (event.httpMethod || event.requestContext && event.requestContext.httpMethod || "GET").toUpperCase();
   if (method === "OPTIONS") return reply(204, {});
@@ -119,6 +170,10 @@ exports.main = async (event) => {
         m1_scores: out.m1,
         m2_result: out.m2,
         m3_result: out.m3,
+        /* 第二、三项的逐题作答也存：报告里的「可信度」三项都要算，
+           一致性检查复核与错题回顾也要用到（票 #34 的表结构补齐）。 */
+        m2_answers: payload.m2_answers || payload.m2_answers_raw || null,
+        m3_answers: payload.m3_answers || payload.m3_answers_raw || null,
         limit_hint: payload.limit_hint || payload.limitHint || null,
         unanswered_m1: unanswered
       };
@@ -133,6 +188,19 @@ exports.main = async (event) => {
         const limit = Math.min(parseInt(q.limit || "50", 10) || 50, 200);
         const rows = await pg("GET", "/" + table + "?select=code,respondent_name,id_last4,group_name,level,submitted_at,duration_ms,unanswered_m1&order=submitted_at.desc&limit=" + limit);
         return reply(200, { ok: true, count: (rows || []).length, rows: rows || [] });
+      }
+      if (q.action === "narrative") {
+        /* 判读话术：调用方只传**分数画像**，不传候选人编号 ⇒ 不碰 responses 表，
+           也就不会泄露任何人的作答。规则从 report_narrative 读，按分数档 + 特征极匹配。 */
+        let profile;
+        try {
+          profile = JSON.parse(decodeURIComponent(q.profile || ""));
+        } catch (e) {
+          return reply(400, { ok: false, error: "profile 不是合法 JSON" });
+        }
+        if (!profile || typeof profile !== "object") return reply(400, { ok: false, error: "缺 profile" });
+        const rules = await pg("GET", "/report_narrative?select=module,dimension,band,pole,pole_label,kind,title,text&active=eq.true&order=sort.asc");
+        return reply(200, { ok: true, narrative: matchNarrative(rules || [], profile) });
       }
       if (!q.code) return reply(400, { ok: false, error: "缺 code" });
       const rows = await pg("GET", "/" + table + "?code=eq." + encodeURIComponent(q.code) + "&limit=1");

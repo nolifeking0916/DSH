@@ -370,6 +370,66 @@ h3 {
 }
 
 /* ============================================================================
+   封面页（独立一页）
+   ========================================================================= */
+.coverpage {
+  break-after: page;
+  page-break-after: always;
+  padding: var(--sp-10) 0 var(--sp-6);
+  border-top: 3px solid var(--accent);
+}
+.coverpage-brand {
+  font-size: var(--text-caption);
+  line-height: var(--lead-caption);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.coverpage-title {
+  font-size: 40px;
+  line-height: 46px;
+  letter-spacing: -0.014em;
+  font-weight: 700;
+  color: var(--brand);
+  margin: var(--sp-3) 0 var(--sp-2);
+  padding: 0;
+  border: 0;
+}
+.coverpage-sub {
+  font-size: var(--text-title-3);
+  line-height: var(--lead-title-3);
+  color: var(--label-secondary);
+  margin: 0 0 var(--sp-8);
+}
+.coverpage-kv { max-width: 30em; }
+.coverpage-grade {
+  display: flex; align-items: baseline; gap: var(--sp-2);
+  margin: var(--sp-4) 0 var(--sp-6);
+}
+.coverpage-label { font-size: var(--text-subhead); color: var(--label-secondary); }
+.coverpage-score { font-size: var(--text-caption); color: var(--label-tertiary); }
+.coverpage-org {
+  font-size: var(--text-callout);
+  color: var(--label-secondary);
+  margin: var(--sp-6) 0 var(--sp-2);
+}
+.coverpage-notice {
+  font-size: var(--text-footnote);
+  line-height: var(--lead-footnote);
+  color: var(--label-tertiary);
+  max-width: 34em;
+}
+
+/* 可信度 */
+.cred {
+  display: flex; align-items: baseline; gap: var(--sp-2);
+  margin: var(--sp-3) 0 var(--sp-5);
+  font-size: var(--text-callout);
+}
+.cred-label { font-weight: 600; color: var(--label-secondary); }
+.cred-text { color: var(--label-tertiary); font-size: var(--text-subhead); }
+
+/* ============================================================================
    打印：A4、页边距、页脚与页码（走 @page margin box，物理上不可能压正文）
    ========================================================================= */
 @page {

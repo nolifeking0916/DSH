@@ -312,8 +312,8 @@ def main():
         ],
         "note": ("第 13 条的两个数：完成整卷比例 = 整卷答完的份数占比；省略作答比例 = 有未答题的份数占比。"
                  "D3（到点只提示、不自动交卷）后不再有「被自动截断」的份数。"
-                 "未答的份子默认**仍进**统计（只报告），要不要剔除用 --exclude-unanswered；"
-                 "这一条是 #26 待拍的口径题。"),
+                 "Q2=A（维护者 2026-10-25 裁定）：有未答题的份子**整份剔除**、逐份登记（见 excluded_ids）；"
+                 "要保留就显式加 --keep-unanswered。"),
     }
     with open(out_report, "w", encoding="utf-8") as f:
         json.dump(report, f, ensure_ascii=False, indent=1)

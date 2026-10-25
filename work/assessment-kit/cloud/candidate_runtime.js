@@ -77,6 +77,24 @@
     };
   }
 
+  /* 交卷前先问一句「这一份是不是已经交过了」。
+     2026-10-25 加（真实候选人刷新后想回到最后一题）：`responses.code` 上有唯一索引，
+     同一份再交一次会被数据库拒（重复键）⇒ 页面显示「提交未成功」，其实第一份早就存好了。
+     ⇒ 先 GET 一下：库里有了就当「已提交」，不再 POST。 */
+  function alreadySubmitted(code) {
+    if (!code) return Promise.resolve(false);
+    return fetch(ENDPOINT + "?code=" + encodeURIComponent(code), { method: "GET" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) {
+        if (!j) return false;
+        var row = j.row || j.data || j;
+        if (row && typeof row === "object" && row.code) return true;
+        if (Array.isArray(row) && row.length) return true;
+        return false;
+      })
+      .catch(function () { return false; });   // 查不到就照常交（宁可重复，也不要把作答弄丢）
+  }
+
   function submit() {
     if (st.sending || st.sent) return;
     var s = appState();
@@ -85,6 +103,13 @@
     paint();
     var p;
     try { p = buildPayload(s); } catch (e) { st.sending = false; st.err = String(e && e.message || e); paint(); return; }
+    alreadySubmitted(p.code).then(function (dup) {
+      if (dup) { st.sending = false; st.sent = true; st.err = null; st.dup = true; paint(); return; }
+      return doPost(p);
+    });
+  }
+
+  function doPost(p) {
     fetch(ENDPOINT, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -111,12 +136,17 @@
   function doneHtml(s) {
     var status;
     if (st.sent) {
-      status = "<div class=\"panel\"><p class=\"hint\">本次作答已提交，结果由集团人力资源部保管。</p></div>";
+      status = "<div class=\"panel\"><p class=\"hint\">" +
+        (st.dup ? "本次作答此前已经提交过了，结果由集团人力资源部保管。" : "本次作答已提交，结果由集团人力资源部保管。") +
+        "</p></div>";
     } else if (st.sending) {
       status = "<div class=\"panel\"><p class=\"hint\">正在提交…</p></div>";
     } else if (st.err) {
       status = "<div class=\"panel\"><p class=\"hint\">提交未成功：" + esc(st.err) + "</p>" +
-        "<button class=\"btn btn-primary btn-full\" style=\"margin-top:var(--sp-2)\" onclick=\"window.__cloudRetry()\">重新提交</button></div>";
+        "<button class=\"btn btn-primary btn-full\" style=\"margin-top:var(--sp-2)\" onclick=\"window.__cloudRetry()\">重新提交</button>" +
+        /* 兜底出口：上传失败时，作答要能被带走（app.js 的云版完成页本来就有这一条，
+           但 paint() 换掉整块 .sheet 会把它抹掉 ⇒ 这里补回来） */
+        "<button class=\"btn btn-quiet btn-full\" style=\"margin-top:var(--sp-2)\" onclick=\"APP.download()\">下载结果文件（JSON）</button></div>";
     } else {
       status = "<div class=\"panel\"><p class=\"hint\">准备提交…</p></div>";
     }

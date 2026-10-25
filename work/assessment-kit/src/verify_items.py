@@ -278,7 +278,10 @@ def render_check(html, fails):
 FLOW_JS = """
 <script>
 window.__muts = 0; window.__fetches = 0; window.__errs = [];
-window.fetch = function () { window.__fetches++; return Promise.reject(new Error('blocked-by-gate')); };
+window.fetch = function (u, o) {
+  if (o && o.method === 'POST') window.__fetches++;   // 只数「交卷」；查重用的 GET 不算
+  return Promise.reject(new Error('blocked-by-gate'));
+};
 window.addEventListener('error', function (e) { window.__errs.push(String(e.message || '')); });
 window.addEventListener('load', function () { setTimeout(function () {
  try {

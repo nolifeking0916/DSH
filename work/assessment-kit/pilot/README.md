@@ -74,13 +74,26 @@ python3 pilot/preflight.py
 # 2. 搬运 + 体检
 python3 pilot/export_from_db.py --dump pilot/out/responses_dump.json --out-dir pilot/out/
 # 3. 计分 + 统计（与离线三条同一条路）
+#    计分结果的落盘名跟着输入名走 ⇒ real_samples.json → real_scored.json
 node    pilot/run_pilot.mjs pilot/out/real_samples.json
-python3 pilot/analyze.py --real pilot/out/real_samples.json --scored pilot/out/scored.json
+python3 pilot/analyze.py --real pilot/out/real_samples.json \
+        --scored pilot/out/real_scored.json \
+        --exclude pilot/out/excluded_ids.json pilot/剔除清单_真人样本.json
 ```
 
 搬运工具同时产出**第 13 条要的两个数**：完成整卷比例、省略作答比例。
 硬错误（长度≠96、非 0/1 的值、code 重复、缺 m1_raw）**整批阻断、零输出**；
-有未答题的份子**默认只报告不剔除**（要剔除加 `--exclude-unanswered` —— 这一条是 #26 待拍的口径题）。
+有未答题的份子**默认整份剔除、逐份登记**（口径 Q2=A；`--keep-unanswered` 才保留）。
+
+## 两道闸门（别把「一个数字」当成「一个结论」）
+
+1. **适用性闸门**：`analyze.py` 只有在 n ≥ 60（`MIN_N_DIAGNOSTIC`）时才把社赞筛查清单当结论；
+   锚定审计那一段**永远是程序演练**（真人审计要两名标注员做）；校准演示在 n < 100 时只写「不适用」。
+   不够 n 的段落一律标「不适用」并写明原因 —— 口径出处是
+   `research/样本量与信度推断边界_20261025.md` 的 6.1/6.2 节与报告模板的三道关。
+2. **剔除登记册**：人工确认要剔除的份子写进 `剔除清单_真人样本.json`（id + 理由 + 批次 + 决定人），
+   分析时用 `--exclude` 指过去。**剔除的份子不进任何统计**（信度 / 分布 / 极端题 / 校准 / 相关性 / 分组），
+   行默认仍留在库里（那是链路证据）。机器只照单剔除，不自己裁决。
 
 ## 区间与判定的自检
 
@@ -104,6 +117,7 @@ python3 pilot/analyze.py --selftest-ci
 | `run_pilot.mjs` | **驱动成品真实计分**：从 `dist/` 里抽 `window.__DATA__`，跑 `src/modules/report.js` 的 `window.REP`；整卷端到端出报告 HTML |
 | `analyze.py` | α / 分半信度 / 分布 / 极端题 / 锚定审计演练 / 真值回收 / 异常盲检 / 校准演示 / 相关性检查 / 与 Node 的交叉验算 / **α 与分半的 95% 区间**（Feldt 解析式 + 重抽样）/ **第 13 条的两个数** |
 | `verify_report_pdf.py` | 报告打印验收：Chrome headless 出 A4 → `pdftotext` 抽文本层 → 8 项断言 |
+| `剔除清单_真人样本.json` | **人工确认剔除的作答登记册**（id + 理由 + 批次 + 决定人 + 出处）：分析时 `--exclude` 指它 |
 
 ## 三条纪律
 

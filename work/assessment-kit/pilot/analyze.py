@@ -480,7 +480,9 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--real", metavar="PATH", help="真人作答文件（格式见真人试测作业包 §6）")
     ap.add_argument("--scored", metavar="PATH", help="计分结果文件，默认 pilot/out/scored.json")
-    ap.add_argument("--exclude", metavar="PATH", help="要剔除的样本 id 清单（人工确认后的异常样本）")
+    ap.add_argument("--exclude", metavar="PATH", nargs="+",
+                    help="要剔除的样本 id 清单（人工确认后的异常样本）；可给多个文件："
+                         "未答份子的自动剔除清单 + 人工登记册（pilot/剔除清单_真人样本.json）")
     ap.add_argument("--selftest-ci", action="store_true",
                     help="自检：区间实现能否复现仓内笔记 §1.2 / §1.4 的表（不读数据、不写文件）")
     args = ap.parse_args()
@@ -553,13 +555,49 @@ def main():
     # ---- C. 每维信度 ----
     # 合成数据下这些数字是生成模型的性质；真人数据下才是题目的性质。
     exclude = set()
-    if args.exclude:
-        raw = open(args.exclude, encoding="utf-8").read().strip()
+    exclude_reasons = {}
+    for excl_path in (args.exclude or []):
+        raw = open(excl_path, encoding="utf-8").read().strip()
         try:
-            lst = json.loads(raw)
-            exclude = set(lst) if isinstance(lst, list) else set()
+            obj = json.loads(raw)
         except Exception:
+            obj = None
+        if isinstance(obj, (list, dict)):
+            items = obj if isinstance(obj, list) else (obj.get("excluded") or obj.get("exclusions") or [])
+            for it in items:
+                if isinstance(it, str):
+                    exclude.add(it)
+                elif isinstance(it, dict) and it.get("id"):
+                    exclude.add(it["id"])
+                    exclude_reasons[it["id"]] = {k: v for k, v in it.items() if k != "id"}
+        else:
             exclude = set(x.strip() for x in raw.splitlines() if x.strip())
+    # 人工确认剔除的份子**不进任何统计**（信度 / 分布 / 极端题 / 校准 / 相关性 / 分组）：
+    # 本票 §13 与 Q2=A 的口径 —— 有问题的份子单独登记、逐份留痕，不进统计。
+    # （合成数据的 behavior 标签是注入的异常，只影响信度那一段，行为不变 ⇒ 合成回归不受影响。）
+    scored_eff = [s for s in scored if s["id"] not in exclude]
+    resp_eff = [r for r in samples["respondents"] if r["id"] not in exclude]
+    res["n_excluded"] = len(exclude)
+    res["excluded_reasons"] = exclude_reasons
+    res["n_effective"] = len(scored_eff)
+    if not scored_eff:
+        res["note"] = ("有效样本 0 份：全部作答都被人工剔除 —— 本轮没有可用于信效度统计的真人样本。"
+                       "剔除清单与理由见 excluded_reasons。")
+        res["applicability"] = {
+            "n": 0, "min_n_diagnostic": MIN_N_DIAGNOSTIC,
+            "gate": "有效样本 0 份：不出任何信效度结论（链路的结论另算）",
+            "sections": {"reliability": "无有效样本，不适用", "extreme_items": "无有效样本，不适用",
+                         "anchor_audit": res.get("anchor_audit_simulated", {}).get("note", "未执行"),
+                         "calibration": "无有效样本，不适用",
+                         "completion": "第 13 条的两个数仍可报（属链路事实）",
+                         "anomaly_detection": "异常样本检出清单仍可报（逐份登记 + 留痕）"},
+        }
+        with open(os.path.join(OUT, "analysis.json"), "w", encoding="utf-8") as f:
+            json.dump(res, f, ensure_ascii=False, indent=1)
+        print("有效样本 0 份：全部作答都被人工剔除 —— 没有可用于信效度统计的真人样本。")
+        print("剔除清单（逐份留痕）：%s" % json.dumps(exclude_reasons, ensure_ascii=False))
+        print("已写出 pilot/out/analysis.json")
+        return
     rel = {}
     for d in DIMS:
         cols = [i for i, it in enumerate(ITEMS) if it["dim"] == d]
@@ -659,9 +697,9 @@ def main():
     # ---- E. 分布与极端题（社会赞许偏差观察） ----
     dist = {}
     for d in DIMS:
-        scores = [s["m1"]["dims"][DIMS.index(d)]["score"] for s in scored]
+        scores = [s["m1"]["dims"][DIMS.index(d)]["score"] for s in scored_eff]
         bands = {}
-        for s in scored:
+        for s in scored_eff:
             g = s["m1"]["dims"][DIMS.index(d)]["grade"]
             bands[g] = bands.get(g, 0) + 1
         dist[d] = {"mean": round(mean(scores), 2), "sd": round(math.sqrt(var(scores)), 2),
@@ -670,16 +708,17 @@ def main():
     res["distribution_simulated"] = dist
 
     extreme = []
+    n_eff = len(resp_eff)
     for j, it in enumerate(ITEMS):
-        p_same = sum(1 for r in samples["respondents"]
-                      if (r["responses"][j] == 0) == (it["anchor"] == "a")) / len(samples["respondents"])
-        pick_a = sum(1 for r in samples["respondents"] if r["responses"][j] == 0) / len(samples["respondents"])
+        p_same = sum(1 for r in resp_eff
+                      if (r["responses"][j] == 0) == (it["anchor"] == "a")) / n_eff
+        pick_a = sum(1 for r in resp_eff if r["responses"][j] == 0) / n_eff
         if max(pick_a, 1 - pick_a) >= EXTREME_SAME:
             extreme.append({"id": it["id"], "dim": it["dim"],
                             "picked_anchor_rate": round(p_same, 3),
                             "pick_a_rate": round(pick_a, 3),
                             "text_a": it["a"], "text_b": it["b"]})
-    n_all = len(samples["respondents"])
+    n_all = n_eff
     # 社赞筛查（每题同端率 ≥ 90%）在 n 不足时**没有分辨力**：n=1 时每题都是 100% 同端，
     # 计数会变成「96 道」这种看着吓人、实则恒真的数 ⇒ 低于门槛只报「不适用」。
     extreme_applicable = n_all >= MIN_N_DIAGNOSTIC
@@ -732,7 +771,7 @@ def main():
     # ---- H. 校准演示（演示用，不写裁定表） ----
     calib = {}
     for d in DIMS:
-        scores = [s["m1"]["dims"][DIMS.index(d)]["score"] for s in scored]
+        scores = [s["m1"]["dims"][DIMS.index(d)]["score"] for s in scored_eff]
         cuts = percentile_cutpoints(scores)
         before = {}
         after = {}
@@ -750,7 +789,7 @@ def main():
 
     # ---- I. 与第三项推理分的相关性：检查器必须「弱相关不报警、强相关报警」 ----
     rng = random.Random(7)
-    m1_tot = [sum(dd["score"] for dd in s["m1"]["dims"]) for s in scored]
+    m1_tot = [sum(dd["score"] for dd in s["m1"]["dims"]) for s in scored_eff]
     mu, sd = mean(m1_tot), math.sqrt(var(m1_tot))
     corr_rows = []
     if sd == 0 or len(m1_tot) < 2:
@@ -772,7 +811,7 @@ def main():
     # ---- J. 分组对比（合成画像混合的结果，不是人群结论） ----
     grp = {}
     for g in ("内部候选人", "在职员工"):
-        ss = [s for s in scored if s["group"] == g]
+        ss = [s for s in scored_eff if s["group"] == g]
         if not ss:
             continue
         grp[g] = {"n": len(ss),
@@ -810,7 +849,7 @@ def main():
     }
 
     # ---- 适用性闸门：哪些数现在能当结论，哪些只是「一个数字」 ----
-    n_now = len(samples["respondents"])
+    n_now = len(scored_eff)
     ci_ok = any(res["reliability"][d].get("alpha_ci95") for d in DIMS)
     res["applicability"] = {
         "n": n_now,

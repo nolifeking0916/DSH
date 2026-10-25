@@ -101,7 +101,7 @@ ${body}
 
   /* 报告里的关键内容必须真的在（防止「渲染成功但内容是空的」） */
   const musts = ["总报告", "综合评估", "短板", "第一项", "第二项", "第三项",
-    e2eScore.m1.out.grade, e2eScore.compose.grade];
+    e2eScore.m1.out.short.grade, e2eScore.compose.grade];
   const missing = musts.filter((m) => !body.includes(m));
   if (missing.length) fail("报告里缺少这些内容：" + missing.join(" / "));
 }
@@ -114,23 +114,25 @@ if (resultJSON) {
 }
 
 /* ---------- 5. 自检门 ---------- */
-const grades = new Set(scored.map((s) => s.m1.grade));
 const dimGrades = new Set();
 scored.forEach((s) => s.m1.dims.forEach((d) => dimGrades.add(d.grade)));
-const overallRule = scored.every((s) => {
+/* 第一项不给总档（ADR-0010）：m1 里不该再有 grade；短板维仍必须等于四维最低档 */
+const noOverall = scored.every((s) => s.m1.grade === undefined || s.m1.grade === null);
+if (!noOverall) fail("第一项仍产出总档（m1.grade），与 ADR-0010 冲突");
+const shortRule = scored.every((s) => {
   const min = s.m1.dims.map((d) => d.grade).sort((a, b) => REP.ORD[a] - REP.ORD[b])[0];
-  return s.m1.grade === min;              // 整体档 = 最低维档
+  return s.m1.short.grade === min;        // 短板维 = 四维最低维档
 });
-if (!overallRule) fail("整体档 != 最低维档，短板档规则没生效");
+if (!shortRule) fail("短板维 != 四维最低维档，短板规则没生效");
 
 console.log("== 试测执行完成 ==");
 console.log(`  样本文件：${samplesPath}`);
 console.log(`  数据源：成品 dist 内嵌的 __DATA__（题库 ${DATA.m1.items.length} 题）`);
 console.log("  计分：src/modules/report.js 的 window.REP（成品同款）");
-console.log(`  样本 ${scored.length} 份 → 整体档出现 ${[...grades].join("/")}；维度档出现 ${[...dimGrades].join("/")}`);
-console.log(`  整体档 = 最低维档 规则：${overallRule ? "通过" : "不通过"}`);
+console.log(`  样本 ${scored.length} 份 → 第一项无总档（ADR-0010）；短板维档出现 ${[...new Set(scored.map((s) => s.m1.short.grade))].join("/")}；维度档出现 ${[...dimGrades].join("/")}`);
+console.log(`  短板维 = 四维最低维档 规则：${shortRule ? "通过" : "不通过"}`);
 if (e2eScore) {
-  console.log(`  整卷端到端：${e2eScore.m1.out.grade} / 综合评估 ${e2eScore.compose.grade} / 短板 ${e2eScore.compose.short.name}`);
+  console.log(`  整卷端到端：短板维 ${e2eScore.m1.out.short.name}（${e2eScore.m1.out.short.grade}，无总档）/ 综合评估 ${e2eScore.compose.grade} / 短板 ${e2eScore.compose.short.name}`);
   console.log("  产物：pilot/out/{scored.json,模拟试测_结果JSON_样例.json,模拟试测_报告样例.html}");
 } else {
   console.log("  产物：pilot/out/scored.json");

@@ -496,7 +496,7 @@ def chapter_results(doc, data, m1, m2, m3, compose, radar_png):
     h2(doc, "1.1　三项成绩")
     grid_table(doc,
                ["模块", "分数口径", "得分", "等级", "最短板维度"],
-               [["第一项 · 管理行为成熟度", "四维 0–24 分，取最低维档", m1["score_text"], m1["grade"], m1["short_text"]],
+               [["第一项 · 管理行为成熟度", "四维 0–24 分（各维独立，无总档）", m1["score_text"], "无总档", m1["short_text"]],
                 ["第二项 · 情境测试", "八维加权 0–5.00", "%.2f / 5.00" % m2["total"], m2["grade"], m2["short_text"]],
                 ["第三项 · 推理测试", "难度加权 0–40 → 参考分布百分位", "%.1f 分 · P%s · T %s" % (
                     m3["total"], m3["pct"], m3["t"]), m3["grade"], m3["short_text"]]],
@@ -513,7 +513,7 @@ def chapter_results(doc, data, m1, m2, m3, compose, radar_png):
                [[d["name"], "%d / %d" % (d["score"], d["max"]), d["grade"], d["brief"]] for d in m1["dims"]],
                widths=(3.0, 2.2, 1.9, 10.4), aligns=["left", "right", "center", "left"], level_col=2)
     para(doc, "", after=4)
-    rich(doc, [("整体档按最短板的一维确定：", {"bold": True, "cn": CN_HEAD}),
+    rich(doc, [("短板维（四维里最弱的一维）：", {"bold": True, "cn": CN_HEAD}),
                ("%s。本项采用绝对锚点切档，尚未建立参照分布（内部样本到量后校准）。"
                 % m1["short_text"], {})], after=10)
 
@@ -565,7 +565,7 @@ def chapter_analysis(doc, m1, m2, m3, m1meta):
 
     h2(doc, "2.1　第一项怎么读")
     para(doc, "第一项每一题是一道二极对比，两端都是行为频率陈述；每题锚定「更有效的一端」计 1 分，"
-              "每维 0–24 分，整体档取最短板的一维。下面逐维说明判据：",
+              "每维 0–24 分，只报四维各档、不合成总档；短板指四维里最弱的一维。下面逐维说明判据：",
          size=10.5, color=INK, cn=CN_FONT, align="justify", after=8)
     for d in m1["dims"]:
         meta = m1meta.get(d["key"], {})
@@ -674,9 +674,12 @@ def build_context(data):
         brief = brief.split("——")[0].split("是")[0][:38] if brief else ""
         dims1.append({"key": d["key"], "name": d["name"], "score": d["score"], "max": d["max"],
                        "grade": d["grade"], "brief": brief or meta.get("behavior", "")[:38]})
-    m1 = {"dims": dims1, "grade": o["grade"],
+    # 第一项不给总档（ADR-0010）：不取 o["grade"]，只用短板维的档位；
+    # 综合评估的第一项输入也取短板维档（数值与旧规则的总档完全相等 ⇒ 合成结果不变）。
+    m1 = {"dims": dims1,
+          "short": {"name": o["short"]["name"], "grade": o["short"]["grade"]},
           "short_text": "%s（%s）" % (o["short"]["name"], o["short"]["grade"]),
-          "score_text": "四维最低 %s" % o["short"]["grade"]}
+          "score_text": "四维 %s 分" % "、".join(str(d["score"]) for d in dims1)}
 
     o2 = data["m2"]
     wmap = {d["key"]: d for d in eq["dimensions"]}
@@ -720,7 +723,7 @@ def build_context(data):
         return ("顶尖" if v >= 4.5 else "优秀" if v >= 3.75 else "良好" if v >= 3.0
                 else "合格" if v >= 2.25 else "待提升")
 
-    items = [{"name": "第一项 · " + m1items["meta"]["title"], "grade": m1["grade"]},
+    items = [{"name": "第一项 · " + m1items["meta"]["title"], "grade": m1["short"]["grade"]},
              {"name": "第二项 · 情境测试", "grade": m2["grade"]},
              {"name": "第三项 · 推理测试", "grade": m3["grade"]}]
     avg = sum(ORDER.index(i["grade"]) for i in items) / 3.0
@@ -747,9 +750,9 @@ def compose_text(compose, m1, m2, m3, m1meta):
         "这位候选人三项的综合评估为%s。综合评估是三项等级（顶尖 5 / 优秀 4 / 良好 3 / 合格 2 / "
         "待提升 1）等权平均后切的档，不产生总分，也不是任何形式的淘汰线。" % grade)
     paras.append(
-        "三项里最弱的是%s（%s）；第一项（行为倾向）整体%s，短板在「%s」（%s）——"
+        "三项里最弱的是%s（%s）；第一项（行为倾向）不合成总档，最弱的一维在「%s」（%s）——"
         "这一维更值得在面试里展开：%s"
-        % (short.get("name", "—"), short.get("grade", "—"), m1["grade"],
+        % (short.get("name", "—"), short.get("grade", "—"),
            short_dim["name"], short_dim["grade"],
            (sk.get("behavior", "") or "结合具体工作场景核实其真实工作顺序。")))
     paras.append(
@@ -868,6 +871,9 @@ p{margin:0 0 2.2mm}
 
 
 def lv_class(grade):
+    # 「无总档」（第一项，ADR-0010）不是一个等级，不套等级色
+    if grade in ("无总档", "—", ""):
+        return ""
     return {"顶尖": "lv-T", "优秀": "lv-A", "良好": "lv-B", "合格": "lv-C", "待提升": "lv-D"}.get(grade, "lv-B")
 
 
@@ -920,7 +926,7 @@ def render_html(data, m1, m2, m3, compose, m1meta, radar_png):
     A('<h2>1.1　三项成绩</h2>')
     A('<table class="tbl"><thead><tr><th>模块</th><th>分数口径</th><th class="r">得分</th>'
       '<th class="c">等级</th><th>最短板维度</th></tr></thead><tbody>')
-    for row in (["第一项 · 管理行为成熟度", "四维 0–24 分，取最低维档", m1["score_text"], m1["grade"], m1["short_text"]],
+    for row in (["第一项 · 管理行为成熟度", "四维 0–24 分（各维独立，无总档）", m1["score_text"], "无总档", m1["short_text"]],
                 ["第二项 · 情境测试", "八维加权 0–5.00", "%.2f / 5.00" % m2["total"], m2["grade"], m2["short_text"]],
                 ["第三项 · 推理测试", "难度加权 0–40 → 参考分布百分位",
                  "%.1f 分 · P%s · T %s" % (m3["total"], m3["pct"], m3["t"]), m3["grade"], m3["short_text"]]):
@@ -939,7 +945,7 @@ def render_html(data, m1, m2, m3, compose, m1meta, radar_png):
           '<td>%s</td></tr>' % (h(d["name"]), d["score"], d["max"], lv_class(d["grade"]),
                                h(d["grade"]), h(d["brief"])))
     A("</tbody></table>")
-    A('<p>整体档按最短板的一维确定：<b>%s</b>。本项采用绝对锚点切档，尚未建立参照分布'
+    A('<p>短板维（四维里最弱的一维）：<b>%s</b>。本项采用绝对锚点切档，尚未建立参照分布'
       '（内部样本到量后校准）。</p>' % h(m1["short_text"]))
 
     A('<h2>1.3　第二项 · 情境测试（八维）</h2>')
@@ -987,7 +993,7 @@ def render_html(data, m1, m2, m3, compose, m1meta, radar_png):
       '以及哪些地方需要施测人结合其他材料再确认。</p>')
     A('<h2>2.1　第一项怎么读</h2>')
     A('<p>第一项每一题是一道二极对比，两端都是行为频率陈述；每题锚定「更有效的一端」计 1 分，'
-      '每维 0–24 分，整体档取最短板的一维。下面逐维说明判据：</p>')
+      '每维 0–24 分，只报四维各档、不合成总档；短板指四维里最弱的一维。下面逐维说明判据：</p>')
     for d in m1["dims"]:
         meta = m1meta.get(d["key"], {})
         A('<div class="dim"><h3>%s（%d / %d，%s）</h3><dl>'

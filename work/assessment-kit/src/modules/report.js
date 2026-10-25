@@ -41,8 +41,9 @@ window.REP = (function () {
       return { key: d.key, name: d.name, score: sc, max: items.length, grade: bandM1(sc, bands) };
     });
     const short = dims.slice().sort((a, b) => ORD[a.grade] - ORD[b.grade])[0];
-    const grade = short.grade; // 整体档 = 最低维档（短板决定）
-    return { out: { dims: dims, grade: grade, short: { key: short.key, name: short.name, grade: short.grade } }, dims: dims, grade: grade, short: short };
+    /* 第一项不给总档（ADR-0010 · 票 #30 裁定）：不产出 grade，只给四维各档 + 短板维。
+       短板维照旧返回 —— 它是「标出最弱的一维」，不是合成的总档。 */
+    return { out: { dims: dims, short: { key: short.key, name: short.name, grade: short.grade } }, dims: dims, short: short };
   }
 
   function scoreM2(S) {
@@ -159,7 +160,8 @@ window.REP = (function () {
 
   function score(S) {
     const m1 = scoreM1(S), m2 = scoreM2(S), m3 = scoreM3(S);
-    const cp = compose(m1, m2, m3);
+    /* 综合评估的第一项输入 = 短板维档（数值与旧规则的总档完全相等 ⇒ 合成结果不变）—— ADR-0010 */
+    const cp = compose({ grade: m1.short.grade, dims: m1.dims }, m2, m3);
     return {
       m1: m1, m2: m2, m3: m3, compose: cp,
       out: { m1: m1.out, m2: m2.out, m3: m3.out, compose: cp }
@@ -270,7 +272,8 @@ window.REP = (function () {
       ladderBlock("综合档", cp.grade) +
       '<p class="compose-note">综合评估由三项的等级合成（顶尖 5 / 优秀 4 / 良好 3 / 合格 2 / 待提升 1，等权平均后切档），<b>不代表总分</b>，也不作一票否决的依据，只用来决定面试追问什么。</p>' +
       skew + "</section>" +
-      '<div class="short-board">短板：<b>' + esc(cp.short.name) + "（" + esc(cp.short.grade) + "）</b>。整体档按最短板的一维确定。</div>";
+      '<div class="short-board">短板：<b>' + esc(cp.short.name) + "（" + esc(cp.short.grade) + "）</b>。" +
+      (cp.short.name.indexOf("第一项") >= 0 ? "短板指该项最弱的一维（第一项取四维里的最低维）。" : "短板指该项最弱的一维。") + "</div>";
   }
   function listMetrics(cp) {
     return '<div class="list-metrics">' + cp.items.map((i) =>
@@ -281,7 +284,7 @@ window.REP = (function () {
   function build(data) {
     if (!data || !data.m1 || !data.m2 || !data.m3) throw new Error("结果数据不完整");
     const cp = data.compose || compose(
-      { grade: data.m1.grade, dims: data.m1.dims },
+      { grade: data.m1.short.grade, dims: data.m1.dims },
       { grade: data.m2.grade, dims: data.m2.dims },
       { grade: data.m3.grade, dims: data.m3.dims }
     );
@@ -303,11 +306,11 @@ window.REP = (function () {
       return '<div class="rep-block"><h3>第一项 · ' + esc(D.m1.meta.title) + "</h3>" +
         calibNote() +
         /* 四维每行仍是「名 + 分 + 五级胶囊」，**不加迷你梯**：五格并排放不下
-           「待提升」（实测折行成两行，390 与 800 宽都难看）—— 按票 #39「别硬塞」，
-           梯只给整体档（总报告给综合档、第二项给整体档）。 */
+           「待提升」（实测折行成两行，390 与 800 宽都难看）—— 按票 #39「别硬塞」。
+           第一项**不给总档**（ADR-0010）⇒ 这一块也没有总档五级梯，
+           只给四维各档 + 短板维提示（梯留给总报告的综合档与第二项的整体档）。 */
         '<div class="dims">' + R.m1.dims.map((d) => metricRow(d)).join("") + "</div>" +
-        ladderBlock("整体档", R.m1.grade) +
-        '<div class="short-board">短板：<b>' + esc(R.m1.short.name) + "（" + esc(R.m1.short.grade) + "）</b>。整体档按最短板的一维确定。</div>" +
+        '<div class="short-board">短板：<b>' + esc(R.m1.short.name) + "（" + esc(R.m1.short.grade) + "）</b>。第一项只报四维各档，不合成总档；短板指四维里最弱的一维。</div>" +
         '<p class="note">每维 0–24 分，按绝对锚点切档（顶尖 22–24 / 优秀 18–21 / 良好 14–17 / 合格 9–13 / 待提升 0–8）；暂未建立参照分布，后续内部样本到量后校准。</p>' +
         "</div>";
     }

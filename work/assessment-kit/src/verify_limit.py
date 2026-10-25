@@ -245,7 +245,10 @@ def main():
           re.search(r"const\s+LADDER\s*=\s*\[\s*\"顶尖\"\s*,\s*\"优秀\"\s*,\s*\"良好\"\s*,\s*\"合格\"\s*,\s*\"待提升\"",
                     html) is not None, "")
     check("总报告有五级梯（综合档）", "ladderBlock(\"综合档\"" in html, "")
-    check("第一项有五级梯（整体档）", "ladderBlock(\"整体档\"" in html, "")
+    check("第二项仍有整体档五级梯", "ladderBlock(\"整体档\", R.m2.grade)" in html, "")
+    check("第一项没有整体档五级梯（ADR-0010）",
+          "ladderBlock(\"整体档\", R.m1.grade)" not in html and html.count("ladderBlock(\"整体档\"") == 1,
+          "%d 处整体档梯（应只剩第二项那 1 处）" % html.count("ladderBlock(\"整体档\""))
     check("口径说明块只出现在第一项报告块（复审定稿：第二、三项不加）",
           html.count("calibNote()") == 2, "%d 处（1 处定义 + 1 处调用）" % html.count("calibNote()"))
     check("总报告有「口径基础」汇总块", "口径基础" in html and "calibBasis()" in html, "")

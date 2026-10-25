@@ -370,8 +370,9 @@ def score_m1_python(items, responses):
             if (it["anchor"] == "a" and resp == 0) or (it["anchor"] == "b" and resp == 1):
                 sc += 1
         dims.append({"key": d, "score": sc, "grade": band_by_anchor(sc, bands)})
-    grade = sorted(dims, key=lambda x: ORD[x["grade"]])[0]["grade"]
-    return dims, grade
+    # 第一项不给总档（ADR-0010）：只回四维各档 + 短板维档（= 四维最低维），不回总档
+    short_grade = sorted(dims, key=lambda x: ORD[x["grade"]])[0]["grade"]
+    return dims, short_grade
 
 
 # ------------------------------------------------------------ 异常样本检测
@@ -495,12 +496,13 @@ def main():
     checked = 0
     for s in scored:
         r = resp_by_id[s["id"]]
-        dims, grade = score_m1_python(ITEMS, r["responses"])
+        dims, short_grade = score_m1_python(ITEMS, r["responses"])
         for mine, theirs in zip(dims, s["m1"]["dims"]):
             checked += 1
             if mine["score"] != theirs["score"] or mine["grade"] != theirs["grade"]:
                 mismatch += 1
-        if grade != s["m1"]["grade"]:
+        # 交叉验算的第一项口径 = 短板维档（ADR-0010：第一项无总档）
+        if short_grade != s["m1"]["short"]["grade"]:
             mismatch += 1
     res["cross_check"] = {"compared": checked, "mismatch": mismatch,
                           "verdict": "两套独立实现逐格一致" if mismatch == 0 else "计分口径有分歧，必须先修"}
@@ -740,9 +742,16 @@ def main():
             continue
         grp[g] = {"n": len(ss),
                   "dim_mean": {d: round(mean([s["m1"]["dims"][DIMS.index(d)]["score"] for s in ss]), 2) for d in DIMS},
-                  "grade_counts": {}}
+                  # 第一项无总档 ⇒ 不再统计「整体档人数」；改为四维各档人数 + 短板维人数
+                  # （票 #26 第 8 条要的「分数分布 + 五级人数」由四维各维满足）
+                  "dim_grade_counts": {d: {} for d in DIMS},
+                  "short_grade_counts": {}}
         for s in ss:
-            grp[g]["grade_counts"][s["m1"]["grade"]] = grp[g]["grade_counts"].get(s["m1"]["grade"], 0) + 1
+            for d in DIMS:
+                gd = s["m1"]["dims"][DIMS.index(d)]["grade"]
+                grp[g]["dim_grade_counts"][d][gd] = grp[g]["dim_grade_counts"][d].get(gd, 0) + 1
+            sg = s["m1"]["short"]["grade"]
+            grp[g]["short_grade_counts"][sg] = grp[g]["short_grade_counts"].get(sg, 0) + 1
     res["group_compare_simulated"] = grp
 
     # ---- K. 真实题面的机械观察（不依赖真人，可复跑；只是线索，不是改题依据） ----

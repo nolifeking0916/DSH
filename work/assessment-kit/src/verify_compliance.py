@@ -65,6 +65,16 @@ def main():
     check("结果对象带 idLast4（后 4 位）", "idLast4" in keys, "字段：%s" % ",".join(keys[:8]))
     check("全文不出现全量身份证回写", not re.search(r'"id"\s*:\s*S\.id\b', html))
 
+    print("== 2b. 身份字段：前 6 位回显已撤除 + 不可逆校验码 ==")
+    check("本机不再读出「前 6 位」残留（S.idEcho 零引用）", not re.search(r"S\.idEcho", html))
+    check("旧本机残留的 idEcho 在加载时自动清除", "delete raw.idEcho" in html)
+    check("不回显号码前缀（成品无 slice(0,6)）", not re.search(r"slice\(\s*0\s*,\s*6\s*\)", html))
+    check("身份字段用不可逆校验码（SHA-256）", "sha256hex" in html
+          and bool(re.search(r"sha256hex\([^)]*\)\.slice\(\s*0\s*,\s*16\s*\)", html)),
+          "取 16 位十六进制" if "sha256hex" in html else "未见 sha256hex")
+    check("结果 JSON 不含校验码字段（idHash 不进结果文件）", "idHash" not in keys)
+    check("生成校验码后输入框随即清空", bool(re.search(r"i\.value\s*=\s*\"\"", html)))
+
     print("== 3. 本机存储与旧键清理 ==")
     cur = re.findall(r"const\s+KEY\s*=\s*\"([^\"]+)\"", html)
     old = re.findall(r"OLD_KEYS\s*=\s*\[([^\]]*)\]", html)

@@ -87,7 +87,7 @@ function reply(status, body) {
    一致性复核都要用），而**线上候选人页本来就在上报这两项** ——
    不收等于白加列，所以收。 */
 const CLIENT_FIELDS = [
-  "code", "respondent_name", "id_last4", "group_name", "level", "dept",
+  "code", "respondent_name", "id_last4", "id_hash", "group_name", "level", "dept",
   "started_at", "duration_ms", "m1_raw", "m2_answers", "m3_answers", "limit_hint"
 ];
 const SERVER_FIELDS = ["submitted_at", "m1_scores", "m2_result", "m3_result", "unanswered_m1"];
@@ -253,6 +253,7 @@ exports.main = async (event) => {
         code: code,
         respondent_name: str(raw.respondent_name) || str(payload.name) || null,
         id_last4: str(raw.id_last4),
+        id_hash: str(raw.id_hash),        /* 不可逆校验码：识别同一人重复提交，不含原号信息 */
         group_name: str(raw.group_name),
         level: str(raw.level),
         dept: str(raw.dept),
@@ -278,7 +279,7 @@ exports.main = async (event) => {
     if (method === "GET") {
       if (q.action === "list") {
         const limit = Math.min(parseInt(q.limit || "50", 10) || 50, 200);
-        const rows = await pg("GET", "/" + table + "?select=code,respondent_name,id_last4,group_name,level,submitted_at,duration_ms,unanswered_m1,m1_scores,m2_result,m3_result&order=submitted_at.desc&limit=" + limit);
+        const rows = await pg("GET", "/" + table + "?select=code,respondent_name,id_last4,id_hash,group_name,level,submitted_at,duration_ms,unanswered_m1,m1_scores,m2_result,m3_result&order=submitted_at.desc&limit=" + limit);
         /* 「等级」= 综合档（compose）：m1 短板档 + m2 总档 + m3 总档重算，
            **不需要重新计分**（三样都在已落库的 out 里）⇒ 只取用、不回传。 */
         const out = (rows || []).map((r) => {
@@ -287,6 +288,7 @@ exports.main = async (event) => {
             code: r.code,
             respondent_name: r.respondent_name || null,
             id_last4: r.id_last4 || null,
+            id_hash: r.id_hash || null,
             group_name: r.group_name || null,
             level: r.level || null,
             submitted_at: r.submitted_at || null,
@@ -333,6 +335,7 @@ exports.main = async (event) => {
             code: row.code,
             respondent_name: row.respondent_name || null,
             id_last4: row.id_last4 || null,
+            id_hash: row.id_hash || null,
             group_name: row.group_name || null,
             level: row.level || null,
             dept: row.dept || null,
@@ -399,7 +402,7 @@ exports.main = async (event) => {
             excluded: excluded
           });
         }
-        const rows = await pg("GET", "/" + table + "?select=code,respondent_name,id_last4,group_name,level,submitted_at,duration_ms,unanswered_m1,m1_scores,m2_result,m3_result&order=submitted_at.desc&limit=" + limit);
+        const rows = await pg("GET", "/" + table + "?select=code,respondent_name,id_last4,id_hash,group_name,level,submitted_at,duration_ms,unanswered_m1,m1_scores,m2_result,m3_result&order=submitted_at.desc&limit=" + limit);
         const out = [];
         const byGrade = {}, byGroup = {}, byLevel = {};
         for (const r of rows || []) {
@@ -409,6 +412,7 @@ exports.main = async (event) => {
             code: r.code,
             respondent_name: r.respondent_name || null,
             id_last4: r.id_last4 || null,
+            id_hash: r.id_hash || null,
             group_name: r.group_name || null,
             level: r.level || null,
             submitted_at: r.submitted_at || null,

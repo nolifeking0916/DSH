@@ -65,6 +65,9 @@
       code: s.code,
       name: s.name || null,
       id_last4: s.idLast4 || null,
+      /* 不可逆校验码（SHA-256 前 16 位）：完整号码从不离开浏览器，
+         只回传末 4 位 + 这个校验码，用来识别同一人重复提交。 */
+      id_hash: s.idHash || null,
       group: s.group || null,
       level: s.level || null,
       dept: s.dept || null,

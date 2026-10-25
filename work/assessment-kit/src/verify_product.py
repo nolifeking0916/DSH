@@ -12,6 +12,7 @@ import os
 import re
 import subprocess
 import sys
+import tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
@@ -97,7 +98,7 @@ def main():
         ("第八条与前七条同区", "八、这不是诊断" in html and "七、有异议怎么办" in html),
         ("勾选框默认不勾选", 'id="c-box"' in html and not re.search(r'id="c-box"[^>]*?\schecked(\s|=|>)', html)),
         ("暂不参加路径", "暂不参加" in html),
-        ("清除本机数据入口", "清除本机数据" in html),
+        ("完成页不再提供「清除本机数据」入口（D6 撤除）", "清除本机数据" not in html),
         ("身份证只留后 4 位", "只保留末 4 位" in html and "不随结果回传" in html),
         ("两行合规页脚", "作答内容不上传服务器" in html and "不构成医学或心理诊断" in html),
         ("云版页脚文案在（两套并存，渲染时按 CLOUD.enabled 选）", "会提交到集团人力资源部的系统" in html),
@@ -392,6 +393,47 @@ window.addEventListener('load', function(){
         os.remove(pp)
     except OSError:
         pass
+
+
+    print("\n== 11. 同意页：勾选后「同意并开始测试」必须可点（2026-10-25 实况 bug） ==")
+    # 这个 bug 的来历：原型 prototypes/candidate-flow-prototype.html 的勾选框带 onchange
+    # （勾上就把 c-ok 的 disabled 去掉），产品版 src/modules/app.js 只抄了按钮上的 disabled，
+    # **没抄那行 onchange** ⇒ 按钮永远灰着，谁也走不出同意页（云版与离线成品都中招）。
+    # 所有旧门都看不出来：它们查结构、查正则、查截图，没有一处真的点一下。
+    js_consent = """
+<script>window.addEventListener('load',function(){setTimeout(function(){
+ try{
+  var S=APP.S(); S.name='门禁自检'; S.idLast4='4821'; APP.save(); APP.go('consent');
+  setTimeout(function(){
+   var cb=document.getElementById('c-box'), btn=document.getElementById('c-ok');
+   if(!cb||!btn){document.title='MISS';return;}
+   var before=btn.disabled;
+   cb.checked=true; cb.dispatchEvent(new Event('change'));
+   var after=btn.disabled;
+   btn.click();
+   setTimeout(function(){
+     document.title='CB:'+before+'->'+after+':screen:'+(APP.S().screen||'?');
+   },600);
+  },400);
+ }catch(e){document.title='ERR:'+e.message;}
+},400);});</script>
+"""
+    with tempfile.NamedTemporaryFile("w", suffix=".html", delete=False, encoding="utf-8") as f:
+        f.write(html.rsplit("</body>", 1)[0] + js_consent + "</body></html>")
+        qp3 = f.name
+    try:
+        dom = subprocess.run([CHROME, "--headless=new", "--disable-gpu", "--virtual-time-budget=8000",
+                              "--dump-dom", "file://" + qp3],
+                             stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=120).stdout.decode("utf-8", "ignore")
+    finally:
+        os.unlink(qp3)
+    tm = re.search(r"<title>([^<]*)</title>", dom)
+    title = (tm.group(1) if tm else "").replace("&gt;", ">")   # DOM 里 "->" 会被转义成 "-&gt;"
+    m_cb = re.search(r"CB:(\w+)->(\w+):screen:(\w*)", title)
+    ok_btn = bool(m_cb) and m_cb.group(1) == "true" and m_cb.group(2) == "false" and m_cb.group(3) == "quiz"
+    print("  [%s] 勾选后「同意并开始测试」可点并进入答题页（%s）" % ("OK " if ok_btn else "FAIL", title or "无回读"))
+    if not ok_btn:
+        fails.append("同意页按钮点不动：勾选后仍 disabled（%s）" % (title or "无回读"))
 
     print("\n==== %s ====" % ("全部通过" if not fails else "有 %d 项未通过" % len(fails)))
     for f in fails:

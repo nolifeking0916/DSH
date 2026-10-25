@@ -40,16 +40,15 @@
     try {
       const raw = JSON.parse(localStorage.getItem(KEY) || "null");
       if (raw && raw.a) {
-        /* 兼容旧状态：限时截止时刻（票 #25）与到点痕迹 limitHint（票 #39）是新增字段 */
+        /* 兼容旧状态：限时截止时刻（票 #25）是新增字段 */
         if (!raw.deadline) raw.deadline = 0;
-        if (!raw.limitHint) raw.limitHint = null;
         return raw;
       }
     } catch (e) { /* 忽略损坏的本地状态 */ }
     return {
       name: "", idLast4: "", idEcho: "", code: newCode(), consented: false, limit: false,
       a: { m1: [], m2: {}, m3: [] }, cur: { m1: 0, m2: 0, m3: 0 }, mod: "m1", phase: "self", t0: Date.now(),
-      deadline: 0, limitHint: null
+      deadline: 0
     };
   }
   function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* 隐私模式等 */ } }
@@ -61,12 +60,13 @@
      · 截止时刻 deadline 存在本机，断点续答按存的时刻继续走（续答不重新给 90 分钟）；
      · **到点 → 只提示一次，不自动交卷**（票 #39 · D3 · 维护者 2026-10-25 12:34 裁定）：
        候选人可以继续作答，什么时候交卷由他自己决定（走完最后一题即交卷）；
-     · 到点这一刻的痕迹记在 S.limitHint = {answered 到点时已答题数, total 总题数}，
-       最终交卷时随结果一起带出（供票 #26 第 13 条算完成整卷比例 / 省略作答比例）；
-     · deadline 与 limitHint 都不落用时字段（limitHint 里刻意不放时间戳）。 */
+     · **不留任何到点痕迹**（票 #39 · D3 复审定稿）：结果 JSON 与云端提交体里
+       既没有用时字段，也没有 limitCut / limitHint —— 到点只是一个提示，不进结果。
+     · deadline 只存在本机状态里，不进结果 JSON（不落用时字段）。 */
   const LIMIT_MIN = 90;                    /* 三项合计一个钟（分钟） */
   const LIMIT_WARN_MS = 10 * 60 * 1000;    /* 剩余 10 分钟开始变色 */
   let timerId = null;
+  let limitTipped = false;   /* 到点提示只弹一次（票 #39 · D3 复审定稿） */
 
   function startTimer() {
     stopTimer();
@@ -100,15 +100,12 @@
     el.style.color = warn ? "var(--gold)" : "";
     el.style.fontWeight = warn ? "700" : "";
   }
-  function answeredTotal() { return answeredOf("m1") + answeredOf("m2") + answeredOf("m3"); }
-  function totalAll() { return totalOf("m1") + totalOf("m2") + totalOf("m3"); }
   function onLimitHit() {
-    /* 票 #39 · D3：到点**只提示一次、不自动交卷**。这里不再有任何跳完成页的逻辑 ——
-       交卷只由候选人自己走完最后一题触发（APP.next → done）。
-       到点这一刻的痕迹只记「已答了多少题」，不记时间戳（票 #25：不把用时落进产品）。 */
-    if (S.limitHint) return;                 /* 只提示一次：痕迹不重复记 */
-    S.limitHint = { answered: answeredTotal(), total: totalAll() };
-    save();
+    /* 票 #39 · D3（维护者 2026-10-25 复审定稿）：到点**只提示一次、不自动交卷、不留痕**。
+       这里不再有任何跳完成页的逻辑 —— 交卷只由候选人自己走完最后一题触发（APP.next → done）。
+       也不写任何到点痕迹：结果里既没有用时字段，也没有 limitCut / limitHint。 */
+    if (limitTipped) return;                 /* 只提示一次 */
+    limitTipped = true;
     showLimitTip();
   }
   function showLimitTip() {
@@ -219,7 +216,7 @@
       '<div class="terms">' + terms + "</div>" +
       limitBlock +
       '<div style="border-top:1px solid var(--line);padding-top:var(--sp-3)">' +
-      '<label class="check"><input type="checkbox" id="c-box"><span>我已阅读并理解以上八条说明，<b>自愿参加</b>本次测试。</span></label>' +
+      '<label class="check"><input type="checkbox" id="c-box" onchange="document.getElementById(\'c-ok\').disabled=!this.checked"><span>我已阅读并理解以上八条说明，<b>自愿参加</b>本次测试。</span></label>' +
       '<div style="display:flex;gap:var(--sp-2);margin-top:var(--sp-3)">' +
       '<button class="btn btn-primary" id="c-ok" style="flex:2" disabled onclick="APP.toQuiz()">' + esc(C.agreeBtn) + "</button>" +
       '<button class="btn btn-quiet" style="flex:1" onclick="APP.go(\'start\')">' + esc(C.quitBtn) + "</button>" +
@@ -286,28 +283,21 @@
      「已完成 · 结果由 HR 保管」，不出现分数、等级与任何评价结论（旧图红线 6 仍然有效）。
      撤回通道做成可选：提一句「如需删除本次记录，请联系 HR」。 */
   function doneHTML() {
-    /* 到点只提示、不自动交卷（票 #39 · D3）：到点时答了多少题如实说明（不含任何评价结论）。 */
-    const hint = S.limitHint;
-    const hintNote = hint
-      ? '<div class="warn" style="margin:var(--sp-3) 0 0">' +
-        esc(C.doneLimitNote.replace("{N}", hint.answered).replace("{M}", hint.total)) + "</div>"
-      : "";
+    /* 完成页（票 #39 · D6 · 维护者 2026-10-25 裁定与复审定稿）：
+       只显示「已完成 · 结果由 HR 保管」，**不出现分数、等级与任何评价结论**（旧图红线 6 仍然有效）。
+       离线版的「下载结果文件 + 回传给施测人」整套话术与入口一并撤掉（云版直接落库，没有回传动作）；
+       候选人侧的「清除本机」入口也一并撤掉（本机残留由候选人自行清浏览器数据）。
+       撤回通道做成可选：这里只留一句「如需删除本次记录，请联系集团人力资源部」。
+       **云上测试版的两处例外**：上传状态行与「下载结果文件」兜底按钮只在云上版出现
+       （build.py --cloud）—— 上传失败时作答需要一条能带走的出口；离线版严格按 D6，两样都没有。 */
     return '<div class="wrap"><div class="sheet" style="margin-top:var(--sp-4);padding:var(--sp-6) var(--sp-4)">' +
       '<div class="done-seal">✓</div>' +
       '<h2 style="font-size:var(--fs-6);text-align:center">' + esc(C.doneTitle) + "</h2>" +
       '<p class="hint" style="max-width:330px;margin:var(--sp-2) auto 0;text-align:center">' + esc(C.doneLead) + "</p>" +
-      '<p class="hint" id="cloud-state" style="max-width:330px;margin:var(--sp-1) auto 0;text-align:center">' +
-        (CLOUD.enabled ? "正在提交本次作答…" : "本次作答只保存在这台设备上。") + "</p>" +
-      hintNote +
-      '<button class="btn btn-primary btn-full" style="margin-top:var(--sp-4)" onclick="APP.download()">下载结果文件（JSON）</button>' +
-      '<div class="panel" style="margin-top:var(--sp-3)"><h3>' + esc(C.sendTitle) + "</h3>" +
-      '<p class="hint">' + esc(C.sendBody) + "<br>测评编号：<b>" + esc(S.code) + "</b></p>" +
-      '<p class="hint" style="margin-top:var(--sp-1)">' + esc(C.doneSendTail) + "</p>" +
-      '<p class="hint" style="margin-top:var(--sp-1)">' + esc(C.doneWithdraw) + "</p></div>" +
-      /* 清除本机数据：云端数据不在本机，本机只是缓存 —— 按钮清的是本机缓存（票 #39） */
-      '<div class="panel" style="margin-top:var(--sp-3)"><h3>' + esc(C.clearTitle) + "</h3>" +
-      '<p class="hint">' + esc(C.clearNote) + "</p>" +
-      '<button class="btn btn-quiet btn-full" style="margin-top:var(--sp-2)" onclick="APP.clearAll()">' + esc(C.clearLabel) + "</button></div>" +
+      (CLOUD.enabled ? '<p class="hint" id="cloud-state" style="max-width:330px;margin:var(--sp-1) auto 0;text-align:center">正在提交本次作答…</p>' : "") +
+      '<p class="hint" style="max-width:330px;margin:var(--sp-1) auto 0;text-align:center">' + esc(C.doneWithdraw) + "</p>" +
+      /* 兜底出口只在云上测试版出现（上传失败时作答要能被带走）；离线版严格按 D6，没有这个入口 */
+      (CLOUD.enabled ? '<button class="btn btn-primary btn-full" style="margin-top:var(--sp-3)" onclick="APP.download()">下载结果文件（JSON）</button>' : "") +
       '<button class="btn btn-quiet btn-full" style="margin-top:var(--sp-2)" onclick="APP.reset()">再测一次</button>' +
       "</div>" + footHTML() + "</div>";
   }
@@ -346,7 +336,6 @@
       m1_scores: r.m1.out,        /* 四维分与档位快照（客户端算分的口径） */
       m2_result: r.m2.out,
       m3_result: r.m3.out,
-      limit_hint: S.limitHint || null,
       unanswered_m1: m1.filter(function (v) { return v === -1; }).length
     };
   }
@@ -394,7 +383,7 @@
     if (l) {
       S.limit = l.checked;
       /* 取消勾选 = 取消限时：清掉截止时刻与到点痕迹，避免上一轮残留把这一轮也标上 */
-      if (!S.limit) { S.deadline = 0; S.limitHint = null; }
+      if (!S.limit) { S.deadline = 0; }
     }
     if (i && i.value.trim()) {
       if (!validId(i.value.trim())) { alert("身份证号格式或校验位不对，请核对后重填"); return; }
@@ -477,9 +466,8 @@
       tool: D.brand, version: "20261024", code: S.code, name: S.name, idLast4: S.idLast4,
       date: new Date().toISOString(), m1: r.m1.out, m2: r.m2.out, m3: r.m3.out
     };
-    /* 到点痕迹只在真的到过点时出现（票 #39 · D3）；不落用时字段 ——
-       limitHint 里只有「到点时已答了多少题 / 共多少题」，没有时间戳（票 #25 裁定）。 */
-    if (S.limitHint) out.limitHint = S.limitHint;
+    /* 结果里不落任何用时字段，也不落到点痕迹（票 #39 · D3 复审定稿：到点只提示、不留痕）。
+       字段恒为 9 个：tool / version / code / name / idLast4 / date / m1 / m2 / m3。 */
     return out;
   }
   function download() {

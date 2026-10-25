@@ -94,20 +94,24 @@ def main():
         check("到点处理函数里不再跳完成页（不自动交卷）",
               re.search(r"go\(\s*['\"]done['\"]", hit_body) is None
               and re.search(r"screen\s*=\s*['\"]done['\"]", hit_body) is None, "")
-        check("到点处理函数记录到点痕迹（limitHint）", "limitHint" in hit_body, "")
-        check("到点痕迹只记一次（if (S.limitHint) return）",
-              re.search(r"if\s*\(\s*S\.limitHint\s*\)\s*return", hit_body) is not None, "")
+        check("到点处理函数不写任何到点痕迹（复审定稿：只提示、不留痕）",
+              re.search(r"S\.(limitHint|limitCut)\s*=", hit_body) is None, "")
+        check("到点提示只弹一次（一次性开关 limitTipped）",
+              re.search(r"if\s*\(\s*limitTipped\s*\)\s*return", hit_body) is not None, "")
 
     print("\n== 2. 结果 JSON 字段（不落用时字段） ==")
     m = re.search(r"const\s+out\s*=\s*\{(.*?)\}\s*;", html, re.S)
     obj = m.group(1) if m else ""
     keys = re.findall(r"(\w+)\s*:", obj)
-    allowed = {"tool", "version", "code", "name", "idLast4", "date", "m1", "m2", "m3", "limitHint"}
+    allowed = {"tool", "version", "code", "name", "idLast4", "date", "m1", "m2", "m3"}
     extra = [k for k in keys if k not in allowed]
     check("结果对象字段在白名单内", not extra, "字段：%s" % ",".join(keys))
-    check("白名单显式包含到点痕迹字段 limitHint", "limitHint" in allowed, "")
-    check("到点痕迹随结果导出（限到过点时才带）", re.search(r"out\.limitHint\s*=", html) is not None, "")
-    check("旧截断标记 limitCut 已下线（成品里不再出现）", "limitCut" not in html, "")
+    check("结果对象恒为 9 个字段（复审定稿：到点不留痕）",
+          sorted(keys) == sorted(allowed), "字段：%s" % ",".join(keys))
+    check("到点痕迹不进结果（out.limitHint 不存在）",
+          re.search(r"out\.limitHint\s*=", html) is None and "limitHint:" not in obj, "")
+    check("旧截断标记 limitCut 已下线（结果对象里不出现）",
+          re.search(r"out\.limitCut\s*=", html) is None and "limitCut:" not in obj, "")
     for w in ["duration", "elapsed", "startedAt", "finishedAt", "usedTime", "timeSpent", "用时"]:
         hit = re.search(r"\b%s\b" % w, obj)
         check("结果对象不含「%s」" % w, hit is None, "")
@@ -159,16 +163,7 @@ def main():
     check("到点后剩余题仍可作答", ":pick:ok" in title, title)
     m2 = re.search(r":hint:(\{.*?\}|none)", title)
     hint = m2.group(1) if m2 else ""
-    check("到点痕迹写进状态", hint not in ("", "none"), hint)
-    if hint not in ("", "none"):
-        try:
-            h = json.loads(hint)
-            check("到点痕迹记着到点时的已答题数（答了 2 题）", h.get("answered") == 2, hint)
-            check("到点痕迹记着总题数", isinstance(h.get("total"), int) and h.get("total") > 0, hint)
-            check("到点痕迹里没有时间戳（不落用时字段）",
-                  not any(k in h for k in ("at", "time", "atMs", "timestamp", "elapsed", "duration")), hint)
-        except Exception as e:  # noqa: BLE001
-            check("到点痕迹可解析", False, "%s：%s" % (hint, e))
+    check("到点后没有写任何到点痕迹（复审定稿：只提示、不留痕）", hint == "none", hint)
 
     print("\n== 5. 手动交卷的结果里带「到点痕迹」（headless 实跑 + 抓真实下载内容） ==")
     js_submit = """
@@ -190,6 +185,7 @@ def main():
       S.mod='m3'; S.cur.m3=D.m3.questions.length-1;
       APP.save(); APP.go('quiz'); APP.next();
       var screen=APP.S().screen;
+      var doneText=document.body.innerText||'';
       var total=D.m1.items.length+D.eq.self_items.length+D.eq.sjt.length+D.m3.questions.length;
       // 抓真实的下载内容（替掉 Blob 构造器，同步拿到结果 JSON）
       var cap=null; var OrigBlob=window.Blob;
@@ -202,6 +198,10 @@ def main():
         var body=document.body.innerText||'';
         document.title='DL:'+JSON.stringify({screen:screen,total:total,hint:o.limitHint||null,
           hasCut:('limitCut' in o),keys:Object.keys(o),
+          done:(doneText.indexOf('已完成')>=0?'ok':'bad')
+            +':'+(doneText.indexOf('下载结果文件')>=0?'dl':'no-dl')
+            +':'+(doneText.indexOf('回传给施测人')>=0?'send':'no-send')
+            +':'+(doneText.indexOf('清除本机数据')>=0?'clr':'no-clr'),
           rep:(body.indexOf('限时到点')>=0?'ok':'bad')});
       },700);
       }catch(e){document.title='E2:'+e.message;}
@@ -218,15 +218,17 @@ def main():
         try:
             p = json.loads(payload)
             check("手动交卷后的页面是完成页", p.get("screen") == "done", str(p.get("screen")))
-            check("结果 JSON 里有到点痕迹 limitHint", isinstance(p.get("hint"), dict), str(p.get("hint")))
-            h = p.get("hint") or {}
-            check("到点痕迹的已答题数与到点那一刻一致（2 题）", h.get("answered") == 2, str(h))
-            check("到点痕迹的总题数与题库一致", h.get("total") == p.get("total"), "%s vs %s" % (h.get("total"), p.get("total")))
-            check("结果 JSON 里没有旧字段 limitCut", p.get("hasCut") is False, str(p.get("keys")))
-            allowed = {"tool", "version", "code", "name", "idLast4", "date", "m1", "m2", "m3", "limitHint"}
+            check("结果 JSON 里没有任何到点/截断标记字段（复审定稿）",
+                  p.get("hint") is None and p.get("hasCut") is False, str(p.get("keys")))
+            allowed = {"tool", "version", "code", "name", "idLast4", "date", "m1", "m2", "m3"}
             extra = [k for k in p.get("keys", []) if k not in allowed]
-            check("手动交卷的结果字段仍在白名单内", not extra, "字段：%s" % ",".join(p.get("keys", [])))
-            check("施测人报告里看得见「限时到点」痕迹", p.get("rep") == "ok", str(p.get("rep")))
+            check("手动交卷的结果字段仍在白名单内（恒 9 个）", not extra, "字段：%s" % ",".join(p.get("keys", [])))
+            check("施测人报告里不再出现「限时到点」痕迹", p.get("rep") == "bad", str(p.get("rep")))
+            d = p.get("done") or ""
+            check("完成页显示「已完成」（D6）", d.startswith("ok:"), d)
+            check("完成页不再有「下载结果文件」入口（D6 删干净）", ":no-dl" in d, d)
+            check("完成页不再有「回传给施测人」话术（D6 删干净）", ":no-send" in d, d)
+            check("完成页不再有「清除本机」入口（D6 撤除）", ":no-clr" in d, d)
         except Exception as e:  # noqa: BLE001
             check("手动交卷结果可解析", False, "%s：%s" % (payload, e))
 
@@ -244,7 +246,11 @@ def main():
                     html) is not None, "")
     check("总报告有五级梯（综合档）", "ladderBlock(\"综合档\"" in html, "")
     check("第一项有五级梯（整体档）", "ladderBlock(\"整体档\"" in html, "")
-    check("口径说明块出现在四个报告块", html.count("calibNote()") >= 5, "%d 处调用" % html.count("calibNote()"))
+    check("口径说明块只出现在第一项报告块（复审定稿：第二、三项不加）",
+          html.count("calibNote()") == 2, "%d 处（1 处定义 + 1 处调用）" % html.count("calibNote()"))
+    check("总报告有「口径基础」汇总块", "口径基础" in html and "calibBasis()" in html, "")
+    check("口径基础汇总两套措辞都在（校准前 / 校准后）",
+          "calibBasisAbs" in html and "calibBasisRef" in html, "")
 
     print("\n== 7. 告知页的限时说明（勾了限时才出现） ==")
     js_consent = """

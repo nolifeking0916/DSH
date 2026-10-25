@@ -87,7 +87,7 @@ def main():
 
     print("== 5. 断点续答 ==")
     check("首页有「继续上次答题」入口", "继续上次" in html)
-    check("提供清除本机数据入口", "清除本机数据" in html)
+    check("本机清除能力保留在实现里（候选人侧入口按 D6 撤除）", "function clearAll" in html)
 
     print("== 6. 运行时行为（headless 实跑）==")
     # 6.1 写入半份作答 → 重新加载 → 出现续答入口并能恢复

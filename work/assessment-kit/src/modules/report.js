@@ -182,9 +182,16 @@ window.REP = (function () {
      两套措辞都放在 copy.js（calibAbs / calibRef），本文件只做选择，不并排写死。 */
   const CALIBRATED = false;
   const CALIB_TEXT = CALIBRATED ? C.calibRef : C.calibAbs;
-  /* 口径说明块：告诉施测人这套档位是怎么划出来的、目前还没校准 */
+  /* 口径说明块：告诉施测人这套档位是怎么划出来的、目前还没校准。
+     **只给第一项用**（票 #39 · D2 复审定稿）—— 只有第一项是绝对锚点、尚未经真人样本校准；
+     第二项是加权阈值、第三项本来就是参照分布的百分位，给它们贴同一句「绝对锚点」是贴错标签。 */
   function calibNote() {
     return '<p class="calib"><b>口径说明</b>：' + esc(CALIB_TEXT) + "</p>";
+  }
+  /* 口径基础汇总：总报告里的一段，三项各是什么口径（校准前 / 校准后两套措辞）。
+     与 calibNote 分开：一个是「第一项的档位怎么来的」，一个是「整份报告的口径地图」。 */
+  function calibBasis() {
+    return '<p class="calib"><b>口径基础</b>：' + esc(CALIBRATED ? C.calibBasisRef : C.calibBasisAbs) + "</p>";
   }
   /* 五级梯：从高到低（顶尖 → 待提升）五格并排。
      深绿格 = **已达到的档**（从低到高直到当前档，含当前档），当前档再加一道金线，
@@ -278,25 +285,18 @@ window.REP = (function () {
       { grade: data.m2.grade, dims: data.m2.dims },
       { grade: data.m3.grade, dims: data.m3.dims }
     );
-    /* limitHint = 限时到点的痕迹（票 #39 · D3）：到点**只提示、不自动交卷**，
-       候选人继续作答、最后自己交卷。痕迹记着到点那一刻已答了多少题，
-       供票 #26 第 13 条算「完成整卷比例 / 省略作答比例」。
-       旧结果 JSON 没有这个字段 → null。 */
-    return { code: data.code, name: data.name, idLast4: data.idLast4, date: data.date, m1: data.m1, m2: data.m2, m3: data.m3, compose: cp, limitHint: data.limitHint || null };
+    /* 到点只提示、不自动交卷，且**不留任何到点痕迹**（票 #39 · D3 复审定稿）——
+       结果里既没有用时字段，也没有 limitCut / limitHint；旧结果 JSON 照常渲染。 */
+    return { code: data.code, name: data.name, idLast4: data.idLast4, date: data.date, m1: data.m1, m2: data.m2, m3: data.m3, compose: cp };
   }
 
   function secHTML(R, id) {
     const cp = R.compose;
     if (id === "total") {
-      /* 到点痕迹必须一眼可见：分数会被未作答拉低，
-         施测人若不知道这份结果是到点之后接着答的，就会把「超时」当成「能力差」（票 #25/#39）。 */
-      const hint = R.limitHint;
-      const hintBlock = hint
-        ? '<div class="warn" style="margin:var(--sp-3) 0"><b>限时到点（未自动交卷）</b>：限时到点时已作答 ' +
-          hint.answered + " / " + hint.total + " 题；到点后候选人可继续作答，最终由本人自行交卷。判读时请把这一点计入完成度。" +
-          "</div>"
-        : "";
-      return hintBlock + calibNote() + composeBlock(cp) + '<div class="rep-block"><h3>三项成绩</h3>' + listMetrics(cp) + "</div>" +
+      return composeBlock(cp) + '<div class="rep-block"><h3>三项成绩</h3>' + listMetrics(cp) + "</div>" +
+        /* 口径基础汇总（票 #39 · D2 复审定稿）：总报告给一段「三项各是什么口径」；
+           口径**说明块**只给第一项，第二、三项报告块不加 —— 见 calibNote 的注释。 */
+        '<div class="rep-block"><h3>口径基础</h3>' + calibBasis() + "</div>" +
         '<div class="rep-block"><h3>怎么用这份结果</h3><p class="note">测评只产出追问清单，不作录用评分项：同一岗位对所有候选人使用同一套题、同一权重、同一阈值；面试按各档位的追问方向取证，录用决策由简历、专业技能、面谈与工作样本多源证据支撑；测评与面试冲突时以面试与工作样本为主，并记录冲突原因。</p></div>';
     }
     if (id === "m1") {
@@ -314,7 +314,6 @@ window.REP = (function () {
     if (id === "m2") {
       const need = (R.m2.needReview || []);
       return '<div class="rep-block"><h3>第二项 · 情境测试</h3>' +
-        calibNote() +
         '<div class="dims">' + R.m2.dims.map((d) => metricRow(d)).join("") + "</div>" +
         ladderBlock("整体档", R.m2.grade) +
         '<p class="note">加权总分 ' + R.m2.total + " / 5.00。档位：顶尖 ≥4.4 / 优秀 3.8–4.39 / 良好 3.0–3.79 / 合格 2.4–2.99 / 待提升 &lt;2.4。</p>" +
@@ -325,7 +324,6 @@ window.REP = (function () {
         "</div>";
     }
     return '<div class="rep-block"><h3>第三项 · 推理测试</h3>' +
-      calibNote() +
       '<div class="radar-wrap">' + radarSVG(R.m3.dims) + "</div>" +
       /* 维度行同时给三个数：原始分（对 / 总）+ 模型换算（百分位 / T 分）——
          雷达图画的是百分位，这一行给出百分位与 T 分，两个口径就能互相推导（票 #27）。
@@ -359,10 +357,9 @@ window.REP = (function () {
       " ｜ 报告共 " + PAGES.length + " 个区块（每块另起一页）</div></section>").join("");
     return '<div class="wrap" style="max-width:760px">' +
       '<div class="topbar"><div class="wrap" style="padding:0"><div class="toprow"><b>施测人报告</b><span' +
-      /* 有到点痕迹时把整行透明度拉回 1，否则金色徽标被父组 opacity:.92 压到 4.5:1 以下 */
-      (R.limitHint ? ' style="opacity:1"' : "") + ">" + esc(R.name || "") +
+      ">" + esc(R.name || "") +
       " ｜ " + esc(String(R.code || "").slice(0, 12)) + "…" + (R.idLast4 ? " ｜ 末4位 " + esc(R.idLast4) : "") +
-      (R.limitHint ? ' ｜ <span style="color:var(--gold);font-weight:700">限时到点（未自动交卷）</span>' : "") + "</span></div></div></div>" +
+      "</span></div></div></div>" +
       '<div class="rep-nav noprint">' + nav.map((n) => '<button data-s="' + n[1] + '" onclick="REP.setSec(this.dataset.s)">' + esc(n[0]) + "</button>").join("") + "</div>" +
       '<div id="rep-body" style="padding-bottom:var(--sp-6)">' + all + "</div>" +
       '<div class="noprint" style="margin:var(--sp-3) 0"><button class="btn btn-primary btn-full" onclick="window.print()">打印 / 存为 PDF</button></div>' +

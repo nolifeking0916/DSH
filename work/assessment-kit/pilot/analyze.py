@@ -716,13 +716,21 @@ def main():
     m1_tot = [sum(dd["score"] for dd in s["m1"]["dims"]) for s in scored]
     mu, sd = mean(m1_tot), math.sqrt(var(m1_tot))
     corr_rows = []
-    for tag, rho in (("预期弱相关", 0.15), ("题目重叠嫌疑", 0.80)):
+    if sd == 0 or len(m1_tot) < 2:
+        # 样本不足（第一项总分无变异，sd=0）：模拟检验没有意义，**跳过而不是崩**
+        # （2026-10-25：n=1 的第一份真实作答会在这里除零）
+        res["correlation_check"] = {"threshold": CORR_ALARM, "rows": [],
+                                    "skipped": "样本不足（第一项总分无变异），模拟检验跳过"}
+        res["correlation_check"]["rows"] = []
+        res["correlation_check"]["_skip"] = True
+    else:
+      for tag, rho in (("预期弱相关", 0.15), ("题目重叠嫌疑", 0.80)):
         z = [rng.gauss(0, 1) for _ in m1_tot]
         m3 = [rho * (x - mu) / sd + math.sqrt(max(0.0, 1 - rho * rho)) * zi for x, zi in zip(m1_tot, z)]
         r = pearson(m1_tot, m3)
         corr_rows.append({"case": tag, "rho_designed": rho, "r_observed": round(r, 4),
                           "alarm": bool(abs(r) >= CORR_ALARM)})
-    res["correlation_check"] = {"threshold": CORR_ALARM, "rows": corr_rows}
+      res["correlation_check"] = {"threshold": CORR_ALARM, "rows": corr_rows}
 
     # ---- J. 分组对比（合成画像混合的结果，不是人群结论） ----
     grp = {}

@@ -131,7 +131,11 @@
   ];
   function m2List() {
     const self = D.eq.self_items.map((x) => ({ kind: "self", id: x.id, text: x.text, dim: x.dimension, rev: !!x.reverse }));
-    const sjt = D.eq.sjt.map((x) => ({ kind: "sjt", id: x.id, stem: x.stem, opts: x.options, dim: x.dimension, ans: x.answer, sec: x.second, thd: x.third }));
+    /* 选项字段两个名字都认：build.py 把第二项的 options 由 {A,B,C,D} 转成了数组 opts，
+       而第三项的题库里字段就叫 options。2026-10-25 修（真实候选人反馈「第二项第 17 题没有选项」）：
+       这里原来只读 x.options ⇒ 取到 undefined ⇒ 渲染时 q.opts || q.options 两边都是空
+       ⇒ **60 道情境题一题选项都不渲染**（自评 16 题走七级量表分支，所以卡在第 17 题才暴露）。 */
+    const sjt = D.eq.sjt.map((x) => ({ kind: "sjt", id: x.id, stem: x.stem, opts: x.opts || x.options || [], dim: x.dimension, ans: x.answer, sec: x.second, thd: x.third }));
     return self.concat(sjt);
   }
   const M2ALL = m2List();

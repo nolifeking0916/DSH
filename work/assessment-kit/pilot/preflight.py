@@ -49,6 +49,7 @@ GATES = [
     ("verify_compliance", "合规门：告知与自动化决策表述"),
     ("verify_print", "打印门：A4 文本层逐页断言"),
     ("verify_limit", "限时口径门：承诺↔实现/到点自动交卷实跑/结果 JSON 字段白名单"),
+    ("verify_items", "题库门：逐题选项/判分码 + 212 道题逐题渲染"),
 ]
 TOOLS = [
     ("ingest_real.py", "回收表录入 → 真实作答 JSON"),

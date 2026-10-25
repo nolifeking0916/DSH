@@ -25,6 +25,8 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import os
+import subprocess
+import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DEFAULT_OUT = os.path.join(HERE, "publish", "candidate", "index.html")
@@ -35,6 +37,19 @@ def load(name):
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     return mod
+
+
+def item_gate(target):
+    """跑题库门（src/verify_items.py）：逐题选项 / 判分码 + 212 道题逐题渲染。
+
+    为什么发布门之外还要这一道：发布门只查「页面里没有答案键」，
+    查不出「某一题渲染不出选项」—— 2026-10-25 真实候选人反馈「第二项第 17 题没有选项」，
+    根因是 app.js 读错字段名（opts: x.options），数据一个不少、渲染一题不出。
+    """
+    script = os.path.join(HERE, "..", "src", "verify_items.py")
+    print("")
+    print("题库门检查：%s %s" % (script, target))
+    return subprocess.run([sys.executable, script, target]).returncode
 
 
 def main():
@@ -60,12 +75,23 @@ def main():
         print("发布门没过 ⇒ 不要上传这一份。")
         return rc
 
+    # 题库门（2026-10-25 加）：逐题选项 / 判分码 + **212 道题逐题渲染**
+    # —— 发布门只查「页面里没有答案键」，查不出「某一题渲染不出选项」：
+    #    2026-10-25 真实候选人反馈「第二项第 17 题没有选项」，
+    #    根因是 app.js 读错字段名（opts: x.options），数据一个不少、渲染一题不出。
+    rc = item_gate(out_path)
+    if rc != 0:
+        print("")
+        print("题库门没过 ⇒ 不要上传这一份。")
+        return rc
+
     print("")
     print("下一步（上传）：")
     print("  manageHosting(action=\"upload\", cloudPath=\"/index.html\", localPath=\"%s\", confirm=true)" % out_path)
     if args.check_url:
         print("")
-        return gate.check_page(None, args.check_url, verbose=True)
+        rc = gate.check_page(None, args.check_url, verbose=True)
+        return rc if rc != 0 else item_gate(args.check_url)
     return 0
 
 

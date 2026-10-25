@@ -345,6 +345,11 @@
   }
   function cloudKick() {
     if (!CLOUD.enabled) return;
+    /* 云版候选人页由 cloud/candidate_runtime.js 负责提交（载荷形状与服务端一致：
+       未答 = null、只发原始选择、分数一律服务端算）。app.js 这条路径的载荷是
+       -1 表示未答、且带客户端算的分数 ⇒ 服务端会拒收或写进错的一行 ⇒ 两边都在就跳过。
+       2026-10-25 加。 */
+    if (window.__cloudRuntime) return;
     const el = document.getElementById("cloud-state");
     fetch(CLOUD.endpoint, {
       method: "POST",

@@ -274,6 +274,77 @@ def render_check(html, fails):
         print("  逐题渲染：%d 道题全部渲染出应有数量的选项 ✓" % total)
 
 
+
+FLOW_JS = """
+<script>
+window.__muts = 0; window.__fetches = 0; window.__errs = [];
+window.fetch = function () { window.__fetches++; return Promise.reject(new Error('blocked-by-gate')); };
+window.addEventListener('error', function (e) { window.__errs.push(String(e.message || '')); });
+window.addEventListener('load', function () { setTimeout(function () {
+ try {
+  var S = APP.S();
+  S.consented = true; S.name = '门禁'; S.idLast4 = '0000';
+  S.mod = 'm3'; S.cur.m3 = 39; S.a.m3 = [];
+  for (var i = 0; i < 40; i++) S.a.m3[i] = 0;
+  APP.go('quiz');
+  var obs = new MutationObserver(function (recs) { window.__muts += recs.length; });
+  obs.observe(document.body, { childList: true, subtree: true });
+  var btn = document.getElementById('next');
+  btn.click();
+  setTimeout(function () {
+   var sheet = document.querySelector('.sheet');
+   document.title = 'F:SCREEN:' + (S.screen || '?') + ':MUTS:' + window.__muts +
+     ':FETCH:' + window.__fetches + ':ERR:' + window.__errs.join(';') +
+     ':SHEET:' + (sheet ? sheet.innerHTML.length : 0);
+  }, 1500);
+ } catch (e) { document.title = 'F:CAUGHT:' + e.message; }
+}, 700); });
+</script>
+"""
+
+
+def flow_check(html, fails):
+    """流程门：**交卷到完成页不能卡死、只能提交一次**（2026-10-25 加）。
+
+    真实候选人反馈「走到第三项最后一题后网页卡住」：
+    云版完成页的运行时用 MutationObserver 盯着 body，而 paint() 每次都重写 innerHTML
+    ⇒ 改动又触发观察者 ⇒ paint() 又跑 ⇒ **无限渲染循环**，页面直接卡死
+    （作答其实已经落库了，只是界面挂了）。
+    ⇒ 这里跑一遍真实的「最后一题 → 交卷」：数 DOM 改动次数（> 50 就是死循环）
+    与提交次数（必须 ≤ 1：app.js 与云版运行时曾各提交一次，抢同一行）。
+    """
+    with tempfile.NamedTemporaryFile("w", suffix=".html", delete=False, encoding="utf-8") as f:
+        f.write(html.rsplit("</body>", 1)[0] + FLOW_JS + "</body></html>")
+        tmp = f.name
+    try:
+        dom = subprocess.run([CHROME, "--headless=new", "--disable-gpu", "--virtual-time-budget=20000",
+                              "--dump-dom", "file://" + tmp],
+                             stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=45).stdout.decode("utf-8", "ignore")
+    except subprocess.TimeoutExpired:
+        # 页面挂死时浏览器永远不吐 DOM ⇒ 这本身就是最直接的证据
+        fails.append("[流程] 交卷后页面挂死（浏览器一直不返回 DOM）—— 无限渲染循环的特征")
+        return
+    finally:
+        os.unlink(tmp)
+    m = re.search(r"<title>([^<]*)</title>", dom)
+    title = (m.group(1) if m else "").replace("&gt;", ">")
+    mm = re.search(r"F:SCREEN:(\w*):MUTS:(\d+):FETCH:(\d+):ERR:(.*):SHEET:(\d+)", title)
+    if not mm:
+        fails.append("[流程] 交卷流程自检没跑起来（%s）" % (title or "无回读"))
+        return
+    screen, muts, fetches = mm.group(1), int(mm.group(2)), int(mm.group(3))
+    errs, sheet_len = mm.group(4), int(mm.group(5))
+    if screen != "done":
+        fails.append("[流程] 交卷后没到完成页（screen=%s）" % screen)
+    if muts > 50:
+        fails.append("[流程] 完成页在无限重绘（DOM 改动 %d 次）—— 页面会卡死" % muts)
+    if fetches > 1:
+        fails.append("[流程] 一次交卷发了 %d 次请求 —— 会写重行" % fetches)
+    if errs.strip():
+        fails.append("[流程] 交卷过程有报错：%s" % errs[:160])
+    if screen == "done" and muts <= 50 and fetches <= 1 and not errs.strip():
+        print("  交卷流程：到达完成页、DOM 改动 %d 次、提交 %d 次、无报错 ✓" % (muts, fetches))
+
 def main():
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     source_only = "--source-only" in sys.argv
@@ -289,6 +360,7 @@ def main():
         data = extract_data(html)
         check(data, "成品", fails)
         render_check(html, fails)
+        flow_check(html, fails)
     print("\n== 题库源文件侧 ==")
     audit_source(fails)
     print("\n==== %s ====" % ("全部通过" if not fails else "有 %d 项未通过" % len(fails)))

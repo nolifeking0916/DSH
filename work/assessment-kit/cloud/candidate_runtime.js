@@ -13,6 +13,10 @@
  */
 (function () {
   var ENDPOINT = "__ENDPOINT__";
+  /* 告诉 app.js「提交由本运行时负责」：app.js 自己那条云端提交路径的载荷形状
+     （-1 表示未答、带客户端算的分数）与服务端约定不符 ⇒ 会和服务端抢同一行，
+     谁先到谁写进去 ⇒ 有可能把一份「客户端算的全 0 分数」写进库。 */
+  window.__cloudRuntime = true;
   var st = { sending: false, sent: false, err: null, submitted: false };
 
   function appState() {
@@ -125,12 +129,21 @@
       limit + status;
   }
 
+  var lastPainted = null;
   function paint() {
     var s = appState();
     if (!s || s.screen !== "done") return;
     var sheet = document.querySelector(".sheet");
     if (!sheet) return;
-    sheet.innerHTML = doneHtml(s);
+    /* 幂等：内容没变就不碰 DOM。
+       2026-10-25 修（真实候选人反馈「走到第三项最后一题后网页卡住」）：
+       MutationObserver 盯着 body，paint() 每次都重写 innerHTML ⇒ 改动又触发观察者
+       ⇒ paint() 又跑 ⇒ **无限渲染循环**，页面直接卡死（作答其实已经落库了）。
+       ⇒ 用 lastPainted 记住上次画的内容，变了才重画。 */
+    var html = doneHtml(s);
+    if (lastPainted === html) return;
+    lastPainted = html;
+    sheet.innerHTML = html;
   }
 
   /* 隐藏施测人入口（候选人页用不到；HR 侧走汇总台/数据库） */

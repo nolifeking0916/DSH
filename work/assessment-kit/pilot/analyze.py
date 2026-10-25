@@ -44,9 +44,26 @@ DISAGREE_MAX = 0.15   # 规程：双人标注分歧率 > 15% → 整维重标
 EXTREME_SAME = 0.90   # 社会赞许偏差观察：某题 90% 选同一端 → 该题判据可能太露骨
 CORR_ALARM = 0.60     # 与第三项推理分的相关：|r| ≥ 0.60 → 查题目是否重叠
 CALIB_MIN_N = 100     # 校准门槛：累计 ≥ 100 份有效作答才允许换参照分布切点
+MIN_N_DIAGNOSTIC = 60   # 描述式诊断的最小 n（三道关第一道）。出处：
+                        # research/样本量与信度推断边界_20261025.md §6.1（C1–C13「第一轮 60–80 份能出的结论」）
+                        # 与 pilot/第一份复测报告模板_20261025.md 的判读规则（n≥60 描述式 / n≥100 候选切点 / n≥300 定版）。
+                        # 低于这个 n，下列判据在数学上就没有分辨力（例：社赞「≥90% 同端」在 n=1 时每题都必然触发），
+                        # **必须标「不适用」，不得写成结论**（本票第 7/8/9/11 条的验收同理）。
 
 
 # ------------------------------------------------------------------ 基础统计
+def fmt(x, nd=3):
+    """数值格式化：None / nan 一律写「不可得」，不写 nan。"""
+    if x is None:
+        return "不可得"
+    try:
+        if math.isnan(x):
+            return "不可得"
+    except TypeError:
+        pass
+    return ("%." + str(nd) + "f") % x
+
+
 def mean(xs):
     return sum(xs) / len(xs) if xs else float("nan")
 
@@ -662,7 +679,20 @@ def main():
                             "picked_anchor_rate": round(p_same, 3),
                             "pick_a_rate": round(pick_a, 3),
                             "text_a": it["a"], "text_b": it["b"]})
+    n_all = len(samples["respondents"])
+    # 社赞筛查（每题同端率 ≥ 90%）在 n 不足时**没有分辨力**：n=1 时每题都是 100% 同端，
+    # 计数会变成「96 道」这种看着吓人、实则恒真的数 ⇒ 低于门槛只报「不适用」。
+    extreme_applicable = n_all >= MIN_N_DIAGNOSTIC
     res["extreme_items_simulated"] = {"threshold": EXTREME_SAME, "count": len(extreme),
+                                      "n": n_all, "applicable": extreme_applicable,
+                                      "min_n": MIN_N_DIAGNOSTIC,
+                                      "verdict": (
+                                          "可作为筛查清单（研究笔记 §6.1 C5：每题同端率要附 Wilson 95% 区间，"
+                                          "结论写「需复核」而不是「重写」）"
+                                          if extreme_applicable else
+                                          "不适用：n=%d < %d（该判据在 n=60 时灵敏度已只有 61%%，n 更小时每题都必然"
+                                          "「≥90%% 同端」，这个计数没有分辨力，不能当题目质量的结论）"
+                                          % (n_all, MIN_N_DIAGNOSTIC)),
                                       "items": extreme}
 
     # ---- F. 锚定审计程序演练 + 真实题目的清晰度代理排序 ----
@@ -670,6 +700,10 @@ def main():
     for d in DIMS:
         audit[d]["pass_simulated"] = bool(audit[d]["hit_rate"] >= AUDIT_MIN)
     res["anchor_audit_simulated"] = audit
+    res["anchor_audit_simulated"]["note"] = (
+        "程序演练：只验审计程序本身能不能分辨，不是真人锚定审计证据"
+        + ("；真人锚定审计尚未执行（本票第 6 条，需两名标注员 + 每维 6 题换位审计）" if real_mode else ""))
+    res["anchor_audit_simulated"]["real_audit_done"] = False
     # 清晰度代理（真实题面，可复跑）→ 真人审计的优先抽样清单
     by_id = {p["id"]: p for p in params}
     audit_priority = {}
@@ -710,7 +744,8 @@ def main():
             after[g2] = after.get(g2, 0) + 1
         calib[d] = {"cuts_demo": {k: round(v, 2) for k, v in cuts.items()},
                     "absolute_anchor_counts": before, "percentile_counts_demo": after,
-                    "n": len(scores), "meets_calib_n": len(scores) >= CALIB_MIN_N}
+                    "n": len(scores), "meets_calib_n": len(scores) >= CALIB_MIN_N,
+                    "applicable": len(scores) >= CALIB_MIN_N}
     res["calibration_demo"] = calib
 
     # ---- I. 与第三项推理分的相关性：检查器必须「弱相关不报警、强相关报警」 ----
@@ -774,6 +809,27 @@ def main():
         "note": "机械文本特征，只作真人标注与审计的优先线索，不构成改题依据",
     }
 
+    # ---- 适用性闸门：哪些数现在能当结论，哪些只是「一个数字」 ----
+    n_now = len(samples["respondents"])
+    ci_ok = any(res["reliability"][d].get("alpha_ci95") for d in DIMS)
+    res["applicability"] = {
+        "n": n_now,
+        "min_n_diagnostic": MIN_N_DIAGNOSTIC,
+        "gate": ("描述式诊断：可写结论，但每个比例与每个 α 都必须带区间" if n_now >= MIN_N_DIAGNOSTIC
+                 else "样本量不足：只出链路结论与题目质量清单，不出信效度判定"),
+        "sections": {
+            "reliability": ("α 与分半的 95% 区间可得" if ci_ok
+                            else "α 与分半的 95% 区间不可得（样本量或题数不足），只能写「算得出来，但还判不了」"),
+            "extreme_items": res["extreme_items_simulated"]["verdict"],
+            "anchor_audit": res["anchor_audit_simulated"]["note"],
+            "calibration": ("可出候选切点（定版仍需 n>=300）" if n_now >= CALIB_MIN_N
+                            else "不适用：n=%d < %d（校准门槛；校准前一律用绝对锚点口径，档位必须标「尚未校准」）"
+                            % (n_now, CALIB_MIN_N)),
+            "completion": "第 13 条的两个数（完成整卷比例 / 省略作答比例）：任何 n 都可报，属描述性",
+            "anomaly_detection": "异常样本检出清单：任何 n 都可报（逐份登记 + 留痕）",
+        },
+    }
+
     with open(os.path.join(OUT, "analysis.json"), "w", encoding="utf-8") as f:
         json.dump(res, f, ensure_ascii=False, indent=1)
 
@@ -781,6 +837,8 @@ def main():
     print("== %s（样本 %d 份 · %s）==" % (
         "真人试测分析" if real_mode else "模拟试测分析（合成数据）",
         len(samples["respondents"]), samples_path))
+    ap = res["applicability"]
+    print("适用性（n=%d）：%s" % (ap["n"], ap["gate"]))
     print("交叉验算：%s（比对 %d 格，不一致 %d）" % (
         res["cross_check"]["verdict"], res["cross_check"]["compared"], res["cross_check"]["mismatch"]))
     ad = res["anomaly_detection"]
@@ -795,10 +853,10 @@ def main():
         if real_mode:
             ci = r["alpha_ci95"]
             sci = r["split_half_ci95"]
-            print("  %s α%s=%.3f 95%%区间[%s]  分半SB%s=%.3f 95%%区间[%s]  → %s" % (
-                d, tag, r["alpha"],
+            print("  %s α%s=%s 95%%区间[%s]  分半SB%s=%s 95%%区间[%s]  → %s" % (
+                d, tag, fmt(r["alpha"]),
                 ("%.3f, %.3f" % (ci[0], ci[1])) if ci else "不可得",
-                tag, r["split_half_sb"],
+                tag, fmt(r["split_half_sb"]),
                 ("%.3f, %.3f" % (sci[0], sci[1])) if sci else "不可得",
                 r["alpha_verdict"]))
         else:
@@ -822,11 +880,18 @@ def main():
         dd = res["distribution_simulated"][d]
         print("  %s 分布：均值 %.2f 标准差 %.2f 范围 %d–%d 绝对锚点档位 %s" % (
             d, dd["mean"], dd["sd"], dd["min"], dd["max"], dd["band_counts"]))
-    print("  极端题（≥90%% 同端）：%d 道" % res["extreme_items_simulated"]["count"])
+    ex = res["extreme_items_simulated"]
+    if ex.get("applicable", True):
+        print("  极端题（≥90%% 同端）：%d 道（n=%d；筛查清单，结论写「需复核」而不是「重写」）" % (
+            ex["count"], ex["n"]))
+    else:
+        print("  极端题（≥90%% 同端）：%s" % ex["verdict"])
     for d in DIMS:
         a = res["anchor_audit_simulated"][d]
-        print("  %s 锚定审计演练命中率 %.2f（阈值 %.2f → %s）" % (
+        print("  %s 锚定审计**程序演练**命中率 %.2f（程序自检阈值 %.2f → %s；非真人审计证据）" % (
             d, a["hit_rate"], AUDIT_MIN, "过" if a["pass_simulated"] else "不过"))
+    if real_mode:
+        print("  真人锚定审计：未执行（本票第 6 条：两名标注员 + 每维 6 题换位反向审计）")
     if has_theta:
         for d in DIMS:
             t = res["truth_recovery"][d]
@@ -836,8 +901,12 @@ def main():
             row["case"], row["rho_designed"], row["r_observed"], "报警" if row["alarm"] else "不报警"))
     for d in DIMS:
         c = res["calibration_demo"][d]
-        print("  %s 校准演示：绝对锚点 %s → 百分位 %s（n=%d，门槛 %d）" % (
-            d, c["absolute_anchor_counts"], c["percentile_counts_demo"], c["n"], CALIB_MIN_N))
+        if c.get("applicable"):
+            print("  %s 校准演示：绝对锚点 %s → 百分位 %s（n=%d，门槛 %d）" % (
+                d, c["absolute_anchor_counts"], c["percentile_counts_demo"], c["n"], CALIB_MIN_N))
+        else:
+            print("  %s 校准：不适用（n=%d < %d；校准前一律用绝对锚点口径，档位必须标「尚未校准」）" % (
+                d, c["n"], CALIB_MIN_N))
     print("已写出 pilot/out/analysis.json")
 
 

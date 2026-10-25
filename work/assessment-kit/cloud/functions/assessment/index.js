@@ -131,7 +131,7 @@ exports.main = async (event) => {
     if (method === "GET") {
       if (q.action === "list") {
         const limit = Math.min(parseInt(q.limit || "50", 10) || 50, 200);
-        const rows = await pg("GET", "/" + table + "?select=code,id_last4,group_name,level,submitted_at,duration_ms,unanswered_m1&order=submitted_at.desc&limit=" + limit);
+        const rows = await pg("GET", "/" + table + "?select=code,respondent_name,id_last4,group_name,level,submitted_at,duration_ms,unanswered_m1&order=submitted_at.desc&limit=" + limit);
         return reply(200, { ok: true, count: (rows || []).length, rows: rows || [] });
       }
       if (!q.code) return reply(400, { ok: false, error: "缺 code" });

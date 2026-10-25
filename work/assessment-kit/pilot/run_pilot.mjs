@@ -65,6 +65,16 @@ if (!REP || typeof REP.score !== "function") fail("report.js 没导出 REP.score
    真人试测作业包 §6）。真人数据没有 end_to_end 字段时自动跳过整卷那一段。 */
 const samplesPath = process.argv[2] ? path.resolve(process.argv[2]) : path.join(OUT, "samples.json");
 if (!fs.existsSync(samplesPath)) fail("找不到 " + samplesPath + "，先跑 python3 pilot/simulate.py");
+/* 计分结果的落盘名跟着输入名走（real_samples.json → real_scored.json；
+   samples.json → scored.json，与旧行为一致）。
+   2026-10-25：以前这个脚本固定写 pilot/out/scored.json，于是票 #26 正文里那串命令
+   （analyze.py --scored pilot/out/real_scored.json）直接报「文件不存在」——
+   命令链在纸上是对的、跑起来是断的。现在输入名决定输出名，两处都写。 */
+const scoredPath = (() => {
+  if (!process.argv[2]) return path.join(OUT, "scored.json");
+  const base = path.basename(samplesPath, ".json").replace(/_?samples$/, "_scored");
+  return path.join(path.dirname(samplesPath), base + ".json");
+})();
 const samples = JSON.parse(fs.readFileSync(samplesPath, "utf8"));
 
 const scored = samples.respondents.map((r) => {
@@ -107,7 +117,9 @@ ${body}
 }
 
 fs.mkdirSync(OUT, { recursive: true });
-fs.writeFileSync(path.join(OUT, "scored.json"), JSON.stringify({ scored }, null, 1));
+const scoredJSON = JSON.stringify({ scored }, null, 1);
+fs.writeFileSync(path.join(OUT, "scored.json"), scoredJSON);
+if (scoredPath !== path.join(OUT, "scored.json")) fs.writeFileSync(scoredPath, scoredJSON);
 if (resultJSON) {
   fs.writeFileSync(path.join(OUT, "模拟试测_结果JSON_样例.json"), JSON.stringify(resultJSON, null, 2));
   fs.writeFileSync(path.join(OUT, "模拟试测_报告样例.html"), reportHTML);

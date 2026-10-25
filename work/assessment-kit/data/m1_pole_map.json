@@ -1,0 +1,158 @@
+{
+  "meta": {
+    "version": "20261025",
+    "note": "值 = 落在极 a 的那个选项值（0=a 侧，1=b 侧）",
+    "poles": {
+      "INT": {
+        "a": "主动推动",
+        "b": "等待配合"
+      },
+      "SNT": {
+        "a": "事实先行",
+        "b": "趋势先导"
+      },
+      "TFS": {
+        "a": "依据先行",
+        "b": "关系先行"
+      },
+      "JPS": {
+        "a": "定时收口",
+        "b": "随机应对"
+      }
+    },
+    "audit": {
+      "source": "items/m1_items.json",
+      "total_items": 96,
+      "id_set_matches_source": true,
+      "values_in_0_1": true,
+      "per_dimension_distribution": {
+        "INT": {
+          "0": 12,
+          "1": 12
+        },
+        "SNT": {
+          "0": 12,
+          "1": 12
+        },
+        "TFS": {
+          "0": 12,
+          "1": 12
+        },
+        "JPS": {
+          "0": 12,
+          "1": 12
+        }
+      },
+      "max_dimension_imbalance": 0,
+      "balance_threshold": 4,
+      "balance_pass": true,
+      "anchor_cross_check": {
+        "rule": "四维「更有效端」= 极 a（items/m1_items.json meta.dimensions[].behavior）；anchor 标更有效端 => anchor=a 当且仅当该题值=0",
+        "consistent_count": 96,
+        "total": 96,
+        "all_consistent": true,
+        "mismatches": []
+      },
+      "per_item_readback": "逐条读回 a 侧文本，与所标极比对：96/96 一致；每题的 rationale 均支持 anchor 侧为更有效端",
+      "doubtful_items": []
+    }
+  },
+  "items": {
+    "INT-01": 0,
+    "INT-02": 1,
+    "INT-03": 0,
+    "INT-04": 1,
+    "INT-05": 0,
+    "INT-06": 1,
+    "INT-07": 0,
+    "INT-08": 1,
+    "INT-09": 0,
+    "INT-10": 1,
+    "INT-11": 0,
+    "INT-12": 1,
+    "INT-13": 0,
+    "INT-14": 1,
+    "INT-15": 0,
+    "INT-16": 1,
+    "INT-17": 0,
+    "INT-18": 1,
+    "INT-19": 1,
+    "INT-20": 0,
+    "INT-21": 1,
+    "INT-22": 0,
+    "INT-23": 1,
+    "INT-24": 0,
+    "SNT-01": 0,
+    "SNT-02": 1,
+    "SNT-03": 0,
+    "SNT-04": 1,
+    "SNT-05": 0,
+    "SNT-06": 1,
+    "SNT-07": 0,
+    "SNT-08": 1,
+    "SNT-09": 0,
+    "SNT-10": 1,
+    "SNT-11": 0,
+    "SNT-12": 1,
+    "SNT-13": 0,
+    "SNT-14": 1,
+    "SNT-15": 0,
+    "SNT-16": 1,
+    "SNT-17": 0,
+    "SNT-18": 1,
+    "SNT-19": 0,
+    "SNT-20": 1,
+    "SNT-21": 0,
+    "SNT-22": 1,
+    "SNT-23": 0,
+    "SNT-24": 1,
+    "TFS-01": 0,
+    "TFS-02": 1,
+    "TFS-03": 1,
+    "TFS-04": 0,
+    "TFS-05": 0,
+    "TFS-06": 0,
+    "TFS-07": 0,
+    "TFS-08": 1,
+    "TFS-09": 0,
+    "TFS-10": 1,
+    "TFS-11": 0,
+    "TFS-12": 1,
+    "TFS-13": 1,
+    "TFS-14": 0,
+    "TFS-15": 0,
+    "TFS-16": 1,
+    "TFS-17": 0,
+    "TFS-18": 1,
+    "TFS-19": 1,
+    "TFS-20": 0,
+    "TFS-21": 0,
+    "TFS-22": 1,
+    "TFS-23": 1,
+    "TFS-24": 1,
+    "JPS-01": 0,
+    "JPS-02": 1,
+    "JPS-03": 0,
+    "JPS-04": 1,
+    "JPS-05": 0,
+    "JPS-06": 1,
+    "JPS-07": 0,
+    "JPS-08": 1,
+    "JPS-09": 0,
+    "JPS-10": 1,
+    "JPS-11": 0,
+    "JPS-12": 1,
+    "JPS-13": 0,
+    "JPS-14": 1,
+    "JPS-15": 0,
+    "JPS-16": 1,
+    "JPS-17": 0,
+    "JPS-18": 1,
+    "JPS-19": 0,
+    "JPS-20": 1,
+    "JPS-21": 0,
+    "JPS-22": 1,
+    "JPS-23": 0,
+    "JPS-24": 1
+  }
+}

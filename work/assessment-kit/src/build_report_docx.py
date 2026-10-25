@@ -1166,7 +1166,8 @@ def main():
         print("雷达图生成失败（不影响报告）：%s" % e)
 
     # 内容块只写一遍，Word 与 HTML 两套渲染器共用（同源同数）
-    blocks = RS.build_blocks(data, m1, m2, m3, compose, m1meta, narrative, cred, radar_png)
+    blocks = RS.build_blocks(data, m1, m2, m3, compose, m1meta, narrative, cred, radar_png,
+                              profile=profile)
 
     doc = setup_doc()
     add_header_footer(doc, data)

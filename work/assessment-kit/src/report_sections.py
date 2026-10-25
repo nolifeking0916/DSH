@@ -46,7 +46,7 @@ def _safe(s):
 
 
 # ---------------------------------------------------------------- 内容块
-def build_blocks(data, m1, m2, m3, compose, m1meta, narrative, cred, radar_png):
+def build_blocks(data, m1, m2, m3, compose, m1meta, narrative, cred, radar_png, profile=None):
     """把报告内容组装成块列表（与渲染方式无关）。"""
     P = narrative.get("personality") or {}
     S = narrative.get("situation") or {}
@@ -82,20 +82,39 @@ def build_blocks(data, m1, m2, m3, compose, m1meta, narrative, cred, radar_png):
 
     # ---------------- 一、总体画像（总）
     blocks.append({"t": "h1", "num": "一", "text": "总体画像"})
+    blocks.append({"t": "p", "text":
+                   "这位候选人的整体画像是：%s" % ov("profile", compose.get("headline") or "见下表逐项说明。")})
     blocks.append({"t": "h2", "text": "1.1　性格画像（%s）" % NAME_M1})
     blocks.append({"t": "p", "text":
-                   "这位候选人在%s上的表现是：%s" % (NAME_M1, ov("profile", compose.get("headline") or "见下表逐维说明。"))})
+                   "%s 分四个维度看，下面是每一维的分数、两极倾向与工作方式上的表现。" % NAME_M1})
+    # 可信度低时，先说清楚：下面的画像不能当结论用
+    cred1 = cred.get("m1") or {}
+    if cred1.get("level") == "低":
+        blocks.append({"t": "callout", "text":
+                       "本次人格特质的作答可信度为「低」（%s）——"
+                       "下面这段画像只作参考，不能当成结论；建议先让候选人重测一遍再判读。"
+                       % "；".join(cred1.get("flags") or [])})
     rows = []
+    prof1 = (profile or {}).get("personality") or {}
     for d in m1["dims"]:
         nar = P.get(d["key"]) or {}
+        pf = prof1.get(d["key"]) or {}
+        a_cnt, b_cnt = pf.get("a_cnt"), pf.get("b_cnt")
+        if a_cnt is None or b_cnt is None:
+            side = nar.get("pole_label") or "—"
+        elif abs(a_cnt - b_cnt) <= 3:
+            side = "两极相当（%d : %d）" % (a_cnt, b_cnt)
+        else:
+            side = "%s（%d : %d）" % (nar.get("pole_label") or "—", a_cnt, b_cnt)
         rows.append([d["name"], "%d / %d" % (d["score"], d["max"]), d["grade"],
-                     nar.get("pole_label") or "—",
-                     nar.get("text") or d.get("brief") or ""])
-    blocks.append({"t": "table", "header": ["维度", "得分", "等级", "更偏的一端", "工作方式上的表现"],
+                     side, nar.get("text") or d.get("brief") or ""])
+    blocks.append({"t": "table", "header": ["维度", "得分", "等级", "两极倾向（极a : 极b）", "工作方式上的表现"],
                    "rows": rows, "align": ["l", "r", "c", "l", "l"]})
     blocks.append({"t": "note", "text":
-                   "「更偏的一端」由 96 道两极题的逐题选择统计得出（该维选同一端 ≥ 60% 即判为偏向），"
-                   "描述的是工作方式上的倾向，不是性格类型，也不是诊断结论。"})
+                   "「两极倾向」由 96 道两极题的逐题选择统计得出（极a : 极b，两极相当时直接标出比值），"
+                   "描述的是工作方式上的倾向，不是性格类型，也不是诊断结论。"
+                   "极的归口用逐题映射表 data/m1_pole_map.json（题库里 a/b 两列正反混排，"
+                   "不能直接按 a/b 列的占比算）。"})
 
     # 可信度
     blocks.append({"t": "h2", "text": "1.2　本次作答的可信度"})

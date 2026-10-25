@@ -81,6 +81,19 @@ def build_profile(data, m1, m2, m3, compose, m1_raw=None):
     dim_items = {}
     for it in m1_items["items"]:
         dim_items.setdefault(it["dim"], []).append(it)
+    # 逐题 → 性格两极的映射表（data/m1_pole_map.json）。
+    # 没有它就退回「按锚定端判极」——那只是近似：锚定端是「更有效的一端」，
+    # 跟性格两极（主动/等待…）不是一回事，题库里 a/b 两列是正反混排的。
+    pole_map, pole_src = {}, "anchor"
+    pm_path = os.path.join(ROOT, "data", "m1_pole_map.json")
+    if os.path.exists(pm_path):
+        try:
+            pm = json.load(open(pm_path, encoding="utf-8"))
+            pole_map = pm.get("items") or {}
+            if pole_map:
+                pole_src = "map"
+        except Exception:
+            pole_map = {}
     for d in m1.get("dims", []):
         key = d["key"]
         a_cnt = b_cnt = 0
@@ -92,17 +105,25 @@ def build_profile(data, m1, m2, m3, compose, m1_raw=None):
                 v = m1_raw[i]
                 if v is None:
                     continue
-                ans_is_a = (v == 0)
-                anchor_is_a = (str(it.get("anchor") or "a").lower() != "b")
-                if ans_is_a == anchor_is_a:
-                    a_cnt += 1
+                pmv = pole_map.get(it["id"])
+                if pmv is not None:
+                    # 映射表：pmv = 落在「极 a」的那个选项值
+                    if v == int(pmv):
+                        a_cnt += 1
+                    else:
+                        b_cnt += 1
                 else:
-                    b_cnt += 1
+                    ans_is_a = (v == 0)
+                    anchor_is_a = (str(it.get("anchor") or "a").lower() != "b")
+                    if ans_is_a == anchor_is_a:
+                        a_cnt += 1
+                    else:
+                        b_cnt += 1
         total = a_cnt + b_cnt
         pole = "a" if (total == 0 or a_cnt >= b_cnt) else "b"
         prof["personality"][key] = {"dimension": key, "score": d["score"], "max": d.get("max", 24),
                                     "band": d["grade"], "pole": pole,
-                                    "a_cnt": a_cnt, "b_cnt": b_cnt,
+                                    "a_cnt": a_cnt, "b_cnt": b_cnt, "pole_src": pole_src,
                                     "aligned": (round(a_cnt / float(total), 3) if total else None)}
 
     # 报告侧的 m2 维度只有名字没有 key ⇒ 用题库的 名字→key 映射补上
@@ -191,6 +212,18 @@ def fetch_narrative(profile, timeout=12):
 
 
 # ---------------------------------------------------------------- 可信度
+def _as_list(v):
+    """云端存下来的 m2_answers 是 {"0":0,"1":2,…} 这种对象 ⇒ 统一成按序的列表。"""
+    if v is None:
+        return []
+    if isinstance(v, dict):
+        out = []
+        for k in sorted(v.keys(), key=lambda x: int(x) if str(x).isdigit() else 0):
+            out.append(v[k])
+        return out
+    return list(v)
+
+
 def _max_run(seq):
     best = cur = 0
     prev = None
@@ -247,32 +280,28 @@ def credibility(data, m1, m2, m3, m1_raw=None, m2_answers=None, m3_answers=None)
     flags2 = []
     level2 = "高"
     if m2_answers:
-        answered = [v for v in m2_answers if v is not None]
-        miss = len(m2_answers) - len(answered)
+        seq2 = _as_list(m2_answers)
+        answered = [v for v in seq2 if v is not None]
+        miss = len(seq2) - len(answered)
         if miss:
             flags2.append("有 %d 题未作答" % miss)
             if miss >= 20:
                 level2 = "低"
             elif miss >= 8 and level2 == "高":
                 level2 = "中"
-        pairs = m2.get("consistency") or []
-        if pairs:
-            same = 0
-            tot = 0
-            for p in pairs:
-                a, b = p.get("a"), p.get("b")
-                if a is None or b is None:
-                    continue
-                tot += 1
-                if (a == "A" and b == "B") or (a == "B" and b == "A"):
-                    same += 1
-            if tot:
-                rate = same / float(tot)
-                if rate < 0.6:
-                    level2 = "低" if level2 == "高" else level2
-                    flags2.append("%d 对一致性题里只有 %d 对同向，两可情境下的倾向偏不稳" % (tot, same))
-    else:
-        flags2.append("本次未留存逐题作答，一致性与缺失只能看汇总口径")
+    # 一致性：服务端算好的结果里有「需复核」的题对 ⇒ 那就是两可情境下选向不一致
+    pairs = m2.get("consistency") or []
+    if pairs:
+        bad = [p for p in pairs if "需复核" in (p.get("status") or "")]
+        tot = len(pairs)
+        same = tot - len(bad)
+        rate = same / float(tot)
+        if rate < 0.6:
+            level2 = "低" if level2 == "高" else level2
+            flags2.append("%d 对一致性题里只有 %d 对同向，两可情境下的倾向偏不稳" % (tot, same))
+    if not m2_answers:
+        flags2.append("本次未留存逐题作答，缺失只能看汇总口径")
+        level2 = "中" if level2 == "高" else level2
     out["m2"] = {"level": level2, "flags": flags2}
 
     # 逻辑分析能力：缺失 + 速度
@@ -288,13 +317,14 @@ def credibility(data, m1, m2, m3, m1_raw=None, m2_answers=None, m3_answers=None)
                 level3 = "中"
     else:
         flags3.append("本次未留存逐题作答，缺失与作答模式只能看汇总口径")
+        level3 = "中" if level3 == "高" else level3
     out["m3"] = {"level": level3, "flags": flags3}
 
     dur = data.get("duration_ms")
     speed_note = None
     if isinstance(dur, int) and dur > 0:
-        per = dur / 212000.0 * 1000.0  # 毫秒/题
-        if per < 8:
+        per = dur / 212000.0          # 毫秒 ÷ 212 题 ÷ 1000 ⇒ 秒/题
+        if per < 4:
             speed_note = "整卷平均 %.1f 秒/题，节奏偏快" % per
         elif per > 120:
             speed_note = "整卷平均 %.0f 秒/题，节奏偏慢" % per

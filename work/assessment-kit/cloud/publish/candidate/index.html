@@ -1346,12 +1346,12 @@ window.REP = (function () {
   }
 
   /* ---------------- 云端上报（云上版 · 票 #33 / #40）----------------
-     离线版：__CLOUD_ON__ = false —— 不联网，页脚与完成页保持「只在本机」口径。
-     云上版：src/build.py --cloud 会把 __CLOUD_ON__ 置为 true、__CLOUD_ENDPOINT__ 填成网关路由地址；
+     离线版：true = false —— 不联网，页脚与完成页保持「只在本机」口径。
+     云上版：src/build.py --cloud 会把 true 置为 true、https://uu-one-d4gc4ot78a702cb70-1257197409.ap-shanghai.app.tcloudbase.com/api/assessment 填成网关路由地址；
      交卷时把作答 POST 给云函数，由云函数落 CloudBase PG（候选人浏览器**不碰数据库**：
      网关的 PG 连接带 row_security=off，浏览器角色写不进开了 RLS 的表）。
      上报失败不阻断：候选人仍可下载结果文件回传（离线兜底）。 */
-  const CLOUD = { enabled: __CLOUD_ON__, endpoint: "__CLOUD_ENDPOINT__" };
+  const CLOUD = { enabled: true, endpoint: "https://uu-one-d4gc4ot78a702cb70-1257197409.ap-shanghai.app.tcloudbase.com/api/assessment" };
 
   function cloudPayload() {
     const r = window.REP.score(S);
@@ -1560,7 +1560,7 @@ window.REP = (function () {
   }
   function esc(s) {
     return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) {
-      return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", """: "&quot;" }[c]);
+      return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]);
     });
   }
   function nItems() {
@@ -1638,7 +1638,7 @@ window.REP = (function () {
       paint();
     }).catch(function (e) {
       st.sending = false;
-      st.err = "网络异常：\u" + String(e && e.message || e);
+      st.err = "网络异常：" + String(e && e.message || e);
       paint();
     });
   }

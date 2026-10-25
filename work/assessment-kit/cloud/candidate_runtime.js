@@ -20,7 +20,7 @@
   }
   function esc(s) {
     return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) {
-      return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", """: "&quot;" }[c]);
+      return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]);
     });
   }
   function nItems() {
@@ -98,7 +98,7 @@
       paint();
     }).catch(function (e) {
       st.sending = false;
-      st.err = "网络异常：\u" + String(e && e.message || e);
+      st.err = "网络异常：" + String(e && e.message || e);
       paint();
     });
   }

@@ -92,9 +92,12 @@ def build(endpoint, out_path):
         "copy": kb.read("src/data/copy.js"),
         "data": json.dumps(clean, ensure_ascii=False, separators=(",", ":")),
         "report": kb.read("src/modules/report.js"),
-        "app": kb.read("src/modules/app.js"),
+        "app": kb.app_source(cloud=True, endpoint=endpoint),
         "cand": runtime,
     }
+
+    if "__CLOUD_ON__" in html or "__CLOUD_ENDPOINT__" in html:
+        sys.exit("构建失败：产物里还有云端占位符（浏览器会直接抛错、整页空白）")
 
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
     with open(out_path, "w", encoding="utf-8") as f:

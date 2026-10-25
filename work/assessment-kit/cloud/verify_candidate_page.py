@@ -25,6 +25,9 @@ import importlib.util
 import json
 import os
 import re
+import shutil
+import subprocess
+import tempfile
 import urllib.request
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -64,6 +67,53 @@ def extract_data(html):
         return json.loads(m.group(1))
     except Exception:
         return None
+
+
+def find_chrome():
+    """找 Chrome（headless 渲染检查用）；找不到就跳过检查，不让构建卡住。"""
+    cand = [os.environ.get("CHROME_BIN"), shutil.which("google-chrome"),
+            shutil.which("chromium"), shutil.which("chromium-browser"),
+            "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+            "/Applications/Chromium.app/Contents/MacOS/Chromium"]
+    for c in cand:
+        if c and os.path.exists(c):
+            return c
+    return None
+
+
+def check_render(path, verbose=True):
+    """渲染检查（2026-10-25 补）：**静态检查看不出 JS 语法错误**。
+
+    空白页事故就是这么漏过去的：产物里 `__CLOUD_ON__` 没替换 + 运行时一处坏转义，
+    结构检查、金丝雀、外链检查全都过，浏览器却是整页空白。
+    ⇒ 这里用 headless Chrome 实跑一遍：控制台不许有 Uncaught/Error，渲染后的 DOM 里要有首屏文案。
+    """
+    problems = []
+    chrome = find_chrome()
+    if not chrome:
+        if verbose:
+            print("  渲染检查：跳过（没找到 Chrome）")
+        return problems
+    with tempfile.TemporaryDirectory() as td:
+        dom_path = os.path.join(td, "dom.html")
+        cmd = [chrome, "--headless=new", "--disable-gpu", "--enable-logging=stderr",
+               "--virtual-time-budget=5000", "--dump-dom", "file://" + os.path.abspath(path)]
+        try:
+            p = subprocess.run(cmd, capture_output=True, text=True, timeout=180)
+        except subprocess.TimeoutExpired:
+            return ["渲染检查超时（headless Chrome 没跑完）"]
+        dom = p.stdout or ""
+        with open(dom_path, "w", encoding="utf-8") as f:
+            f.write(dom)
+        errs = [l for l in (p.stderr or "").splitlines()
+                if "INFO:CONSOLE" in l and re.search(r"Uncaught|SyntaxError|ReferenceError|TypeError", l)]
+        if errs:
+            problems.append("渲染时 JS 报错 %d 条；第一条：%s" % (len(errs), errs[0][:200]))
+        if not re.search(r"同意并开始|开始测试|继续上次答题", dom):
+            problems.append("渲染后 DOM 里没有首屏文案（页面没画出来，多半是脚本崩了）")
+    if verbose:
+        print("  渲染检查：%s" % ("通过" if not problems else "不通过"))
+    return problems
 
 
 def check_page(path=None, url=None, verbose=True):
@@ -123,6 +173,14 @@ def check_page(path=None, url=None, verbose=True):
     if "__cloudRetry" not in html or "m1_raw" not in html:
         problems.append("交卷运行时不在页面里（交卷写库会失效）")
 
+    # 5. 云端占位符必须已替换（静态就能查，是空白页事故的第一现场）
+    if "__CLOUD_ON__" in html or "__CLOUD_ENDPOINT__" in html:
+        problems.append("页面里还有云端占位符（__CLOUD_ON__ / __CLOUD_ENDPOINT__）——浏览器会直接抛错、整页空白")
+
+    # 6. 渲染检查（只对本地文件做：线上 URL 会被平台的访问提示中间页挡住）
+    if path:
+        problems.extend(check_render(path, verbose=verbose))
+
     if verbose:
         print("发布门检查：%s" % origin)
         print("  金丝雀 %d 条（96 条判据原文 + 40 条推理题解析）" % len(canaries))
@@ -132,7 +190,7 @@ def check_page(path=None, url=None, verbose=True):
             print("    - %s" % p)
         return 1
     if verbose:
-        print("  通过：页面不含答案键、无外链资源、交卷运行时在位")
+        print("  通过：页面不含答案键、无外链资源、交卷运行时在位、渲染无报错")
     return 0
 
 

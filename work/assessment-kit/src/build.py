@@ -100,12 +100,23 @@ window.__DATA__ = %(data)s;
 """
 
 
+def app_source(cloud=False, endpoint=None):
+    """app.js 的云端开关：**占位符只在这里替换一次**（单一来源）。
+
+    教训（2026-10-25）：`cloud/build_candidate.py` 曾自己拼装页面、没走这条替换，
+    于是产物里留着 `__CLOUD_ON__` ⇒ 浏览器加载即抛 ReferenceError ⇒ 整页空白。
+    ⇒ 任何构建路径都必须调这个函数，不要各自 replace。
+    """
+    src = read("src/modules/app.js")
+    src = src.replace("__CLOUD_ON__", "true" if cloud else "false")
+    src = src.replace("__CLOUD_ENDPOINT__", (endpoint or CLOUD_ENDPOINT) if cloud else "")
+    return src
+
+
 def main():
     cloud = "--cloud" in sys.argv
     data = build_data()
-    app_src = read("src/modules/app.js")
-    app_src = app_src.replace("__CLOUD_ON__", "true" if cloud else "false")
-    app_src = app_src.replace("__CLOUD_ENDPOINT__", CLOUD_ENDPOINT if cloud else "")
+    app_src = app_source(cloud=cloud)
     html = SHELL % {
         "brand": BRAND,
         "tokens": read("src/tokens.css"),

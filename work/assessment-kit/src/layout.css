@@ -22,7 +22,10 @@ button{cursor:pointer;border:none;background:none}
 
 /* 报告页骨架 */
 .rep-nav{display:flex;gap:var(--sp-2);overflow-x:auto;padding:var(--sp-3) 0;-webkit-overflow-scrolling:touch}
-.rep-nav button{flex:0 0 auto;min-height:40px;padding:0 var(--sp-3);border-radius:999px;background:#F0F2F0;color:var(--ink2);font-size:var(--fs-2);white-space:nowrap}
+/* 胶囊规则（票 #27）：横向内边距必须 ≥ 圆角半径（= 高的一半）。
+   min-height 40 → 半径 20 → 内边距 ≥ 20（取 22）。原来的 12px 让「总报告」这类
+   3 字标签落进圆弧区。导航是横向可滚的（overflow-x:auto），加宽不破版。 */
+.rep-nav button{flex:0 0 auto;min-height:40px;padding:0 22px;border-radius:999px;background:#F0F2F0;color:var(--ink2);font-size:var(--fs-2);white-space:nowrap}
 .rep-nav button[aria-current="true"]{background:var(--green);color:var(--cream);font-weight:600}
 .rep-block{margin-bottom:var(--sp-5)}
 .rep-block h3{font-family:var(--serif);font-size:var(--fs-4);margin-bottom:var(--sp-2);color:var(--green)}
@@ -53,6 +56,12 @@ button{cursor:pointer;border:none;background:none}
   size:A4;               /* 集团用纸为 A4；如需 Letter 改这一行即可 */
   margin:12mm 12mm 16mm; /* 底部留出页脚带 */
   @bottom-right{content:"第 " counter(page) " 页";font-size:10px;color:#5C6A60}
+  /* 每页合规提醒（票 #27：打印门断言「每页合规声明在场」）。
+     走 @page margin box —— 这是唯一既能每页重复、又不压住正文的机制；
+     **不要**用 position:fixed（固定元素在打印时会把正文压掉，见票 #5 实测）。
+     降级：Firefox / Safari 忽略 margin box → 那两页仍由报告末尾的 .foot
+     给出完整两行合规声明（口径与 src/data/copy.js 的 foot 一致）。 */
+  @bottom-left{content:"心理测评结果不得作为录用唯一依据";font-size:9px;color:#5C6A60}
 }
 /* 打印页脚：position:fixed 在打印时每页重复，跨浏览器都能读到候选人身份信息 */
 /* 打印页脚：固定元素在打印时每页重复；bottom 放到负值 → 落在页边距区，不压正文 */

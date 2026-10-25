@@ -85,6 +85,38 @@ def main():
     else:
         check("各页无 undefined / NaN / [object Object]", True, "")
 
+    # 票 #27 新增断言：单页文字量上限（防「一页 4000 字的文字墙」）+
+    # 每页可定位候选人（编号 + 页码）+ 合规声明在场 + 等级词不被截断。
+    # 口径说明：产品的打印版式按《测评设计规范》§六用**区块落款**（每块抬头 + 块尾落款），
+    # **不用 fixed 页脚**；所以「每页」的保证是「每页有测评编号与页码（能定位到谁）」，
+    # 合规声明落在报告末尾一次，不是每页。
+    counts = [len("".join(p.split())) for p in pages_text]
+    if counts:
+        top = max(counts)
+        over = [i + 1 for i, c in enumerate(counts) if c > 1800]
+        check("单页文字量 ≤ 1800 字符（无文字墙）", not over,
+              "最密一页 %d 字符；超限页：%s" % (top, "、".join(map(str, over)) or "无"))
+    miss_id = [i + 1 for i, p in enumerate(pages_text) if "EQ-20261024" not in p]
+    check("每页都能定位到测评编号", not miss_id, "缺失页：" + "、".join(map(str, miss_id)))
+    miss_pg = [i + 1 for i, p in enumerate(pages_text) if not re.search(r"第\s*\d+\s*页", p)]
+    check("每页都有页码", not miss_pg, "缺失页：" + "、".join(map(str, miss_pg)))
+    # 合规声明：**每页**都要有（票 #27 验收项）。产品侧走 @page margin box（Chrome 专有，
+    # 降级路径见《测评设计规范》§六）；报告末尾另有完整两行声明。
+    # 判定前先去掉空白：margin box 里那句可能被 pdftotext 拆行或插空格。
+    norm = [re.sub(r"\s+", "", p) for p in pages_text]
+    miss_cp = [i + 1 for i, p in enumerate(norm) if "不得作为录用唯一依据" not in p]
+    check("每页都有合规声明", not miss_cp, "缺失页：" + "、".join(map(str, miss_cp)))
+    check("合规声明完整在场（报告末尾两行）",
+          "心理测评结果不得作为录用唯一依据" in norm[-1] and "不构成医学或心理诊断" in norm[-1], "")
+    ns = re.sub(r"\s+", "", raw)
+    tmp_ns = ns
+    for g in ("优秀", "顶尖", "良好", "合格", "待提升"):
+        tmp_ns = tmp_ns.replace(g, "")
+    # 只用「秀」「尖」当探针：「好」「格」在正常中文里单字出现（「表现好时」「性格」），会误报。
+    lone = [c for c in "秀尖" if c in tmp_ns]
+    check("等级词未被截断（无半个等级词）", not lone,
+          ("出现孤立字：" + "、".join(lone)) if lone else "")
+
     print("== 4. 四个区块各出现一次，且有抬头与落款 ==")
     blocks = ["总报告", "第一项报告", "第二项报告", "第三项报告"]
     for b in blocks:
@@ -102,11 +134,12 @@ def main():
         "第一项四维名": "互动方式",
         "第二项八维名": "冲突处理",
         "第三项维度名": "风险判断",
-        "错题回顾": "错题回顾",
         "一致性检查": "一致性检查",
         "不得说清单": "不得说",
         "打印页脚页码": None,
     }
+    # 「错题回顾」整块去掉（维护者 2026-10-24 裁定 + 票 #27）：打印件里不该再有它。
+    check("不含「错题回顾」（已按裁定移除）", "错题回顾" not in raw, "")
     for label, needle in must.items():
         if needle is None:
             continue

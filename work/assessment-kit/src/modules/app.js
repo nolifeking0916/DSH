@@ -39,16 +39,70 @@
   function load() {
     try {
       const raw = JSON.parse(localStorage.getItem(KEY) || "null");
-      if (raw && raw.a) return raw;
+      if (raw && raw.a) {
+        /* 兼容旧状态：限时截止时刻与截断标记是票 #25 新增的字段 */
+        if (!raw.deadline) raw.deadline = 0;
+        if (!raw.limitCut) raw.limitCut = null;
+        return raw;
+      }
     } catch (e) { /* 忽略损坏的本地状态 */ }
     return {
       name: "", idLast4: "", idEcho: "", code: newCode(), consented: false, limit: false,
-      a: { m1: [], m2: {}, m3: [] }, cur: { m1: 0, m2: 0, m3: 0 }, mod: "m1", phase: "self", t0: Date.now()
+      a: { m1: [], m2: {}, m3: [] }, cur: { m1: 0, m2: 0, m3: 0 }, mod: "m1", phase: "self", t0: Date.now(),
+      deadline: 0, limitCut: null
     };
   }
   function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* 隐私模式等 */ } }
   function clearOldKeys() { OLD_KEYS.forEach((k) => { try { localStorage.removeItem(k); } catch (e) { } }); }
   function wipe() { try { localStorage.removeItem(KEY); } catch (e) { } clearOldKeys(); S = load(); }
+
+  /* ---------------- 限时：全局一个 90 分钟钟（票 #25 裁定） ----------------
+     · 起算点 = 候选人点「同意并开始测试」的那一刻；
+     · 截止时刻 deadline 存在本机，断点续答按存的时刻继续走（续答不重新给 90 分钟）；
+     · 到点 → 自动交卷，未作答的题按未作答处理，并在结果里留「截断」标记；
+     · deadline 只存在本机状态里，不进结果 JSON（不落用时字段）。 */
+  const LIMIT_MIN = 90;                    /* 三项合计一个钟（分钟） */
+  const LIMIT_WARN_MS = 10 * 60 * 1000;    /* 剩余 10 分钟开始变色 */
+  let timerId = null;
+
+  function startTimer() {
+    stopTimer();
+    if (!S.limit) return;
+    if (!S.deadline) { S.deadline = Date.now() + LIMIT_MIN * 60000; save(); }
+    tickTimer();
+    timerId = setInterval(tickTimer, 1000);
+  }
+  function stopTimer() { if (timerId) { clearInterval(timerId); timerId = null; } }
+  function tickTimer() {
+    const el = document.getElementById("t-left");
+    if (!el) return;
+    const left = S.deadline - Date.now();
+    if (left <= 0) { stopTimer(); onLimitHit(); return; }
+    const m = Math.floor(left / 60000), s = Math.floor(left % 60000 / 1000);
+    el.textContent = C.limitLeftLabel + " " + m + ":" + String(s).padStart(2, "0");
+    /* 剩余 10 分钟内转金色提醒：金在深绿底 4.55:1 ✓（tokens.css 坑 1 (b)）。
+       .toprow span 默认 opacity:.92（分组透明度），故提醒态须同时把 opacity 拉回 1，
+       否则对比度会被压到 4.5:1 以下。#t-left 是 .toprow 的直接子元素，改它自身即可。 */
+    const warn = left < LIMIT_WARN_MS;
+    el.style.opacity = warn ? "1" : "";
+    el.style.color = warn ? "var(--gold)" : "";
+    el.style.fontWeight = warn ? "700" : "";
+  }
+  function countUnanswered() {
+    const u = {
+      m1: totalOf("m1") - answeredOf("m1"),
+      m2: totalOf("m2") - answeredOf("m2"),
+      m3: totalOf("m3") - answeredOf("m3")
+    };
+    u.total = u.m1 + u.m2 + u.m3;
+    return u;
+  }
+  function onLimitHit() {
+    const u = countUnanswered();
+    /* 一题未漏时不留截断标记（正常做完只是钟走完了，不是被截断） */
+    if (u.total > 0) { S.limitCut = { unanswered: u.total, m1: u.m1, m2: u.m2, m3: u.m3 }; save(); }
+    go("done");
+  }
 
   /* ---------------- 五级切档 ---------------- */
   function bandM1(score, dim) {
@@ -141,10 +195,17 @@
   function consentHTML() {
     const first = MODULES[0].name + "（" + MODULES[0].count + "）";
     const terms = C.terms.map((t) => "<p><b>" + esc(t[0]) + "</b>" + esc(t[1].replace("{FIRST}", first)) + "</p>").join("");
+    /* 勾了限时才给这段说明（告知卡要素清单把「限时模式开关说明」列为可选要素）；
+       里面写的每一条都必须与实现对得上 —— 禁止本页做不到的表述。 */
+    const limitBlock = S.limit
+      ? '<div class="panel" style="margin:var(--sp-3) 0"><h3>' + esc(C.limitTermsTitle) + '</h3><div class="terms">' +
+        C.limitTerms.map((t) => "<p>" + esc(t) + "</p>").join("") + "</div></div>"
+      : "";
     return '<div class="wrap"><div class="sheet consent" style="margin-top:var(--sp-4);padding:var(--sp-5) var(--sp-4)">' +
       "<h2>本次测试的知情同意</h2>" +
       '<p class="hint" style="margin:var(--sp-1) 0 var(--sp-3)">下面这段说明这次测评是什么、结果谁会看到、怎么使用。请逐条阅读，勾选下方确认框后再开始。</p>' +
       '<div class="terms">' + terms + "</div>" +
+      limitBlock +
       '<div style="border-top:1px solid var(--line);padding-top:var(--sp-3)">' +
       '<label class="check"><input type="checkbox" id="c-box"><span>我已阅读并理解以上八条说明，<b>自愿参加</b>本次测试。</span></label>' +
       '<div style="display:flex;gap:var(--sp-2);margin-top:var(--sp-3)">' +
@@ -161,7 +222,15 @@
     const pct = Math.round(done / total * 100);
     const mod = MODULES.find((m) => m.key === mk);
     const bar = '<div class="pbar"><i style="width:' + pct + '%"></i></div>';
-    const meta = '<div class="toprow"><b>' + esc(mod.no + " · " + mod.name) + "</b><span>第 " + (it.i + 1) + " / " + total + " 题 · 已答 " + done + (S.limit ? " · 限时中" : "") + "</span></div>";
+    /* 限时中：题头显示**真实剩余时间**（票 #25）。原来这里只有「· 限时中」三个字，
+       全文件没有任何计时行为 —— 那是一句做不到的承诺。 */
+    /* 限时模式下顶栏分两行：第一行「模块名 + 剩余时间」，第二行「第 x / N 题 · 已答 y」。
+       倒计时与模块名挤在一行会在 390 CSS px 下换行（顶栏涨到三行），已实测。 */
+    const prog = '<span id="tmeta">第 ' + (it.i + 1) + " / " + total + " 题 · 已答 " + done + "</span>";
+    const meta = S.limit
+      ? '<div class="toprow"><b>' + esc(mod.no + " · " + mod.name) + '</b><span id="t-left">' + esc(C.limitLeftLabel) + " --:--</span></div>" +
+        '<div class="toprow">' + prog + "</div>"
+      : '<div class="toprow"><b>' + esc(mod.no + " · " + mod.name) + "</b>" + prog + "</div>";
     let body = "";
     if (it.kind === "ab") {
       const q = D.m1.items[it.i];
@@ -197,10 +266,17 @@
 
   /* ---------------- 渲染：完成页 ---------------- */
   function doneHTML() {
+    /* 被限时到点截断时，完成页必须如实说明（票 #25）：不能还写「三项测评已完成」。 */
+    const cut = S.limitCut;
+    const cutNote = cut
+      ? '<div class="warn" style="margin:var(--sp-3) 0 0">' +
+        esc(C.doneCutNote.replace("{N}", cut.unanswered).replace("{M1}", cut.m1).replace("{M2}", cut.m2).replace("{M3}", cut.m3)) + "</div>"
+      : "";
     return '<div class="wrap"><div class="sheet" style="margin-top:var(--sp-4);padding:var(--sp-6) var(--sp-4)">' +
       '<div class="done-seal">✓</div>' +
-      '<h2 style="font-size:var(--fs-6);text-align:center">三项测评已完成</h2>' +
+      '<h2 style="font-size:var(--fs-6);text-align:center">' + (cut ? esc(C.doneCutTitle) : "三项测评已完成") + "</h2>" +
       '<p class="hint" style="max-width:330px;margin:var(--sp-2) auto 0;text-align:center">' + esc(C.doneLead) + "</p>" +
+      cutNote +
       '<button class="btn btn-primary btn-full" style="margin-top:var(--sp-4)" onclick="APP.download()">下载结果文件（JSON）</button>' +
       '<div class="panel" style="margin-top:var(--sp-3)"><h3>' + esc(C.sendTitle) + "</h3>" +
       '<p class="hint">' + esc(C.sendBody) + "<br>测评编号：<b>" + esc(S.code) + "</b></p>" +
@@ -230,6 +306,8 @@
   function render() {
     app.innerHTML = SCREENS[S.screen] ? SCREENS[S.screen]() : (REPORT ? window.REP.reportHTML(REPORT) : startHTML());
     if (S.screen === "quiz") drawGrid();
+    /* 计时器只在答题屏跑；离开答题屏立即停（施测人入口/报告页不该有钟） */
+    if (S.screen === "quiz") startTimer(); else stopTimer();
     window.scrollTo(0, 0);
   }
   function go(s) { S.screen = s; render(); }
@@ -239,7 +317,11 @@
     const n = document.getElementById("f-name"), i = document.getElementById("f-id");
     const l = document.getElementById("f-limit");
     if (n) S.name = n.value.trim();
-    if (l) S.limit = l.checked;
+    if (l) {
+      S.limit = l.checked;
+      /* 取消勾选 = 取消限时：清掉截止时刻与截断标记，避免上一轮残留把这一轮也截断 */
+      if (!S.limit) { S.deadline = 0; S.limitCut = null; }
+    }
     if (i && i.value.trim()) {
       if (!validId(i.value.trim())) { alert("身份证号格式或校验位不对，请核对后重填"); return; }
       const v = i.value.trim();
@@ -252,6 +334,8 @@
     const b = document.getElementById("c-box");
     if (b) S.consented = b.checked;
     if (!S.consented) { alert("请先勾选同意"); return; }
+    /* 限时起算点 = 候选人点「同意并开始测试」这一刻（票 #25 裁定） */
+    if (S.limit && !S.deadline) S.deadline = Date.now() + LIMIT_MIN * 60000;
     S.mod = "m1"; S.phase = "self"; save(); go("quiz");
   }
   function pick(el) {
@@ -315,10 +399,13 @@
   /* ---------------- 结果 JSON 与清除 ---------------- */
   function resultObj() {
     const r = window.REP.score(S);
-    return {
+    const out = {
       tool: D.brand, version: "20261024", code: S.code, name: S.name, idLast4: S.idLast4,
       date: new Date().toISOString(), m1: r.m1.out, m2: r.m2.out, m3: r.m3.out
     };
+    /* 截断标记只在真的被限时到点截断时出现；不落用时字段（票 #25 裁定） */
+    if (S.limitCut) out.limitCut = S.limitCut;
+    return out;
   }
   function download() {
     const blob = new Blob([JSON.stringify(resultObj(), null, 2)], { type: "application/json" });

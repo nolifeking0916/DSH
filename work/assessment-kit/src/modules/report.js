@@ -174,14 +174,19 @@ window.REP = (function () {
     return '<span class="grade" data-level="' + (LVL[g] || "B") + '"><span class="grade-name">' + esc(g) + "</span>" +
       (scoreText ? '<span class="grade-score">' + esc(scoreText) + "</span>" : "") + meter + "</span>";
   }
+  /* 维度条：一行一值（票 #27）。
+     .metric-row 已经是「名 + 分 + 五级胶囊」（《测评设计规范》§五组件表），
+     所以条形只负责**把分数画出来**，不再在右端重复同一个数 —— 原来的
+     「18/24」在上下两行各出现一次，看着像出错。 */
   function bar(label, v, max, valueText) {
     const p = Math.max(0, Math.min(100, Math.round(v / max * 100)));
-    return '<div class="bar"><span class="bar-label">' + esc(label) + '</span><span class="bar-track"><span class="bar-fill" style="width:' + p + '%"></span></span><span class="bar-value">' + esc(valueText || (p + "%")) + "</span></div>";
+    const val = valueText ? '<span class="bar-value">' + esc(valueText) + "</span>" : "";
+    return '<div class="bar"><span class="bar-label">' + esc(label) + '</span><span class="bar-track"><span class="bar-fill" style="width:' + p + '%"></span></span>' + val + "</div>";
   }
   function metricRow(d) {
     return '<div class="metric-row"><span class="mr-name">' + esc(d.name) + '</span><span class="mr-score">' +
       esc(d.scoreText || (d.score + (d.max ? " / " + d.max : ""))) + "</span>" + gradePill(d.grade) + "</div>" +
-      (d.max ? bar("相对表现", d.score, d.max, d.score + " / " + d.max) : "");
+      (d.max ? bar("相对表现", d.score, d.max) : "");
   }
   const RADAR_SHORT = { DED: "演绎", IND: "归纳", NUM: "数量", CON: "约束", SPA: "图形", CRI: "批判", PLN: "规划", RSK: "风险" };
   function radarSVG(dims) {
@@ -196,14 +201,22 @@ window.REP = (function () {
     const labels = dims.map((d, i) => {
       const p = pt(i, R + 24);
       const p2 = pt(i, R * Math.max(0.04, Math.min(1, d.pct / 100)));
-      // 数值标在顶点外侧：左半边靠左、右半边靠右，避免与维度名叠字
+      /* 数值标在**顶点外侧**（票 #27）：之前写的是 `p2[1] < cy ? -6 : 12` —— 漏了
+         `p2[1] +`，于是上半圈所有数值标签都塌到 SVG 顶边（y=-6 / 12），互相叠、
+         还跟顶部维度名叠在一起，读者根本对不上哪个数属于哪一维（这正是「蛛网图的
+         分数和推理测试对不上」的一半原因）。现在按顶点位置偏移：
+         上半圈放顶点上方、下半圈放下方、水平轴放点的正上方。 */
       const left = p2[0] < cx - 6, right = p2[0] > cx + 6;
       const vx = left ? p2[0] - 7 : right ? p2[0] + 7 : p2[0];
       const anchor = left ? "end" : right ? "start" : "middle";
       const onAxis = Math.abs(p2[1] - cy) < 10;   // 水平轴上的顶点：数值放到点的正上方，避开维度名
-      const vy = onAxis ? p2[1] - 8 : (p2[1] < cy ? -6 : 12);
+      const vy = onAxis ? p2[1] - 9 : (p2[1] < cy ? p2[1] - 7 : p2[1] + 15);
+      /* 数值标签写「P75」而不是「75」：这张图画的是**参考分布百分位**，
+         顶点标 P 前缀 = 口径自明（不用猜是百分位还是百分数）。
+         与 Word/PDF 双胞胎（src/build_report_docx.py 的 radar_svg，标 P%d）
+         和下方维度行的「P75」完全同口径 —— 票 #27 的「两个口径并置」就是这么消掉的。 */
       return '<text class="radar-label" x="' + p[0].toFixed(1) + '" y="' + p[1].toFixed(1) + '" text-anchor="middle">' + esc(RADAR_SHORT[d.key] || d.short || d.name) + "</text>" +
-        '<text class="radar-value" x="' + vx.toFixed(1) + '" y="' + vy.toFixed(1) + '" text-anchor="' + anchor + '">' + d.pct + "</text>";
+        '<text class="radar-value" x="' + vx.toFixed(1) + '" y="' + vy.toFixed(1) + '" text-anchor="' + anchor + '">P' + d.pct + "</text>";
     }).join("");
     const axes = dims.map((_, i) => { const p = pt(i, R); return '<line class="radar-axis" x1="' + cx + '" y1="' + cy + '" x2="' + p[0].toFixed(1) + '" y2="' + p[1].toFixed(1) + '"/>'; }).join("");
     const dots = dims.map((d, i) => '<circle class="radar-point" cx="' + self[i][0].toFixed(1) + '" cy="' + self[i][1].toFixed(1) + '" r="3"/>').join("");
@@ -212,7 +225,7 @@ window.REP = (function () {
       '<polygon points="' + poly(dims.map((_, i) => pt(i, R * 0.25))) + '" fill="none" stroke="#B7BEB9" stroke-width="1" stroke-dasharray="3 3"/>' +
       '<polygon points="' + poly(dims.map((_, i) => pt(i, R * 0.5))) + '" fill="none" stroke="#C9A55C" stroke-width="1" stroke-dasharray="3 3"/>' +
       '<polygon class="radar-area" points="' + poly(self) + '"/>' + dots + labels + "</svg></div>" +
-      '<p class="note">实线 = 本次作答的相对位置；金色虚线 = 参考分布中位；灰色虚线 = 参考分布第 25 百分位。每个顶点旁同时标注维度名与数值，黑白打印也能读。</p>';
+      '<p class="note">实线 = 本次作答在参考分布上的<b>百分位</b>位置；金色虚线 = 参考分布中位（P50）；灰色虚线 = 参考分布第 25 百分位。每个顶点旁同时标注维度名与百分位数值（黑白打印也能读）；下方维度行给出该维的「对 / 总题数」与百分位、T 分，可互相核对。</p>';
   }
 
   function composeBlock(cp) {
@@ -238,13 +251,22 @@ window.REP = (function () {
       { grade: data.m2.grade, dims: data.m2.dims },
       { grade: data.m3.grade, dims: data.m3.dims }
     );
-    return { code: data.code, name: data.name, idLast4: data.idLast4, date: data.date, m1: data.m1, m2: data.m2, m3: data.m3, compose: cp };
+    /* limitCut = 限时到点自动交卷的截断标记（票 #25）；旧结果 JSON 没有这个字段 → null。 */
+    return { code: data.code, name: data.name, idLast4: data.idLast4, date: data.date, m1: data.m1, m2: data.m2, m3: data.m3, compose: cp, limitCut: data.limitCut || null };
   }
 
   function secHTML(R, id) {
     const cp = R.compose;
     if (id === "total") {
-      return composeBlock(cp) + '<div class="rep-block"><h3>三项成绩</h3>' + listMetrics(cp) + "</div>" +
+      /* 被限时到点截断的结果必须一眼可见：分数会被未作答拉低，
+         施测人若不知道这份结果没答完，就会把「超时」当成「能力差」（票 #25）。 */
+      const cut = R.limitCut;
+      const cutBlock = cut
+        ? '<div class="warn" style="margin:var(--sp-3) 0"><b>限时到点自动交卷</b>：本次作答在限时到点时自动交卷，' +
+          cut.unanswered + " 题未作答（第一项 " + cut.m1 + " / 第二项 " + cut.m2 + " / 第三项 " + cut.m3 +
+          "）。未作答按未作答处理，不计入得分；该结果不完整，只作追问线索，不作横向比较。</div>"
+        : "";
+      return cutBlock + composeBlock(cp) + '<div class="rep-block"><h3>三项成绩</h3>' + listMetrics(cp) + "</div>" +
         '<div class="rep-block"><h3>怎么用这份结果</h3><p class="note">测评只产出追问清单，不作录用评分项：同一岗位对所有候选人使用同一套题、同一权重、同一阈值；面试按各档位的追问方向取证，录用决策由简历、专业技能、面谈与工作样本多源证据支撑；测评与面试冲突时以面试与工作样本为主，并记录冲突原因。</p></div>';
     }
     if (id === "m1") {
@@ -265,11 +287,16 @@ window.REP = (function () {
     }
     return '<div class="rep-block"><h3>第三项 · 推理测试</h3>' +
       '<div class="radar-wrap">' + radarSVG(R.m3.dims) + "</div>" +
-      '<div class="dims">' + R.m3.dims.map((d) => metricRow(Object.assign({}, d, { scoreText: d.correct + " / " + d.total, max: 0 }))).join("") + "</div>" +
+      /* 维度行同时给三个数：原始分（对 / 总）+ 模型换算（百分位 / T 分）——
+         雷达图画的是百分位，这一行给出百分位与 T 分，两个口径就能互相推导（票 #27）。
+         只写「对 / 总」时，读者对不上雷达上的数。 */
+      '<div class="dims">' + R.m3.dims.map((d) => metricRow(Object.assign({}, d, {
+        scoreText: d.correct + " / " + d.total + "　·　P" + d.pct + "　·　T " + d.t, max: 0
+      }))).join("") + "</div>" +
       '<p class="note">难度加权答对 ' + R.m3.total + " 分 · 参考分布第 " + R.m3.pct + " 百分位 · T 分 " + R.m3.t +
       "。百分位基于内置参考分布（按题目难度加权的理论模型）换算，不是商业常模，也不等同任何标准化智力测验；T 分超出 100 表示超出模型分布上端（满分作答的正常结果），档位以百分位为准。</p>" +
-      ((R.m3.wrong && R.m3.wrong.length) ? '<div class="rep-block" style="margin-top:var(--sp-4)"><h3>错题回顾</h3><ul class="wrong-list">' +
-        R.m3.wrong.map((w) => "<li><b>" + esc(w.id) + "</b>：" + esc(w.stem) + (w.explain ? '<br><span class="note">' + esc(w.explain) + "</span>" : "") + "</li>").join("") + "</ul></div>" : "") +
+      /* 「错题回顾」整块去掉（维护者 2026-10-24 裁定：施测人报告只要结果、解析与对候选人的判断；
+         逐题解析是给考生自己复盘的，打印出来是 4000+ 字一堵墙 —— 票 #27）。 */
       ((D.m3.must_say && D.m3.must_say.length) ? '<div class="rep-block"><h3>对外反馈时必须说明</h3><ul class="must">' + D.m3.must_say.map((t) => "<li>" + esc(t) + "</li>").join("") + "</ul></div>" : "") +
       ((D.m3.must_not_say && D.m3.must_not_say.length) ? '<div class="rep-block"><h3>对外反馈时不得说</h3><ul class="must">' + D.m3.must_not_say.map((t) => "<li>" + esc(t) + "</li>").join("") + "</ul></div>" : "") +
       "</div>";
@@ -292,8 +319,11 @@ window.REP = (function () {
       (R.name ? " ｜ " + esc(R.name) : "") + (R.idLast4 ? " ｜ 末 4 位 " + esc(R.idLast4) : "") +
       " ｜ 报告共 " + PAGES.length + " 个区块（每块另起一页）</div></section>").join("");
     return '<div class="wrap" style="max-width:760px">' +
-      '<div class="topbar"><div class="wrap" style="padding:0"><div class="toprow"><b>施测人报告</b><span>' + esc(R.name || "") +
-      " ｜ " + esc(String(R.code || "").slice(0, 12)) + "…" + (R.idLast4 ? " ｜ 末4位 " + esc(R.idLast4) : "") + "</span></div></div></div>" +
+      '<div class="topbar"><div class="wrap" style="padding:0"><div class="toprow"><b>施测人报告</b><span' +
+      /* 有截断时把整行透明度拉回 1，否则金色徽标被父组 opacity:.92 压到 4.5:1 以下 */
+      (R.limitCut ? ' style="opacity:1"' : "") + ">" + esc(R.name || "") +
+      " ｜ " + esc(String(R.code || "").slice(0, 12)) + "…" + (R.idLast4 ? " ｜ 末4位 " + esc(R.idLast4) : "") +
+      (R.limitCut ? ' ｜ <span style="color:var(--gold);font-weight:700">限时到点自动交卷</span>' : "") + "</span></div></div></div>" +
       '<div class="rep-nav noprint">' + nav.map((n) => '<button data-s="' + n[1] + '" onclick="REP.setSec(this.dataset.s)">' + esc(n[0]) + "</button>").join("") + "</div>" +
       '<div id="rep-body" style="padding-bottom:var(--sp-6)">' + all + "</div>" +
       '<div class="noprint" style="margin:var(--sp-3) 0"><button class="btn btn-primary btn-full" onclick="window.print()">打印 / 存为 PDF</button></div>' +

@@ -104,7 +104,11 @@ a{color:var(--green)}
 .hint{font-size:12.5px;color:var(--muted);line-height:1.7;margin-top:6px}
 .hint a{color:var(--green)}
 
-.tag{display:inline-flex;align-items:center;min-height:24px;padding:0 9px;border-radius:999px;
+/* 胶囊规则（票 #27 定的硬规则，改胶囊样式时照这条）：
+   **横向内边距必须 ≥ 圆角半径**（radius = 高的一半）。否则 2 个汉字会落进圆弧区，
+   视觉上「卡边」——等级胶囊（.grade-pill）就是这样被发现的。
+   .tag：min-height 24 → 半径 12 → 内边距 ≥ 12（取 13）。 */
+.tag{display:inline-flex;align-items:center;min-height:24px;padding:0 13px;border-radius:999px;
   font-size:11.5px;font-weight:700;line-height:1.4}
 .t-good{background:var(--good-bg);color:var(--good)}
 .t-sand{background:var(--sand-bg);color:var(--sand)}
@@ -194,7 +198,10 @@ a{color:var(--green)}
        DOM：<span class="grade-meter"><i></i><i></i><i></i><i></i><i></i></span>
        段数即等级 → 与颜色无关的第二重编码，打印/色觉差异下都能读。
    ================================================================ */
-.grade-pill{display:inline-flex;align-items:center;gap:6px;min-height:26px;padding:0 10px;border-radius:999px;
+/* 胶囊规则（票 #27）：横向内边距必须 ≥ 圆角半径（= 高的一半），文字才完全落在直段。
+   min-height 26 → 半径 13 → 内边距 ≥ 13（取 15，留 2px 余量）。原来的 10px < 13，
+   2 个汉字落进圆弧区 → 「合格 / 良好」的等级圈看着卡边。 */
+.grade-pill{display:inline-flex;align-items:center;gap:6px;min-height:26px;padding:0 15px;border-radius:999px;
   font-size:var(--fs-2);font-weight:700;line-height:1.4;white-space:nowrap;border:1px solid transparent}
 .grade-pill[data-level="T"]{background:var(--lv-t-bg);color:var(--lv-t-fg);border-color:var(--lv-t-bg)}
 .grade-pill[data-level="A"]{background:var(--lv-a-bg);color:var(--lv-a-fg);border-color:var(--lv-a-fg)}
@@ -235,10 +242,12 @@ a{color:var(--green)}
 .metric-row .grade-pill{flex:0 0 auto}
 
 /* 5.4 维度相对表现条：长度是主编码，颜色只是辅助
-       DOM：<div class="bar"><span class="bar-label">演绎推理</span>
+       DOM：<div class="bar"><span class="bar-label">相对表现</span>
              <span class="bar-track"><span class="bar-fill" style="width:78%"></span></span>
-             <span class="bar-value">78</span></div>
-       .bar-fill 的 width 由 JS 按维度相对表现写入（0–100）。 */
+             </div>
+       .bar-fill 的 width 由 JS 按维度相对表现写入（0–100）。
+       票 #27：**右端的 .bar-value 已去掉** —— 同一维度的分数已经在上面的
+       .metric-row 里写过一次，条形再写一遍就成了「18/24 出现两次」。 */
 .bars{display:grid;gap:10px;margin:var(--sp-3) 0}
 .bar{display:grid;grid-template-columns:minmax(68px,96px) 1fr auto;gap:var(--sp-3);
   align-items:center;min-height:32px}

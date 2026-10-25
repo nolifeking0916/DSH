@@ -14,6 +14,11 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 DIST = os.path.join(ROOT, "dist")
 OUT_NAME = "云上文旅集团核心人才系列测试_20261024.html"
+# 云上测试版（build.py --cloud）：同一套源码，注入网关路由地址，页脚与完成页走云端口径。
+CLOUD_OUT_NAME = "云上文旅集团核心人才系列测试_云上测试版_20261025.html"
+CLOUD_ENDPOINT = os.environ.get(
+    "ASSESSMENT_CLOUD_ENDPOINT",
+    "https://uu-one-d4gc4ot78a702cb70-1257197409.ap-shanghai.app.tcloudbase.com/api/assessment")
 BRAND = "云上文旅集团核心人才系列测试"
 
 
@@ -96,7 +101,11 @@ window.__DATA__ = %(data)s;
 
 
 def main():
+    cloud = "--cloud" in sys.argv
     data = build_data()
+    app_src = read("src/modules/app.js")
+    app_src = app_src.replace("__CLOUD_ON__", "true" if cloud else "false")
+    app_src = app_src.replace("__CLOUD_ENDPOINT__", CLOUD_ENDPOINT if cloud else "")
     html = SHELL % {
         "brand": BRAND,
         "tokens": read("src/tokens.css"),
@@ -105,10 +114,10 @@ def main():
         "copy": read("src/data/copy.js"),
         "data": json.dumps(data, ensure_ascii=False, separators=(",", ":")),
         "report": read("src/modules/report.js"),
-        "app": read("src/modules/app.js"),
+        "app": app_src,
     }
     os.makedirs(DIST, exist_ok=True)
-    out = os.path.join(DIST, OUT_NAME)
+    out = os.path.join(DIST, CLOUD_OUT_NAME if cloud else OUT_NAME)
     with open(out, "w", encoding="utf-8") as f:
         f.write(html)
 
@@ -126,7 +135,10 @@ def main():
     if bad:
         print("自检未通过：成品出现外链 -> %s" % "、".join(bad))
         sys.exit(1)
-    print("自检通过：零外链，可离线打开")
+    if cloud:
+        print("自检通过：零外链资源（本版会向 %s 提交作答）" % CLOUD_ENDPOINT)
+    else:
+        print("自检通过：零外链，可离线打开")
 
 
 if __name__ == "__main__":

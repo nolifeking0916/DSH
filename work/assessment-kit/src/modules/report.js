@@ -1,6 +1,7 @@
 /* 报告层：三项计分、综合评估（档位层合成）、三模块报告页与总报告 */
 window.REP = (function () {
   const D = window.__DATA__;
+  const C = window.__COPY__;   /* 固定文案（口径说明的两套措辞在 copy.js，不在本文件写死） */
   const ORD = { "待提升": 1, "合格": 2, "良好": 3, "优秀": 4, "顶尖": 5 };
   const esc = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const M3META = D.m3.meta || {};
@@ -174,6 +175,31 @@ window.REP = (function () {
     return '<span class="grade" data-level="' + (LVL[g] || "B") + '"><span class="grade-name">' + esc(g) + "</span>" +
       (scoreText ? '<span class="grade-score">' + esc(scoreText) + "</span>" : "") + meter + "</span>";
   }
+  /* ---------- 票 #39：口径说明块 + 五级梯 ---------- */
+  /* D2 裁定（维护者 2026-10-25 12:34）：校准前一律用「绝对锚点口径 + 明写尚未校准」。
+     口径出处：items/m1_design.md §九.2（档位是专家阈值，不是人群分布）+ 票 #26 §12。
+     切换点：把 CALIBRATED 改成 true，四个报告块的口径说明自动换成参照人群口径的措辞 ——
+     两套措辞都放在 copy.js（calibAbs / calibRef），本文件只做选择，不并排写死。 */
+  const CALIBRATED = false;
+  const CALIB_TEXT = CALIBRATED ? C.calibRef : C.calibAbs;
+  /* 口径说明块：告诉施测人这套档位是怎么划出来的、目前还没校准 */
+  function calibNote() {
+    return '<p class="calib"><b>口径说明</b>：' + esc(CALIB_TEXT) + "</p>";
+  }
+  /* 五级梯：从高到低（顶尖 → 待提升）五格并排。
+     深绿格 = **已达到的档**（从低到高直到当前档，含当前档），当前档再加一道金线，
+     浅灰格 = 未达到。与 .grade-meter「前 n 段点亮」同口径（同一人的两处图形不打架）。
+     档名是主编码（文字写在格子里），底色只是辅助。 */
+  const LADDER = ["顶尖", "优秀", "良好", "合格", "待提升"];
+  function ladderHTML(grade) {
+    const n = ORD[grade] || 1;
+    return '<div class="ladder">' + LADDER.map((g) =>
+      '<span class="' + (ORD[g] <= n ? "on" : "") + (g === grade ? " cur" : "") + '">' + esc(g) + "</span>"
+    ).join("") + "</div>";
+  }
+  function ladderBlock(cap, grade) {
+    return '<div class="ladder-cap">' + esc(cap) + " · 五级档上的位置（深绿＝已达到的档）</div>" + ladderHTML(grade);
+  }
   /* 维度条：一行一值（票 #27）。
      .metric-row 已经是「名 + 分 + 五级胶囊」（《测评设计规范》§五组件表），
      所以条形只负责**把分数画出来**，不再在右端重复同一个数 —— 原来的
@@ -234,6 +260,7 @@ window.REP = (function () {
       : "";
     return '<section class="compose"><h3 class="compose-title">综合评估</h3>' +
       '<div class="compose-head">' + gradeBlock(cp.grade, "三项等级合成") + "</div>" +
+      ladderBlock("综合档", cp.grade) +
       '<p class="compose-note">综合评估由三项的等级合成（顶尖 5 / 优秀 4 / 良好 3 / 合格 2 / 待提升 1，等权平均后切档），<b>不代表总分</b>，也不作一票否决的依据，只用来决定面试追问什么。</p>' +
       skew + "</section>" +
       '<div class="short-board">短板：<b>' + esc(cp.short.name) + "（" + esc(cp.short.grade) + "）</b>。整体档按最短板的一维确定。</div>";
@@ -251,41 +278,54 @@ window.REP = (function () {
       { grade: data.m2.grade, dims: data.m2.dims },
       { grade: data.m3.grade, dims: data.m3.dims }
     );
-    /* limitCut = 限时到点自动交卷的截断标记（票 #25）；旧结果 JSON 没有这个字段 → null。 */
-    return { code: data.code, name: data.name, idLast4: data.idLast4, date: data.date, m1: data.m1, m2: data.m2, m3: data.m3, compose: cp, limitCut: data.limitCut || null };
+    /* limitHint = 限时到点的痕迹（票 #39 · D3）：到点**只提示、不自动交卷**，
+       候选人继续作答、最后自己交卷。痕迹记着到点那一刻已答了多少题，
+       供票 #26 第 13 条算「完成整卷比例 / 省略作答比例」。
+       旧结果 JSON 没有这个字段 → null。 */
+    return { code: data.code, name: data.name, idLast4: data.idLast4, date: data.date, m1: data.m1, m2: data.m2, m3: data.m3, compose: cp, limitHint: data.limitHint || null };
   }
 
   function secHTML(R, id) {
     const cp = R.compose;
     if (id === "total") {
-      /* 被限时到点截断的结果必须一眼可见：分数会被未作答拉低，
-         施测人若不知道这份结果没答完，就会把「超时」当成「能力差」（票 #25）。 */
-      const cut = R.limitCut;
-      const cutBlock = cut
-        ? '<div class="warn" style="margin:var(--sp-3) 0"><b>限时到点自动交卷</b>：本次作答在限时到点时自动交卷，' +
-          cut.unanswered + " 题未作答（第一项 " + cut.m1 + " / 第二项 " + cut.m2 + " / 第三项 " + cut.m3 +
-          "）。未作答按未作答处理，不计入得分；该结果不完整，只作追问线索，不作横向比较。</div>"
+      /* 到点痕迹必须一眼可见：分数会被未作答拉低，
+         施测人若不知道这份结果是到点之后接着答的，就会把「超时」当成「能力差」（票 #25/#39）。 */
+      const hint = R.limitHint;
+      const hintBlock = hint
+        ? '<div class="warn" style="margin:var(--sp-3) 0"><b>限时到点（未自动交卷）</b>：限时到点时已作答 ' +
+          hint.answered + " / " + hint.total + " 题；到点后候选人可继续作答，最终由本人自行交卷。判读时请把这一点计入完成度。" +
+          "</div>"
         : "";
-      return cutBlock + composeBlock(cp) + '<div class="rep-block"><h3>三项成绩</h3>' + listMetrics(cp) + "</div>" +
+      return hintBlock + calibNote() + composeBlock(cp) + '<div class="rep-block"><h3>三项成绩</h3>' + listMetrics(cp) + "</div>" +
         '<div class="rep-block"><h3>怎么用这份结果</h3><p class="note">测评只产出追问清单，不作录用评分项：同一岗位对所有候选人使用同一套题、同一权重、同一阈值；面试按各档位的追问方向取证，录用决策由简历、专业技能、面谈与工作样本多源证据支撑；测评与面试冲突时以面试与工作样本为主，并记录冲突原因。</p></div>';
     }
     if (id === "m1") {
       return '<div class="rep-block"><h3>第一项 · ' + esc(D.m1.meta.title) + "</h3>" +
+        calibNote() +
+        /* 四维每行仍是「名 + 分 + 五级胶囊」，**不加迷你梯**：五格并排放不下
+           「待提升」（实测折行成两行，390 与 800 宽都难看）—— 按票 #39「别硬塞」，
+           梯只给整体档（总报告给综合档、第二项给整体档）。 */
         '<div class="dims">' + R.m1.dims.map((d) => metricRow(d)).join("") + "</div>" +
+        ladderBlock("整体档", R.m1.grade) +
         '<div class="short-board">短板：<b>' + esc(R.m1.short.name) + "（" + esc(R.m1.short.grade) + "）</b>。整体档按最短板的一维确定。</div>" +
-        '<p class="note">每维 0–24 分，按绝对锚点切档（顶尖 22–24 / 优秀 18–21 / 良好 14–17 / 合格 9–13 / 待提升 0–8）；暂未建立参照分布，后续内部样本到量后校准。</p></div>';
+        '<p class="note">每维 0–24 分，按绝对锚点切档（顶尖 22–24 / 优秀 18–21 / 良好 14–17 / 合格 9–13 / 待提升 0–8）；暂未建立参照分布，后续内部样本到量后校准。</p>' +
+        "</div>";
     }
     if (id === "m2") {
       const need = (R.m2.needReview || []);
       return '<div class="rep-block"><h3>第二项 · 情境测试</h3>' +
+        calibNote() +
         '<div class="dims">' + R.m2.dims.map((d) => metricRow(d)).join("") + "</div>" +
+        ladderBlock("整体档", R.m2.grade) +
         '<p class="note">加权总分 ' + R.m2.total + " / 5.00。档位：顶尖 ≥4.4 / 优秀 3.8–4.39 / 良好 3.0–3.79 / 合格 2.4–2.99 / 待提升 &lt;2.4。</p>" +
         (need.length ? '<div class="short-board">需复核：<b>' + esc(need.join("、")) + "</b>（自我参照与情境作答差异较大，按『需结合真实经历再确认』处理，不直接采信任一方）。</div>" : "") +
         ((R.m2.consistency && R.m2.consistency.length) ? '<div class="rep-block keep" style="margin-top:var(--sp-4)"><h3>一致性检查</h3><ul class="must">' +
           R.m2.consistency.map((c) => "<li><b>" + esc(c.pair) + "</b>：" + esc(c.status) + "（作答 " + esc(c.detail) + "）</li>").join("") + "</ul>" +
-          '<p class="note">一致性检查题不计入任何维度分，只用于观察同一致情境的两种问法是否指向同一倾向；一正一负的按需复核处理。</p></div>' : "") + "</div>";
+          '<p class="note">一致性检查题不计入任何维度分，只用于观察同一致情境的两种问法是否指向同一倾向；一正一负的按需复核处理。</p></div>' : "") +
+        "</div>";
     }
     return '<div class="rep-block"><h3>第三项 · 推理测试</h3>' +
+      calibNote() +
       '<div class="radar-wrap">' + radarSVG(R.m3.dims) + "</div>" +
       /* 维度行同时给三个数：原始分（对 / 总）+ 模型换算（百分位 / T 分）——
          雷达图画的是百分位，这一行给出百分位与 T 分，两个口径就能互相推导（票 #27）。
@@ -303,7 +343,6 @@ window.REP = (function () {
   }
 
   function reportHTML(R) {
-    const C = window.__COPY__;
     const cp = R.compose;
     const nav = [['总报告', 'total'], ['第一项', 'm1'], ['第二项', 'm2'], ['第三项', 'm3']];
     const sec = (id) => secHTML(R, id);
@@ -320,10 +359,10 @@ window.REP = (function () {
       " ｜ 报告共 " + PAGES.length + " 个区块（每块另起一页）</div></section>").join("");
     return '<div class="wrap" style="max-width:760px">' +
       '<div class="topbar"><div class="wrap" style="padding:0"><div class="toprow"><b>施测人报告</b><span' +
-      /* 有截断时把整行透明度拉回 1，否则金色徽标被父组 opacity:.92 压到 4.5:1 以下 */
-      (R.limitCut ? ' style="opacity:1"' : "") + ">" + esc(R.name || "") +
+      /* 有到点痕迹时把整行透明度拉回 1，否则金色徽标被父组 opacity:.92 压到 4.5:1 以下 */
+      (R.limitHint ? ' style="opacity:1"' : "") + ">" + esc(R.name || "") +
       " ｜ " + esc(String(R.code || "").slice(0, 12)) + "…" + (R.idLast4 ? " ｜ 末4位 " + esc(R.idLast4) : "") +
-      (R.limitCut ? ' ｜ <span style="color:var(--gold);font-weight:700">限时到点自动交卷</span>' : "") + "</span></div></div></div>" +
+      (R.limitHint ? ' ｜ <span style="color:var(--gold);font-weight:700">限时到点（未自动交卷）</span>' : "") + "</span></div></div></div>" +
       '<div class="rep-nav noprint">' + nav.map((n) => '<button data-s="' + n[1] + '" onclick="REP.setSec(this.dataset.s)">' + esc(n[0]) + "</button>").join("") + "</div>" +
       '<div id="rep-body" style="padding-bottom:var(--sp-6)">' + all + "</div>" +
       '<div class="noprint" style="margin:var(--sp-3) 0"><button class="btn btn-primary btn-full" onclick="window.print()">打印 / 存为 PDF</button></div>' +
@@ -339,5 +378,8 @@ window.REP = (function () {
     window.scrollTo(0, 0);
   }
 
-  return { score: score, build: build, reportHTML: reportHTML, gradePill: gradePill, bandComposite: bandComposite, ORD: ORD };
+  /* setSec 必须导出：报告页的切换按钮写的是 onclick="REP.setSec(...)"
+     —— 2026-10-25 修（票 #39 顺带发现的老 bug）：原来没导出，点任何一个区块标签
+     都抛 "REP.setSec is not a function"，四个报告块里只有「总报告」能看见。 */
+  return { score: score, build: build, reportHTML: reportHTML, setSec: setSec, gradePill: gradePill, bandComposite: bandComposite, ORD: ORD };
 })();

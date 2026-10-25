@@ -209,6 +209,39 @@ a{color:var(--green)}
 .grade-pill[data-level="C"]{background:var(--lv-c-bg);color:var(--lv-c-fg);border-color:var(--lv-c-fg)}
 .grade-pill[data-level="D"]{background:var(--lv-d-bg);color:var(--lv-d-fg);border-color:var(--lv-d-fg)}
 
+/* ================================================================
+   5.1b 五级梯 .ladder（票 #39 新增）
+   ---------------------------------------------------------------
+   要素搬自 prototypes/candidate-report-20261025.html 的 .ladder
+   （该原型已标「定位作废」，只有「口径说明块」与「五级梯」两个要素进成品）。
+   DOM：<div class="ladder"><span class="on">顶尖</span><span class="on">优秀</span>
+        <span class="on">良好</span><span class="on cur">合格</span><span>待提升</span></div>
+   · 五格从高到低：顶尖 / 优秀 / 良好 / 合格 / 待提升；
+   · 深绿格 = 已达到的档（on），当前档再加一道金线（cur），浅灰格 = 未达到；
+   · **档名是主编码**（文字写在格子里），底色只是辅助 —— 黑白打印与色觉差异下都读得出；
+   · 金只作装饰描边（tokens.css 坑 1：浅底上不用金做文字）；
+   · 打印时深绿格改白底深字（见 §6 @media print），不依赖「深底 + 浅字」。
+   ================================================================ */
+.ladder{display:flex;gap:4px;margin-top:var(--sp-3)}
+.ladder span{flex:1;text-align:center;font-size:var(--fs-1);line-height:1.4;padding:5px 2px;
+  border-radius:var(--r-s);background:var(--paper-b);color:var(--ink2);border:1px solid var(--line)}
+.ladder span.on{background:var(--green);color:var(--cream);border-color:var(--green)}
+.ladder span.cur{outline:2px solid var(--gold);outline-offset:1px}
+.ladder-cap{font-size:var(--fs-1);color:var(--muted);margin-top:var(--sp-2)}
+
+/* ================================================================
+   5.1c 口径说明块 .calib（票 #39 新增）
+   ---------------------------------------------------------------
+   要素搬自 prototypes/candidate-report-20261025.html 的 .calib。
+   DOM：<p class="calib"><b>口径说明</b>：…</p>
+   · 金底棕字的提示块：告诉施测人「这套档位是绝对锚点定的，尚未经真人样本校准」
+     （票 #26 §12 的硬要求：校准前必须标注）；
+   · 文字用 --sand（浅底 5.65:1 ✓），不用 --gold（浅底只有 2.21:1，tokens.css 坑 1）。
+   ================================================================ */
+.calib{margin:var(--sp-4) 0 var(--sp-3);font-size:var(--fs-1);line-height:1.8;color:var(--sand);
+  background:var(--sand-bg);border:1px solid var(--line-warm);border-radius:var(--r-s);padding:8px 12px}
+.calib b{color:var(--sand);font-weight:700}
+
 .grade{display:flex;flex-direction:column;gap:6px;padding:12px 14px;border-radius:var(--r-m);
   border:1px solid transparent;min-width:132px}
 .grade-name{font-family:var(--serif);font-size:var(--fs-5);font-weight:600;line-height:1.4}
@@ -321,13 +354,16 @@ a{color:var(--green)}
   body{background:#fff}
   .mask,.gridpanel,.btn,.gridbtn,.qnav,.topbar{display:none !important}
   .compose,.short-board,.metric-row,.list-metrics,.metric,.grade,.grade-pill,.radar-wrap,
-  .card,.panel,.foot{break-inside:avoid}
-  .compose,.short-board,.grade,.grade-pill,.radar-wrap,.list-metrics{
+  .card,.panel,.foot,.ladder,.calib{break-inside:avoid}
+  .compose,.short-board,.grade,.grade-pill,.radar-wrap,.list-metrics,.calib{
     print-color-adjust:exact;-webkit-print-color-adjust:exact}
   /* 深绿底浅字的档位块在丢背景后不可读 → 打印改为白底深字 + 深色描边 */
   .grade-pill[data-level="T"],.grade[data-level="T"]{
     background:transparent;color:var(--green);border:2px solid var(--green)}
   .grade[data-level="T"] .grade-score{color:var(--green)}
+  /* 五级梯（票 #39）：深绿格同样改成白底深字；当前档靠加粗 + 粗描边标出，不靠金色 */
+  .ladder span.on{background:transparent;color:var(--green);border-color:var(--green)}
+  .ladder span.cur{outline:none;border:2px solid var(--green);font-weight:700}
   .short-board,.compose{border-left-width:4px}
   /* SVG 打印需要确定的内在尺寸（viewBox 之外的 width/height 用绝对单位） */
   .radar-wrap{width:120mm;max-width:120mm}

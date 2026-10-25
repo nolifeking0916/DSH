@@ -5,6 +5,7 @@
 用法：python3 src/verify_product.py
 依赖：dist/ 下的成品（先跑 src/build.py）
 """
+import sys
 import json
 import math
 import os
@@ -16,6 +17,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 DIST = os.path.join(ROOT, "dist")
 PRODUCT = os.path.join(DIST, "云上文旅集团核心人才系列测试_20261024.html")
+if len(sys.argv) > 1:  # 可指定要验的产物（云上测试版走这里）
+    PRODUCT = sys.argv[1]
 SHOTS = os.path.join(DIST, "shots")
 CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 W = 390
@@ -97,6 +100,9 @@ def main():
         ("清除本机数据入口", "清除本机数据" in html),
         ("身份证只留后 4 位", "只保留末 4 位" in html and "不随结果回传" in html),
         ("两行合规页脚", "作答内容不上传服务器" in html and "不构成医学或心理诊断" in html),
+        ("云版页脚文案在（两套并存，渲染时按 CLOUD.enabled 选）", "会提交到集团人力资源部的系统" in html),
+        ("云端占位符已替换（__CLOUD_ON__ / __CLOUD_ENDPOINT__）", "__CLOUD_" not in html),
+        ("云端开关与端点一致", ("enabled: true" not in html) or ("/api/assessment" in html)),
         ("必答提示是文本", "这一题还没作答" in html),
         ("续答入口", "继续上次答题" in html),
         ("限时开关", "限时模式" in html),

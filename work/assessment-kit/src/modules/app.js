@@ -40,27 +40,30 @@
     try {
       const raw = JSON.parse(localStorage.getItem(KEY) || "null");
       if (raw && raw.a) {
-        /* 兼容旧状态：限时截止时刻与截断标记是票 #25 新增的字段 */
+        /* 兼容旧状态：限时截止时刻（票 #25）与到点痕迹 limitHint（票 #39）是新增字段 */
         if (!raw.deadline) raw.deadline = 0;
-        if (!raw.limitCut) raw.limitCut = null;
+        if (!raw.limitHint) raw.limitHint = null;
         return raw;
       }
     } catch (e) { /* 忽略损坏的本地状态 */ }
     return {
       name: "", idLast4: "", idEcho: "", code: newCode(), consented: false, limit: false,
       a: { m1: [], m2: {}, m3: [] }, cur: { m1: 0, m2: 0, m3: 0 }, mod: "m1", phase: "self", t0: Date.now(),
-      deadline: 0, limitCut: null
+      deadline: 0, limitHint: null
     };
   }
   function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* 隐私模式等 */ } }
   function clearOldKeys() { OLD_KEYS.forEach((k) => { try { localStorage.removeItem(k); } catch (e) { } }); }
   function wipe() { try { localStorage.removeItem(KEY); } catch (e) { } clearOldKeys(); S = load(); }
 
-  /* ---------------- 限时：全局一个 90 分钟钟（票 #25 裁定） ----------------
+  /* ---------------- 限时：全局一个 90 分钟钟（票 #25 裁定 + 票 #39 修订）----------------
      · 起算点 = 候选人点「同意并开始测试」的那一刻；
      · 截止时刻 deadline 存在本机，断点续答按存的时刻继续走（续答不重新给 90 分钟）；
-     · 到点 → 自动交卷，未作答的题按未作答处理，并在结果里留「截断」标记；
-     · deadline 只存在本机状态里，不进结果 JSON（不落用时字段）。 */
+     · **到点 → 只提示一次，不自动交卷**（票 #39 · D3 · 维护者 2026-10-25 12:34 裁定）：
+       候选人可以继续作答，什么时候交卷由他自己决定（走完最后一题即交卷）；
+     · 到点这一刻的痕迹记在 S.limitHint = {answered 到点时已答题数, total 总题数}，
+       最终交卷时随结果一起带出（供票 #26 第 13 条算完成整卷比例 / 省略作答比例）；
+     · deadline 与 limitHint 都不落用时字段（limitHint 里刻意不放时间戳）。 */
   const LIMIT_MIN = 90;                    /* 三项合计一个钟（分钟） */
   const LIMIT_WARN_MS = 10 * 60 * 1000;    /* 剩余 10 分钟开始变色 */
   let timerId = null;
@@ -77,7 +80,16 @@
     const el = document.getElementById("t-left");
     if (!el) return;
     const left = S.deadline - Date.now();
-    if (left <= 0) { stopTimer(); onLimitHit(); return; }
+    if (left <= 0) {
+      /* 到点：停钟 + 顶栏改成「限时已到」（不再倒计时）+ 提示一次。**不跳完成页。** */
+      stopTimer();
+      el.textContent = C.limitHitLeftLabel;
+      el.style.opacity = "1";
+      el.style.color = "var(--gold)";
+      el.style.fontWeight = "700";
+      onLimitHit();
+      return;
+    }
     const m = Math.floor(left / 60000), s = Math.floor(left % 60000 / 1000);
     el.textContent = C.limitLeftLabel + " " + m + ":" + String(s).padStart(2, "0");
     /* 剩余 10 分钟内转金色提醒：金在深绿底 4.55:1 ✓（tokens.css 坑 1 (b)）。
@@ -88,20 +100,20 @@
     el.style.color = warn ? "var(--gold)" : "";
     el.style.fontWeight = warn ? "700" : "";
   }
-  function countUnanswered() {
-    const u = {
-      m1: totalOf("m1") - answeredOf("m1"),
-      m2: totalOf("m2") - answeredOf("m2"),
-      m3: totalOf("m3") - answeredOf("m3")
-    };
-    u.total = u.m1 + u.m2 + u.m3;
-    return u;
-  }
+  function answeredTotal() { return answeredOf("m1") + answeredOf("m2") + answeredOf("m3"); }
+  function totalAll() { return totalOf("m1") + totalOf("m2") + totalOf("m3"); }
   function onLimitHit() {
-    const u = countUnanswered();
-    /* 一题未漏时不留截断标记（正常做完只是钟走完了，不是被截断） */
-    if (u.total > 0) { S.limitCut = { unanswered: u.total, m1: u.m1, m2: u.m2, m3: u.m3 }; save(); }
-    go("done");
+    /* 票 #39 · D3：到点**只提示一次、不自动交卷**。这里不再有任何跳完成页的逻辑 ——
+       交卷只由候选人自己走完最后一题触发（APP.next → done）。
+       到点这一刻的痕迹只记「已答了多少题」，不记时间戳（票 #25：不把用时落进产品）。 */
+    if (S.limitHint) return;                 /* 只提示一次：痕迹不重复记 */
+    S.limitHint = { answered: answeredTotal(), total: totalAll() };
+    save();
+    showLimitTip();
+  }
+  function showLimitTip() {
+    const w = document.getElementById("warn");
+    if (w) { w.hidden = false; w.textContent = C.limitHitTip; }
   }
 
   /* ---------------- 五级切档 ---------------- */
@@ -247,10 +259,15 @@
           '<span class="dot"></span><span class="sl">' + (lab || "") + "</span></button>").join("") + "</div>";
     } else {
       const q = mk === "m2" ? M2ALL[it.i] : M3ALL[it.i];
+      /* 选项字段两个名字都认：第二项的题在 build.py 里转成了 opts，
+         第三项的题库里字段就叫 options。2026-10-25 修（票 #39 顺带发现的老 bug）：
+         这里原来只读 q.opts，第三项一渲染就抛 TypeError —— 候选人卡在第二项末尾，
+         整卷交不出去（连带「手动交卷」流程根本走不到）。 */
+      const opts = q.opts || q.options || [];
       const grid = q.grid ? '<pre class="grid" style="font-family:ui-monospace,Menlo,monospace;font-size:var(--fs-3);line-height:1.5;margin-bottom:var(--sp-3)">' +
         esc(Array.isArray(q.grid) ? q.grid.join("\n") : q.grid) + "</pre>" : "";
       body = '<div class="qstem">' + esc(q.stem) + "</div>" + grid +
-        '<div class="opts" role="group" aria-label="选项">' + q.opts.map((o, k) =>
+        '<div class="opts" role="group" aria-label="选项">' + opts.map((o, k) =>
           '<button class="opt" type="button" aria-pressed="' + (pickOf(mk, it.i) === k ? "true" : "false") + '" data-i="' + k + '" onclick="APP.pick(this)">' +
           '<span class="k">' + "ABCD"[k] + "</span><span>" + esc(o) + "</span></button>").join("") + "</div>";
     }
@@ -264,24 +281,33 @@
       '<div class="wrap"><div class="qbody">' + body + warn + nav + "</div></div>" + footHTML();
   }
 
-  /* ---------------- 渲染：完成页 ---------------- */
+  /* ---------------- 渲染：完成页 ----------------
+     票 #39：候选人在自助云版里**看不到自己的结果** ⇒ 这一页只说
+     「已完成 · 结果由 HR 保管」，不出现分数、等级与任何评价结论（旧图红线 6 仍然有效）。
+     撤回通道做成可选：提一句「如需删除本次记录，请联系 HR」。 */
   function doneHTML() {
-    /* 被限时到点截断时，完成页必须如实说明（票 #25）：不能还写「三项测评已完成」。 */
-    const cut = S.limitCut;
-    const cutNote = cut
+    /* 到点只提示、不自动交卷（票 #39 · D3）：到点时答了多少题如实说明（不含任何评价结论）。 */
+    const hint = S.limitHint;
+    const hintNote = hint
       ? '<div class="warn" style="margin:var(--sp-3) 0 0">' +
-        esc(C.doneCutNote.replace("{N}", cut.unanswered).replace("{M1}", cut.m1).replace("{M2}", cut.m2).replace("{M3}", cut.m3)) + "</div>"
+        esc(C.doneLimitNote.replace("{N}", hint.answered).replace("{M}", hint.total)) + "</div>"
       : "";
     return '<div class="wrap"><div class="sheet" style="margin-top:var(--sp-4);padding:var(--sp-6) var(--sp-4)">' +
       '<div class="done-seal">✓</div>' +
-      '<h2 style="font-size:var(--fs-6);text-align:center">' + (cut ? esc(C.doneCutTitle) : "三项测评已完成") + "</h2>" +
+      '<h2 style="font-size:var(--fs-6);text-align:center">' + esc(C.doneTitle) + "</h2>" +
       '<p class="hint" style="max-width:330px;margin:var(--sp-2) auto 0;text-align:center">' + esc(C.doneLead) + "</p>" +
-      cutNote +
+      '<p class="hint" id="cloud-state" style="max-width:330px;margin:var(--sp-1) auto 0;text-align:center">' +
+        (CLOUD.enabled ? "正在提交本次作答…" : "本次作答只保存在这台设备上。") + "</p>" +
+      hintNote +
       '<button class="btn btn-primary btn-full" style="margin-top:var(--sp-4)" onclick="APP.download()">下载结果文件（JSON）</button>' +
       '<div class="panel" style="margin-top:var(--sp-3)"><h3>' + esc(C.sendTitle) + "</h3>" +
       '<p class="hint">' + esc(C.sendBody) + "<br>测评编号：<b>" + esc(S.code) + "</b></p>" +
-      '<p class="hint" style="margin-top:var(--sp-1)">回传后，本机仍保留作答记录；你可随时清除。</p></div>' +
-      '<button class="btn btn-quiet btn-full" style="margin-top:var(--sp-3)" onclick="APP.clearAll()">' + esc(C.clearLabel) + "</button>" +
+      '<p class="hint" style="margin-top:var(--sp-1)">' + esc(C.doneSendTail) + "</p>" +
+      '<p class="hint" style="margin-top:var(--sp-1)">' + esc(C.doneWithdraw) + "</p></div>" +
+      /* 清除本机数据：云端数据不在本机，本机只是缓存 —— 按钮清的是本机缓存（票 #39） */
+      '<div class="panel" style="margin-top:var(--sp-3)"><h3>' + esc(C.clearTitle) + "</h3>" +
+      '<p class="hint">' + esc(C.clearNote) + "</p>" +
+      '<button class="btn btn-quiet btn-full" style="margin-top:var(--sp-2)" onclick="APP.clearAll()">' + esc(C.clearLabel) + "</button></div>" +
       '<button class="btn btn-quiet btn-full" style="margin-top:var(--sp-2)" onclick="APP.reset()">再测一次</button>' +
       "</div>" + footHTML() + "</div>";
   }
@@ -298,7 +324,55 @@
       "</div>" + footHTML() + "</div>";
   }
 
-  function footHTML() { return '<div class="foot">' + C.foot.map((f) => "<b>" + esc(f) + "</b>").join("") + "</div>"; }
+  /* ---------------- 云端上报（云上版 · 票 #33 / #40）----------------
+     离线版：__CLOUD_ON__ = false —— 不联网，页脚与完成页保持「只在本机」口径。
+     云上版：src/build.py --cloud 会把 __CLOUD_ON__ 置为 true、__CLOUD_ENDPOINT__ 填成网关路由地址；
+     交卷时把作答 POST 给云函数，由云函数落 CloudBase PG（候选人浏览器**不碰数据库**：
+     网关的 PG 连接带 row_security=off，浏览器角色写不进开了 RLS 的表）。
+     上报失败不阻断：候选人仍可下载结果文件回传（离线兜底）。 */
+  const CLOUD = { enabled: __CLOUD_ON__, endpoint: "__CLOUD_ENDPOINT__" };
+
+  function cloudPayload() {
+    const r = window.REP.score(S);
+    const m1 = (S.a.m1 || []).map(function (v) { return (v === null || v === undefined) ? -1 : v; });
+    return {
+      code: S.code,
+      respondent_name: S.name,
+      id_last4: S.idLast4,
+      started_at: new Date(S.t0).toISOString(),
+      submitted_at: new Date().toISOString(),
+      duration_ms: Math.max(0, Date.now() - S.t0),
+      m1_raw: m1,                 /* 96 题逐题作答：0=选 a 侧 / 1=选 b 侧（-1=未作答） */
+      m1_scores: r.m1.out,        /* 四维分与档位快照（客户端算分的口径） */
+      m2_result: r.m2.out,
+      m3_result: r.m3.out,
+      limit_hint: S.limitHint || null,
+      unanswered_m1: m1.filter(function (v) { return v === -1; }).length
+    };
+  }
+  function cloudKick() {
+    if (!CLOUD.enabled) return;
+    const el = document.getElementById("cloud-state");
+    fetch(CLOUD.endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(cloudPayload())
+    }).then(function (r) { return r.json(); })
+      .then(function (res) {
+        if (!el) return;
+        el.textContent = (res && res.ok)
+          ? "已提交到集团人力资源部的系统（结果不在本页面显示）。"
+          : "本次未能联网上传，请下载结果文件回传给施测人。";
+      })
+      .catch(function () {
+        if (!el) return;
+        el.textContent = "本次未能联网上传，请下载结果文件回传给施测人。";
+      });
+  }
+  function footHTML() {
+    const lines = (CLOUD.enabled && C.footCloud) ? C.footCloud : C.foot;
+    return '<div class="foot">' + lines.map(function (f) { return "<b>" + esc(f) + "</b>"; }).join("") + "</div>";
+  }
 
   /* ---------------- 屏幕切换 ---------------- */
   const SCREENS = { start: startHTML, consent: consentHTML, quiz: quizHTML, done: doneHTML, hr: hrHTML };
@@ -319,8 +393,8 @@
     if (n) S.name = n.value.trim();
     if (l) {
       S.limit = l.checked;
-      /* 取消勾选 = 取消限时：清掉截止时刻与截断标记，避免上一轮残留把这一轮也截断 */
-      if (!S.limit) { S.deadline = 0; S.limitCut = null; }
+      /* 取消勾选 = 取消限时：清掉截止时刻与到点痕迹，避免上一轮残留把这一轮也标上 */
+      if (!S.limit) { S.deadline = 0; S.limitHint = null; }
     }
     if (i && i.value.trim()) {
       if (!validId(i.value.trim())) { alert("身份证号格式或校验位不对，请核对后重填"); return; }
@@ -360,7 +434,7 @@
     if (it.i + 1 >= total) {
       if (S.mod === "m1") { S.mod = "m2"; S.cur.m2 = 0; }
       else if (S.mod === "m2") { S.mod = "m3"; S.cur.m3 = 0; }
-      else { S.screen = "done"; }
+      else { S.screen = "done"; cloudKick(); }
       save(); render(); return;
     }
     S.cur[S.mod] = it.i + 1; save(); render();
@@ -403,8 +477,9 @@
       tool: D.brand, version: "20261024", code: S.code, name: S.name, idLast4: S.idLast4,
       date: new Date().toISOString(), m1: r.m1.out, m2: r.m2.out, m3: r.m3.out
     };
-    /* 截断标记只在真的被限时到点截断时出现；不落用时字段（票 #25 裁定） */
-    if (S.limitCut) out.limitCut = S.limitCut;
+    /* 到点痕迹只在真的到过点时出现（票 #39 · D3）；不落用时字段 ——
+       limitHint 里只有「到点时已答了多少题 / 共多少题」，没有时间戳（票 #25 裁定）。 */
+    if (S.limitHint) out.limitHint = S.limitHint;
     return out;
   }
   function download() {
@@ -414,8 +489,8 @@
     a.click(); URL.revokeObjectURL(a.href);
   }
   function clearAll() {
-    if (!confirm("确定清除本机保存的作答与结果？清除后无法恢复。")) return;
-    wipe(); closeGrid(); alert("已清除本机数据"); go("start");
+    if (!confirm("确定清除本机缓存的作答与结果？清除后无法恢复。")) return;
+    wipe(); closeGrid(); alert(C.clearDoneTip); go("start");
   }
   function reset() {
     if (!confirm("重新开始？本次记录会被清空。")) return;

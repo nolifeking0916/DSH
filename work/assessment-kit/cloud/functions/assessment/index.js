@@ -318,14 +318,38 @@ exports.main = async (event) => {
         if (v !== 0 && v !== 1) return reply(400, { ok: false, error: "m1_raw 第 " + (i + 1) + " 题不是 0/1" });
         m1[i] = v;
       }
+      /* ---- m3_answers：值域校验（2026-10-26 · 票 #26 根因的服务器侧兜底）----
+         第三项是**四选项**（选项下标 0/1/2/3）。客户端曾把 2/3 丢成 null
+         （normalize 只认 0/1）⇒ 那一批数据整批被按「未作答」计分。
+         ⇒ 服务端现在**明确拒绝**不在 0-3 的值（宁可报错也不要静默算错），
+         并把「第三项有 N 题未作答」**回显在响应里**，让提交方立刻看得见。 */
+      const m3in = raw.m3_answers;
+      const m3 = Array.isArray(m3in) ? m3in : null;
+      if (m3) {
+        for (let i = 0; i < m3.length; i++) {
+          const v = m3[i];
+          if (v === null || v === undefined) continue;
+          if (v !== 0 && v !== 1 && v !== 2 && v !== 3) {
+            return reply(400, { ok: false, error: "m3_answers 第 " + (i + 1) + " 题不是 0-3 的选项下标", got: v });
+          }
+        }
+      }
       /* 服务端算分：浏览器自报的任何分数一律不采信 */
       let out;
       try {
-        out = scoreAll({ m1_raw: m1, m2_answers: raw.m2_answers || null, m3_answers: raw.m3_answers || null });
+        out = scoreAll({ m1_raw: m1, m2_answers: raw.m2_answers || null, m3_answers: m3 });
       } catch (err) {
         return reply(500, { ok: false, error: "服务端计分失败：" + String(err && err.message || err) });
       }
       const unanswered = m1.filter((v) => v === null).length;
+      /* 完整度回显：三项各缺几题（第二项按键数、第三项按 40 位数组） */
+      const m2done = (raw.m2_answers && typeof raw.m2_answers === "object") ? Object.keys(raw.m2_answers).length : null;
+      const m3done = m3 ? m3.filter((v) => v !== null && v !== undefined).length : null;
+      const gaps = {
+        m1: unanswered,
+        m2: m2done === null ? null : Math.max(0, 76 - m2done),
+        m3: m3done === null ? null : Math.max(0, 40 - m3done),
+      };
       const row = {
         /* —— 白名单里的客户端字段 —— */
         code: code,
@@ -351,7 +375,10 @@ exports.main = async (event) => {
       const inserted = await pg("POST", "/" + table, row, "return=representation");
       const first = Array.isArray(inserted) ? inserted[0] : inserted;
       /* 响应里**不含分数**：候选人端不显示分数（红线 6） */
-      return reply(201, { ok: true, code: first && first.code, id: first && first.id, stored: n, unanswered: unanswered });
+      /* 但**回显完整度**：哪一项缺了几题（2026-10-26）——
+         之前「她漏答 22 题」是静默发生的（客户端丢答 + 页面显示已答 40/40），
+         现在交卷方与服务端都能立刻看见缺口。 */
+      return reply(201, { ok: true, code: first && first.code, id: first && first.id, stored: n, unanswered: unanswered, gaps: gaps });
     }
 
     if (method === "GET") {

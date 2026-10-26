@@ -103,6 +103,41 @@ function codeCheckOn() {
   return !(v === "off" || v === "0" || v === "false");
 }
 
+/* ============================================================ 补交第三项（票 #26 · 2026-10-26）
+   纯函数，可被本地单测 import（exports._mergeM3Patch）。
+   规则：**只填空位** —— 已作答的题位不覆盖（幂等 + 不可篡改已答内容）；
+   题位必须是 0..(题数-1) 的整数，选项必须是 0-3 的整数；其它一律判为不合法。 */
+function m3Slots() {
+  try { return KEYS.m3.questions.length; } catch (e) { return 40; }
+}
+function mergeM3Patch(cur, patch) {
+  const n = m3Slots();
+  const arr = Array.isArray(cur) ? cur.slice(0, n) : [];
+  while (arr.length < n) arr.push(null);
+  const filled = [], skipped = [], bad = [];
+  for (const k of Object.keys(patch || {})) {
+    const i = Number(k);
+    if (!Number.isInteger(i) || i < 0 || i >= n) { bad.push(k); continue; }
+    const v = patch[k];
+    if (!Number.isInteger(v) || v < 0 || v > 3) { bad.push(k); continue; }
+    const old = arr[i];
+    if (old === null || old === undefined) { arr[i] = v; filled.push(i); }
+    else { skipped.push(i); }
+  }
+  let empty = 0;
+  for (const v of arr) if (v === null || v === undefined) empty++;
+  return { array: arr, filled: filled, skipped: skipped, bad: bad, empty: empty };
+}
+
+/* 补答动作的结构化日志（与 exportLog 同一纪律：先留位置） */
+function patchLog(code, merged, m3out) {
+  const line = {
+    ev: "assessment_m3_patch", code: code, at: new Date().toISOString(),
+    filled: merged.filled, skipped: merged.skipped, remaining_empty: merged.empty,
+    m3_grade: m3out && m3out.grade
+  };
+  try { console.log(JSON.stringify(line)); } catch (e) { /* 日志失败不影响补答 */ }
+}
 function str(v) {
   if (v === null || v === undefined) return null;
   const s = String(v).trim();
@@ -208,6 +243,49 @@ exports.main = async (event) => {
   const q = event.queryStringParameters || {};
   const table = process.env.PG_TABLE || "responses";
   try {
+    /* ---- 补交第三项（2026-10-26 · 票 #26 的临时补答通道）------------------------
+       场景：某份作答的**第三项**有题位未作答（页面 bug 或候选人跳答），第一、二项完整。
+       本分支**只填空位**：已作答的题位一律不覆盖 ⇒ 幂等、且不能篡改已答内容；
+       合并后由服务端用同一套 report.js **重算第三项成绩**，
+       第一项成绩、第二项成绩与逐题作答**一个字都不动**。
+       body: { code, m3_answers: { "<题位>": <选项下标 0-3> } }
+       ⚠ 这个接口的门槛就是 code 本身（谁拿到 code 就能补空位）—— 补答页用完即删，
+         且访问控制归票 #44。 */
+    if (method === "POST" && q.action === "patch_m3") {
+      let payload = event.body;
+      if (typeof payload === "string") {
+        try { payload = JSON.parse(payload); } catch (e) { return reply(400, { ok: false, error: "请求体不是合法 JSON" }); }
+      }
+      if (!payload || typeof payload !== "object") return reply(400, { ok: false, error: "缺少作答记录" });
+      const code = str(payload.code);
+      if (!code) return reply(400, { ok: false, error: "缺少 code（测评编号）" });
+      const patch = payload.m3_answers;
+      if (!patch || typeof patch !== "object" || Array.isArray(patch)) {
+        return reply(400, { ok: false, error: "m3_answers 应为 {题位: 选项下标}" });
+      }
+      const rows = await pg("GET", "/" + table + "?code=eq." + encodeURIComponent(code) +
+        "&select=code,respondent_name,m1_raw,m2_answers,m3_answers,m3_result");
+      if (!rows || !rows.length) return reply(404, { ok: false, error: "没有这一份", code: code });
+      const row = rows[0];
+      const merged = mergeM3Patch(row.m3_answers, patch);
+      if (merged.bad.length) {
+        return reply(400, { ok: false, error: "题位或选项不合法", bad: merged.bad,
+          "allowed_slots": "0-" + (m3Slots() - 1), "allowed_options": "0-3" });
+      }
+      if (!merged.filled.length) {
+        return reply(200, { ok: true, code: code, filled: [], skipped: merged.skipped,
+          "remaining_empty": merged.empty,
+          "note": "没有可补的空位（已作答的题位不覆盖）" });
+      }
+      const out = scoreAll({ m1_raw: row.m1_raw, m2_answers: row.m2_answers, m3_answers: merged.array });
+      await pg("PATCH", "/" + table + "?code=eq." + encodeURIComponent(code),
+        { m3_answers: merged.array, m3_result: out.m3 });
+      patchLog(code, merged, out.m3);
+      return reply(200, { ok: true, code: code, filled: merged.filled, skipped: merged.skipped,
+        "remaining_empty": merged.empty, "m3_grade": out.m3 && out.m3.grade,
+        "name": row.respondent_name });
+    }
+
     if (method === "POST") {
       let payload = event.body;
       if (payload && typeof payload === "string") {
@@ -450,3 +528,6 @@ exports.main = async (event) => {
     });
   }
 };
+
+/* 本地单测用的导出（不参与线上逻辑） */
+exports._mergeM3Patch = mergeM3Patch;

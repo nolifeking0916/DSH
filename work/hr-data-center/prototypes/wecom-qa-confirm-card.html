@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>原型 · 企微群「确认卡」（#58）</title>
+<style>
+  :root{
+    --ink:#1E4634;      /* 深绿 · 品牌主色 */
+    --ink-2:#2F5D48;
+    --paper:#F5F0E4;    /* 米白 */
+    --paper-2:#FBF8F0;
+    --line:#D9D0BC;
+    --muted:#7A7566;
+    --red:#B4462F;
+    --gold:#A8801F;
+    --green:#2E6B45;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--paper); color:#22201B;
+    font:15px/1.72 -apple-system,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  }
+  code,.mono{font-family:"SF Mono",Menlo,Consolas,monospace; font-size:12.5px}
+  .wrap{max-width:1420px;margin:0 auto;padding:22px 20px 70px}
+
+  /* ---------- 页头 ---------- */
+  header.hd{
+    background:var(--ink); color:var(--paper); border-radius:10px;
+    padding:20px 24px; margin-bottom:16px;
+  }
+  header.hd h1{margin:0 0 4px; font-size:21px; letter-spacing:.3px}
+  header.hd .sub{opacity:.82; font-size:13px; margin-bottom:12px}
+  .meta{display:flex; flex-wrap:wrap; gap:7px}
+  .meta span{
+    background:rgba(245,240,228,.13); border:1px solid rgba(245,240,228,.25);
+    border-radius:5px; padding:3px 9px; font-size:12px;
+  }
+  .meta span b{color:#EBD9A8; font-weight:600}
+
+  .assume{
+    background:var(--paper-2); border:1px solid var(--line); border-left:4px solid var(--gold);
+    border-radius:7px; padding:13px 17px; margin-bottom:24px; font-size:13.2px;
+  }
+  .assume h3{margin:0 0 7px; font-size:14px; color:var(--ink)}
+  .assume ol{margin:0; padding-left:20px}
+  .assume li{margin:3px 0; color:#3A362E}
+
+  /* ---------- 场景块 ---------- */
+  .scene{
+    background:#fff; border:1px solid var(--line); border-radius:10px;
+    margin-bottom:26px; overflow:hidden;
+  }
+  .scene > .bar{
+    background:var(--ink-2); color:var(--paper); padding:11px 18px;
+    display:flex; align-items:baseline; gap:12px; flex-wrap:wrap;
+  }
+  .scene > .bar .no{
+    background:#EBD9A8; color:var(--ink); border-radius:4px; padding:1px 9px;
+    font-size:13px; font-weight:700; letter-spacing:.5px;
+  }
+  .scene > .bar h2{margin:0; font-size:16px; font-weight:600}
+  .scene > .bar .tag{
+    margin-left:auto; font-size:12px; opacity:.85; border:1px solid rgba(245,240,228,.3);
+    border-radius:4px; padding:1px 8px;
+  }
+  .cols{display:grid; grid-template-columns:minmax(0,1.12fr) minmax(0,1fr)}
+  @media (max-width:1080px){ .cols{grid-template-columns:1fr} }
+  .col{padding:16px 18px 20px; min-width:0}
+  .col.left{border-right:1px solid var(--line); background:#FDFDFA}
+  @media (max-width:1080px){ .col.left{border-right:0; border-bottom:1px solid var(--line)} }
+  .col h3{
+    margin:0 0 12px; font-size:12px; letter-spacing:1.4px; color:var(--muted);
+    text-transform:uppercase; font-weight:700;
+  }
+
+  /* ---------- 企微群 ---------- */
+  .wecom{
+    background:#EDEDED; border:1px solid #DCDCD5; border-radius:8px; padding:14px 13px;
+  }
+  .wecom .grp{
+    text-align:center; font-size:11.5px; color:var(--muted);
+    margin:0 0 12px; padding-bottom:9px; border-bottom:1px dashed #D2D2C9;
+  }
+  .msg{display:flex; gap:9px; margin-bottom:15px}
+  .msg .av{
+    flex:0 0 34px; height:34px; border-radius:4px; background:#B9B9B2; color:#fff;
+    display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:600;
+  }
+  .msg.bot .av{background:var(--ink)}
+  .msg.me .av{background:#4A6B8A}
+  .msg .body{min-width:0; flex:1}
+  .msg .who{font-size:12px; color:var(--muted); margin-bottom:4px}
+  .msg .who b{color:#3A362E; font-weight:600}
+  .bub{
+    background:#fff; border:1px solid #DEDEDA; border-radius:5px; padding:10px 13px;
+    font-size:14px; word-break:break-word;
+  }
+  .msg.me .bub{background:#95EC69; border-color:#8ADD57}
+  .bub .q{color:#1A1A1A}
+  .bub .q::before{content:"「"; color:#777}
+  .bub .q::after{content:"」"; color:#777}
+
+  /* ---------- 确认卡 ---------- */
+  .card{
+    background:#fff; border:1px solid #C8C8C0; border-top:3px solid var(--ink);
+    border-radius:5px; padding:0; overflow:hidden; font-size:13.6px;
+  }
+  .card .ch{
+    background:var(--paper); border-bottom:1px solid var(--line);
+    padding:9px 13px; display:flex; align-items:center; gap:8px;
+  }
+  .card .ch .ic{
+    width:20px; height:20px; border-radius:4px; background:var(--ink); color:#EBD9A8;
+    display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700;
+  }
+  .card .ch .ti{font-weight:700; font-size:14px; color:var(--ink)}
+  .card .ch .no{margin-left:auto; font-size:11.5px; color:var(--muted); font-family:"SF Mono",Menlo,monospace}
+  .card .cb{padding:12px 13px}
+  .card .cb p{margin:0 0 9px}
+  .card .sec{font-size:11.5px; letter-spacing:.8px; color:var(--muted); font-weight:700; margin:13px 0 6px}
+  .card .sec:first-child{margin-top:0}
+
+  table.pk{width:100%; border-collapse:collapse; font-size:12.8px}
+  table.pk td{padding:4px 0; vertical-align:top; border-bottom:1px dotted #E2DFD4}
+  table.pk tr:last-child td{border-bottom:0}
+  table.pk td.k{
+    width:88px; color:var(--muted); white-space:nowrap;
+    padding-right:8px; font-size:12.3px;
+  }
+  table.pk td.v{flex:1}
+  .old{color:#8A6A4A; text-decoration:line-through}
+  .new{color:var(--red); font-weight:700}
+  .mono{background:#F4F1E8; padding:1px 4px; border-radius:3px; border:1px solid #E7E2D4}
+
+  .warn{
+    background:#FBF4E2; border:1px solid #E4D3A6; border-left:3px solid var(--gold);
+    border-radius:4px; padding:8px 11px; font-size:12.6px; color:#5A4A22; margin-top:9px;
+  }
+  .warn b{color:#7A5C12}
+  .foot{
+    background:#F7F4EA; border-top:1px dashed var(--line); padding:9px 13px;
+    font-size:12.2px; color:#4A463C; display:flex; flex-wrap:wrap; gap:4px 14px;
+  }
+  .foot .k{color:var(--muted)}
+  .ask{
+    margin-top:10px; font-size:13.4px; background:#FFFDF5; border:1px dashed #C9C2AA;
+    border-radius:5px; padding:9px 12px;
+  }
+  .ask b{color:var(--ink)}
+
+  /* ---------- 右栏 契约展开 ---------- */
+  .panel{
+    background:#FBFAF6; border:1px solid var(--line); border-radius:7px; padding:12px 13px; margin-bottom:12px;
+  }
+  .panel > h4{
+    margin:0 0 9px; font-size:13px; color:var(--ink); display:flex; align-items:center; gap:7px;
+  }
+  .panel > h4::before{content:""; width:3px; height:14px; background:var(--ink); border-radius:2px; display:inline-block}
+  ol.steps{margin:0; padding-left:0; list-style:none; counter-reset:s}
+  ol.steps li{
+    counter-increment:s; position:relative; padding:5px 0 5px 30px; font-size:12.9px; border-bottom:1px dotted #E4E0D2;
+  }
+  ol.steps li:last-child{border-bottom:0}
+  ol.steps li::before{
+    content:counter(s); position:absolute; left:0; top:6px;
+    width:19px; height:19px; border-radius:50%; background:var(--ink); color:#EBD9A8;
+    font-size:11px; display:flex; align-items:center; justify-content:center; font-weight:700;
+  }
+  ol.steps li .st{font-weight:600; color:var(--ink)}
+  ol.steps li .rs{color:#5C574B; display:block; font-size:12.3px; margin-top:2px}
+  .ok{color:var(--green); font-weight:700}
+  .cond{
+    display:inline-block; background:#EDE7D6; color:#6B5A22; border-radius:3px;
+    padding:0 6px; font-size:11px; font-weight:700; margin-right:5px;
+  }
+  .cond.opt{background:#E4EAE5; color:#3C5C48}
+
+  table.src{width:100%; border-collapse:collapse; font-size:12.3px}
+  table.src th{
+    text-align:left; font-weight:600; color:var(--muted); font-size:11.3px; letter-spacing:.5px;
+    border-bottom:1px solid var(--line); padding:3px 6px 4px 0;
+  }
+  table.src td{padding:4px 6px 4px 0; border-bottom:1px dotted #E4E0D2; vertical-align:top}
+  table.src tr:last-child td{border-bottom:0}
+  .rule{
+    display:inline-block; background:var(--ink); color:#EBD9A8; border-radius:3px;
+    padding:1px 7px; font-size:11.4px; font-family:"SF Mono",Menlo,monospace; margin:2px 4px 2px 0;
+  }
+  .cred{
+    border:1px solid var(--line); border-radius:5px; padding:8px 11px; margin-bottom:8px; background:#fff;
+  }
+  .cred .ch2{font-size:12.4px; font-weight:700; color:var(--ink); margin-bottom:3px}
+  .cred .ch2 span{color:var(--muted); font-weight:400; font-size:11.5px}
+  .rev{
+    background:#F1F5F1; border:1px solid #C8DACB; border-radius:5px; padding:10px 12px;
+    font-size:12.2px; font-family:"SF Mono",Menlo,monospace; line-height:1.85;
+  }
+  .rev .k{color:#4A6B52; display:inline-block; min-width:92px}
+  .sig{display:flex; flex-wrap:wrap; gap:8px}
+  .sig .s{
+    flex:1 1 150px; border:1px solid var(--line); border-radius:5px; padding:8px 10px; background:#fff;
+  }
+  .sig .s .r{font-size:12.6px; font-weight:700; color:var(--ink)}
+  .sig .s .d{font-size:11.9px; color:#5C574B; margin-top:2px}
+  .sig .s .by{font-size:11.3px; color:var(--muted); margin-top:3px}
+
+  /* ---------- 底部挑刺 ---------- */
+  .pick{background:#fff; border:1px solid var(--line); border-radius:9px; padding:18px 22px}
+  .pick h2{margin:0 0 4px; font-size:17px; color:var(--ink)}
+  .pick .lead{color:var(--muted); font-size:13px; margin-bottom:14px}
+  .pick h3{font-size:14px; color:var(--ink); margin:16px 0 7px}
+  .pick ul{margin:0; padding-left:21px}
+  .pick li{margin:5px 0; font-size:13.4px}
+  .pick li b{color:var(--ink)}
+  .cols2{display:grid; grid-template-columns:1fr 1fr; gap:22px}
+  @media (max-width:900px){ .cols2{grid-template-columns:1fr} }
+  .badge{
+    display:inline-block; font-size:11px; border-radius:3px; padding:0 6px; font-weight:700; margin-left:5px;
+  }
+  .b-open{background:#F2E3D8; color:#8E3F26}
+  .b-done{background:#DCE9DF; color:#2E5C3E}
+  .b-new{background:#E5E1F0; color:#4A3D7A}
+  .note{font-size:12.4px; color:var(--muted); margin-top:10px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hd">
+  <h1>企微群「确认卡」原型 · 2 则</h1>
+  <div class="sub">主数据变更 → 确认卡 → 维护者回「同意」→ 写库留痕　｜　用完即弃的一次性原型，非生产代码</div>
+  <div class="meta">
+    <span>票 <b>#58</b>（父票 #55）</span>
+    <span>分支 <b>prototype/wecom-qa-confirm-card</b></span>
+    <span>落点 <b>work/hr-data-center/prototypes/</b></span>
+    <span>生成 <b>2026-10-26 12:49 CST</b></span>
+    <span>数据截至 <b>2026-10-26 12:46</b>（现查云库）</span>
+    <span>契约依据 <b>#63 已结</b> / 留痕依据 <b>#62 已结</b></span>
+    <span>范围 <b>只做确认卡 2 则</b>（问答 3 则与「答不了」3 则后补）</span>
+  </div>
+</header>
+
+<div class="assume">
+  <h3>原型假设（先看这里，再挑刺）</h3>
+  <ol>
+    <li><b>形态</b>：按「对话流 + 契约展开」双栏做。左侧是企微群里用户实际看到的样子，右侧把同一条消息背后的必经顺序、查过的表、口径号、双重凭据、留痕行摊开。格式沿用第一档，不做多套视觉变体。</li>
+    <li><b>企微渲染</b>：企微 bot 发的是 markdown 文本，左侧是渲染后的示意；真实内容里没有按钮，<b>确认动作就是用户回一句「同意」</b>。</li>
+    <li><b>署名</b>：按地图口径 10「统一署名」，卡由 <b>Chief</b> 署名对外，卡内标注起草专家（口径）与依据专家（管道）。用户（汪洋，工号 23484）是确认人，不是署名人。</li>
+    <li><b>双重凭据</b>：按 #62 Q5 裁定——凭据 1 = 卡正文自带完整变更包（表名/字段/旧值/新值/影响行数/预估快照）；凭据 2 = 群消息 chatid + msgid + 确认人 from_userid。</li>
+    <li><b>数据</b>：全部为云库现查真值（2026-10-26 12:46），无编造；未发生的那一版（确认卡会写的留痕行）标为「模拟写入」。</li>
+    <li><b>留痕现状对照</b>：样例 A 背后的真实留痕行 <code>hr_data_revision id=40</code> 已存在，<b>source 只有「用户口头确认＋企微在线表格」，没有 chatid/msgid，机器不可核</b>——确认卡要补的就是这个洞。</li>
+  </ol>
+</div>
+
+<!-- ================= 场景 A ================= -->
+<section class="scene">
+  <div class="bar">
+    <span class="no">样例 A</span>
+    <h2>单行字段修正 · 储备汪洋定级月薪 16000 → 18000</h2>
+    <span class="tag">change_type = 修改 ｜ 影响 1 行</span>
+  </div>
+  <div class="cols">
+    <div class="col left">
+      <h3>企微群 · HR 数据中心</h3>
+      <div class="wecom">
+        <div class="grp">群「HR 数据中心」　chatid <span class="mono">wrAjuPVwAAzEXAIFdSl6K1hLYpVF2xsg</span>　成员：Chief（对外唯一出口）、管道、口径、分析、面板 + 维护者</div>
+
+        <div class="msg me">
+          <div class="av">汪</div>
+          <div class="body">
+            <div class="who"><b>汪洋</b>（工号 23484 · 集团行政人事部）　10:12</div>
+            <div class="bub"><span class="q">储备干部汪洋转正调薪了，定级月薪从 16000 改成 18000，储备津贴 1500 不变。源表是《2026年储备干部一览表1021》10.17 更新版，tab 000002 的 M17。帮我更新到库里，生效日 2026-11-01。</span></div>
+          </div>
+        </div>
+
+        <div class="msg bot">
+          <div class="av">C</div>
+          <div class="body">
+            <div class="who"><b>Chief</b>　10:12</div>
+            <div class="card">
+              <div class="ch"><span class="ic">✓</span><span class="ti">主数据变更确认卡</span><span class="no">C-20261026-01</span></div>
+              <div class="cb">
+                <p>已按你的说明定位到行，变更包如下。<b>确认无误请回「同意」</b>，我即刻写库并留痕；回「改」我退回重出卡。</p>
+
+                <div class="sec">变更包 · 凭据 1（卡正文自带）</div>
+                <table class="pk">
+                  <tr><td class="k">目标表</td><td class="v"><span class="mono">hr_reserve_cadres</span>　批次 <span class="mono">2026-10-17</span></td></tr>
+                  <tr><td class="k">目标行</td><td class="v"><span class="mono">id=237</span>　汪洋 · 行政管理中心·人事组 · 储备总监（行政方向） · <span class="mono">M5-2</span> · 在职</td></tr>
+                  <tr><td class="k">字段</td><td class="v"><span class="mono">base_salary</span>（定级月薪）</td></tr>
+                  <tr><td class="k">旧值 → 新值</td><td class="v"><span class="old mono">16000</span> → <span class="new mono">18000</span>　元/月</td></tr>
+                  <tr><td class="k">影响行数</td><td class="v"><b>1</b> 行（仅该行；津贴列不随本次变更）</td></tr>
+                  <tr><td class="k">预估快照</td><td class="v">该行合计 <span class="mono">16,000+1,500=17,500</span> → <span class="mono">18,000+1,500=19,500</span>（津贴 1,500 不变）<br>批次 2026-10-17 津贴合计 <b>83,000 不变</b>（在职 26 人 64,000 ／ 待招 5 人 19,000）</td></tr>
+                  <tr><td class="k">生效日</td><td class="v"><span class="mono">2026-11-01</span>（源表「调薪流程日期或批次」）</td></tr>
+                  <tr><td class="k">来源</td><td class="v">《2026年储备干部一览表1021》10.17 更新版　<span class="mono">tab=000002 M17</span> 16000→18000；合计行 <span class="mono">M34</span> 464,500→466,500</td></tr>
+                  <tr><td class="k">所用口径</td><td class="v"><span class="mono">TACIT-20261026-25</span> 名单默认仅在职·双源交叉<br><span class="mono">TACIT-20261014-06</span> 储备干部分类与兼任（兼任者只领储备津贴）</td></tr>
+                </table>
+
+                <div class="warn">
+                  <b>⚠ 口径提示（不影响本次写库，请你顺带裁一句）</b><br>
+                  <span class="mono">TACIT-20261026-27</span> 规定「定级薪资取最新一版四定表，不取工资表」。本次来源是<b>《储备干部一览表》</b>，属储备序列专表、不是四定表 —— 储备序列的定级月薪是否也走四定表口径，目前规则未覆盖。
+                </div>
+
+                <div class="ask">
+                  <b>请回复「同意」执行写库</b>（我写 <span class="mono">hr_data_revision</span> 并留凭据），或回复「改」退回。
+                </div>
+              </div>
+              <div class="foot">
+                <span><span class="k">起草</span> 口径（口径治理专家）</span>
+                <span><span class="k">依据</span> 管道（新鲜度／同步状态）</span>
+                <span><span class="k">署名</span> Chief（唯一对外出口）</span>
+                <span><span class="k">数据截至</span> 2026-10-26 12:46</span>
+                <span><span class="k">来源</span> hr_reserve_cadres / hr_data_revision</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="msg me">
+          <div class="av">汪</div>
+          <div class="body">
+            <div class="who"><b>汪洋</b>　10:13</div>
+            <div class="bub"><span class="q">同意。储备序列定级月薪先按储备一览表走，四定表那条先挂着，回头我单独裁。</span></div>
+          </div>
+        </div>
+
+        <div class="msg bot">
+          <div class="av">C</div>
+          <div class="body">
+            <div class="who"><b>Chief</b>　10:13</div>
+            <div class="bub">
+              <b>已写库并留痕。</b><br>
+              <span class="mono">hr_reserve_cadres</span> 批次 2026-10-17　<span class="mono">id=237</span>　<span class="mono">base_salary</span> <span class="old">16000</span> → <span class="new">18000</span>，津贴 1,500 未动。<br>
+              留痕 <span class="mono">hr_data_revision</span>　<span class="mono">change_type=修改</span>　<span class="mono">source</span> 已写入群凭据（chatid + msgid + 确认人工号）。<br>
+              批次津贴合计 83,000 不变（在职 26 人 64,000／待招 5 人 19,000）。生效日 2026-11-01。
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col">
+      <h3>这条卡背后发生了什么</h3>
+
+      <div class="panel">
+        <h4>必经顺序（#63 契约 · 分级）</h4>
+        <ol class="steps">
+          <li><span class="st">terms 术语归一</span>　<span class="cond">普适必做</span>
+            <span class="rs">「定级月薪」→ <span class="mono">base_salary</span>；「储备津贴」→ <span class="mono">allowance</span>；「转正调薪」= 改 <span class="mono">base_salary</span>，<b>不动 allowance</b>（用户原话已含「津贴不变」）→ 口径无歧义</span></li>
+          <li><span class="st">freshness 新鲜度闸门</span>　<span class="cond">普适必做</span>
+            <span class="rs"><span class="mono">hr_reserve_cadres</span> <span class="mono">updated_at</span> = 2026-10-26 10:47:41 → <span class="ok">fresh</span>，未列入 aging → 可直接引用；<span class="mono">hr_data_revision</span> 最新 10:49:07</span></li>
+          <li><span class="st">verify_roster 在册核验</span>　<span class="cond">名单类条件必做</span>
+            <span class="rs">汪洋 工号 <span class="mono">23484</span>：企业后台 <span class="mono">state=0</span> ∧ 企微通讯录在册 → 双源一致，计入在职（<span class="mono">TACIT-20261026-25</span>）</span></li>
+          <li><span class="st">职责域内现查取数</span>　<span class="cond">普适必做</span>
+            <span class="rs">查 <span class="mono">hr_reserve_cadres WHERE batch_date='2026-10-17'</span> → 31 行；定位 <span class="mono">id=237</span>；未用旧文档数字</span></li>
+          <li><span class="st">标注补齐三项</span>　<span class="cond">普适必做</span>
+            <span class="rs">来源表 <span class="mono">hr_reserve_cadres</span> + 数据截至 2026-10-26 12:46 + 口径 <span class="mono">TACIT-20261026-25</span>／<span class="mono">TACIT-20261014-06</span></span></li>
+          <li><span class="st">memory_write 回写</span>　<span class="cond opt">可选</span>
+            <span class="rs">跳过 —— 同一变更已在 <span class="mono">hr_data_revision</span> 留痕，不重复写记忆表（只写 <span class="mono">hr_analysis_memory</span>／<span class="mono">hr_qa_memory</span>）</span></li>
+        </ol>
+      </div>
+
+      <div class="panel">
+        <h4>查了哪些表 · 数据截至</h4>
+        <table class="src">
+          <tr><th>表 / 视图</th><th>用途</th><th>数据截至</th></tr>
+          <tr><td class="mono">hr_reserve_cadres</td><td>目标行与批次全量</td><td>2026-10-26 10:47:41</td></tr>
+          <tr><td class="mono">hr_data_revision</td><td>既有留痕、避免重复写</td><td>2026-10-26 10:49:07</td></tr>
+          <tr><td class="mono">hr_persons_all</td><td>汪洋 在职状态 state=0</td><td>2026-10-26（ent-sync 同步）</td></tr>
+          <tr><td class="mono">wx_contacts_daily</td><td>企微花名册在册</td><td>最新快照日</td></tr>
+          <tr><td class="mono">tacit_rules</td><td>口径规则号</td><td>2026-10-26 11:03（-27 生效）</td></tr>
+        </table>
+        <div style="margin-top:9px">
+          <span class="rule">TACIT-20261026-25</span>
+          <span class="rule">TACIT-20261014-06</span>
+          <span class="rule" style="background:#8E3F26">TACIT-20261026-27 · 提示</span>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h4>双重凭据（#62 Q5）</h4>
+        <div class="cred">
+          <div class="ch2">凭据 1 · 卡正文变更包 <span>— 机器核对「执行的是什么」</span></div>
+          <div>表名 / 字段 / 旧值 / 新值 / 影响行数 / 预估快照 / 来源 / 生效日，<b>全部写在卡正文里</b>，不依赖任何约定格式的外部约定。同一份卡 = 变更说明书 + 写库入参。</div>
+        </div>
+        <div class="cred">
+          <div class="ch2">凭据 2 · 群消息标识 <span>— 机器核对「谁在何时说的同意」</span></div>
+          <div class="mono" style="font-size:12px">
+            chatid = wrAjuPVwAAzEXAIFdSl6K1hLYpVF2xsg<br>
+            msgid　= session-d05cfd64-…:462（模拟，实际以同步进库 msgid 为准）<br>
+            from_userid = 23484（汪洋）· from_name = 汪洋<br>
+            捕获通道：<span class="mono">wecom_bot_messages</span>（已有，无需新造）
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h4>写库留痕 · 模拟写入行</h4>
+        <div class="rev">
+          <span class="k">table_name</span> hr_reserve_cadres<br>
+          <span class="k">revision_date</span> 2026-10-26<br>
+          <span class="k">change_type</span> 修改<br>
+          <span class="k">target_key</span> 批次 2026-10-17 / 汪洋（行政管理中心·人事组·储备总监（行政方向））<br>
+          <span class="k">field</span> base_salary<br>
+          <span class="k">old_value</span> 16000<br>
+          <span class="k">new_value</span> 18000<br>
+          <span class="k">source</span> 企微确认卡 C-20261026-01 · chatid=wrAjuPVwAAzEXAIFdSl6K1hLYpVF2xsg · msgid=session-d05cfd64-…:462 · from_userid=23484<br>
+          <span class="k">note</span> 生效日 2026-11-01；津贴 1,500 不变；来源《2026年储备干部一览表1021》tab 000002 M17；口径 TACIT-20261026-25 / TACIT-20261014-06；用户附注「储备序列定级月薪先按储备一览表走，四定表那条先挂着」
+        </div>
+        <div class="note">
+          <b>与现状的对照（关键）：</b> 库里已有同一条变更的真实留痕 <span class="mono">id=40</span>，
+          <span class="mono">source</span> = 「用户口头确认（2026-10-26）＋企微在线表格《2026年储备干部一览表1021》」，
+          <b>没有 chatid、没有 msgid、没有确认人 → 机器无法核验「谁同意的」</b>。确认卡把它换成可核凭据。
+        </div>
+      </div>
+
+      <div class="panel">
+        <h4>署名与分工</h4>
+        <div class="sig">
+          <div class="s"><div class="r">口径</div><div class="d">起草变更包、列口径号、标口径缺口</div><div class="by">口径治理专家（capability <span class="mono">hr-caliber</span>）</div></div>
+          <div class="s"><div class="r">管道</div><div class="d">给新鲜度与同步状态</div><div class="by">数据管道专家（capability <span class="mono">hr-pipeline</span>）</div></div>
+          <div class="s"><div class="r">Chief</div><div class="d">对外唯一署名出口、汇总后发出</div><div class="by">队长（capability <span class="mono">hr-chief</span>）</div></div>
+          <div class="s"><div class="r">汪洋</div><div class="d">确认人（唯一有裁定权的人）</div><div class="by">工号 23484 · 集团行政人事部</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 场景 B ================= -->
+<section class="scene">
+  <div class="bar">
+    <span class="no">样例 B</span>
+    <h2>批次定稿 · 储备干部 2026-10-17 批次定稿</h2>
+    <span class="tag">change_type = 定稿（枚举新增）｜ 影响 31 行</span>
+  </div>
+  <div class="cols">
+    <div class="col left">
+      <h3>企微群 · HR 数据中心</h3>
+      <div class="wecom">
+        <div class="grp">群「HR 数据中心」　chatid <span class="mono">wrAjuPVwAAzEXAIFdSl6K1hLYpVF2xsg</span>　（承接样例 A 之后）</div>
+
+        <div class="msg bot">
+          <div class="av">C</div>
+          <div class="body">
+            <div class="who"><b>Chief</b>　10:41</div>
+            <div class="bub">
+              储备干部表现在有两个批次同时在库：<span class="mono">2026-10-17</span>（31 行，带定级月薪与储备津贴）和 <span class="mono">2026-08-25</span>（25 行，薪资字段全空、职级还是 M5/M6/P 老体系）。<br>
+              视图 <span class="mono">v_reserve_cadres_latest</span> 是按 <span class="mono">max(batch_date)</span> 自动取最新的，<b>没有经过你确认</b>。按「答案只来自定稿库」的要求，这个得你定一下。
+            </div>
+          </div>
+        </div>
+
+        <div class="msg bot">
+          <div class="av">C</div>
+          <div class="body">
+            <div class="who"><b>Chief</b>　10:41</div>
+            <div class="card">
+              <div class="ch"><span class="ic">✓</span><span class="ti">定稿确认卡</span><span class="no">C-20261026-02</span></div>
+              <div class="cb">
+                <p>请确认 <b>2026-10-17</b> 为储备干部定稿批次。<b>确认无误请回「同意」</b>。</p>
+
+                <div class="sec">变更包 · 凭据 1（卡正文自带）</div>
+                <table class="pk">
+                  <tr><td class="k">目标表</td><td class="v"><span class="mono">hr_reserve_cadres</span>　批次 <span class="mono">2026-10-17</span></td></tr>
+                  <tr><td class="k">旧值 → 新值</td><td class="v"><span class="old mono">v_reserve_cadres_latest = WHERE batch_date=(SELECT max(batch_date))　自动取最新，无人工确认</span><br>→ <span class="new mono">定稿批次 = 2026-10-17（人工确认）</span></td></tr>
+                  <tr><td class="k">影响行数</td><td class="v"><b>31</b> 行（在职 <b>26</b> ／ 待招 <b>5</b>）</td></tr>
+                  <tr><td class="k">预估快照</td><td class="v">津贴合计 <b>83,000</b> 元/月<br>· 在职 26 人 津贴 <b>64,000</b><br>· 待招 5 人 津贴 <b>19,000</b></td></tr>
+                  <tr><td class="k">双日期</td><td class="v">批次日期 <span class="mono">2026-10-17</span>　｜　确认日期 <span class="mono">2026-10-26</span>（本次确认日）</td></tr>
+                  <tr><td class="k">历史批次</td><td class="v"><span class="mono">2026-08-25</span>（25 行）<b>保留</b>，作为对比基准，不删；其薪资字段全空、职级为老体系，不参与本期津贴口径</td></tr>
+                  <tr><td class="k">写入位置</td><td class="v"><span class="mono">hr_data_revision</span>（留痕，<span class="mono">change_type=定稿</span>）<br>＋ <span class="mono">hr_reserve_cadres_confirmed</span>（确认层，<b>#68 待建</b>，结构对齐 <span class="mono">hr_roster_confirmed_active</span>）</td></tr>
+                  <tr><td class="k">所用口径</td><td class="v"><span class="mono">TACIT-20261026-25</span> 名单默认仅在职·双源交叉<br><span class="mono">TACIT-20261014-06</span> 储备干部分类与兼任</td></tr>
+                </table>
+
+                <div class="warn">
+                  <b>⚠ 写库后视图行为会变</b><br>
+                  <span class="mono">v_reserve_cadres_latest</span> 需从「取 max(batch_date)」改为「取已确认批次」（<b>#68 执行项</b>，代码改动不在本次写库范围内）。本次只定「哪一批是定稿」，视图改造另排。
+                </div>
+
+                <div class="ask">
+                  <b>请回复「同意」执行定稿</b>，或回复「改」退回。
+                </div>
+              </div>
+              <div class="foot">
+                <span><span class="k">起草</span> 口径</span>
+                <span><span class="k">依据</span> 管道（批次共存实况）</span>
+                <span><span class="k">署名</span> Chief</span>
+                <span><span class="k">数据截至</span> 2026-10-26 12:46</span>
+                <span><span class="k">来源</span> hr_reserve_cadres / v_reserve_cadres_latest</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="msg me">
+          <div class="av">汪</div>
+          <div class="body">
+            <div class="who"><b>汪洋</b>　10:42</div>
+            <div class="bub"><span class="q">同意，10-17 这批定稿。8-25 那批留着做对比。</span></div>
+          </div>
+        </div>
+
+        <div class="msg bot">
+          <div class="av">C</div>
+          <div class="body">
+            <div class="who"><b>Chief</b>　10:42</div>
+            <div class="bub">
+              <b>已定稿并留痕。</b><br>
+              定稿批次 <span class="mono">2026-10-17</span>：31 行（在职 26 ／ 待招 5），津贴合计 <b>83,000</b> 元/月（在职 64,000 ／ 待招 19,000）。批次日期 2026-10-17，确认日期 2026-10-26。<br>
+              <span class="mono">2026-08-25</span> 批次保留为对比基准，未删。<br>
+              留痕 <span class="mono">hr_data_revision</span>　<span class="mono">change_type=定稿</span>，<span class="mono">source</span> 已写入群凭据。
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col">
+      <h3>这条卡背后发生了什么</h3>
+
+      <div class="panel">
+        <h4>必经顺序（#63 契约 · 分级）</h4>
+        <ol class="steps">
+          <li><span class="st">terms 术语归一</span>　<span class="cond">普适必做</span>
+            <span class="rs">「定稿」= 人工确认该批次为现行口径（<b>不是</b>「只留最新批次」，历史批次保留做对比）；「定稿库」= 已确认批次集合</span></li>
+          <li><span class="st">freshness 新鲜度闸门</span>　<span class="cond">普适必做</span>
+            <span class="rs">2026-10-17 批次 <span class="mono">updated_at</span> 2026-10-26 10:47:41 → <span class="ok">fresh</span>；2026-08-25 为历史批次，<b>不参与滞后判定</b>（批次日期只标注，不判滞后）</span></li>
+          <li><span class="st">verify_roster 在册核验</span>　<span class="cond">名单类条件必做</span>
+            <span class="rs">批次内 26 名在职人员逐条双源核验；<span class="mono">TACIT-20261026-25</span> 冲突项单列待核（本次无冲突项）</span></li>
+          <li><span class="st">双日期</span>　<span class="cond">带版本数据条件必做</span>
+            <span class="rs">批次日期 <span class="mono">2026-10-17</span>（只标注）＋ 确认日期 <span class="mono">2026-10-26</span>（判滞后用）</span></li>
+          <li><span class="st">职责域内现查取数</span>　<span class="cond">普适必做</span>
+            <span class="rs">查 <span class="mono">hr_reserve_cadres</span> 两批次全量 → 逐行汇总津贴合计；未用旧文档数字</span></li>
+          <li><span class="st">标注补齐三项</span>　<span class="cond">普适必做</span>
+            <span class="rs">来源表 <span class="mono">hr_reserve_cadres</span> / 视图 <span class="mono">v_reserve_cadres_latest</span> + 数据截至 2026-10-26 12:46 + 口径 <span class="mono">TACIT-20261026-25</span>／<span class="mono">TACIT-20261014-06</span></span></li>
+          <li><span class="st">memory_write 回写</span>　<span class="cond opt">可选</span>
+            <span class="rs">跳过 —— 定稿事实已落 <span class="mono">hr_data_revision</span></span></li>
+        </ol>
+      </div>
+
+      <div class="panel">
+        <h4>查了哪些表 · 数据截至</h4>
+        <table class="src">
+          <tr><th>表 / 视图</th><th>用途</th><th>数据截至</th></tr>
+          <tr><td class="mono">hr_reserve_cadres</td><td>两批次全量、津贴汇总</td><td>2026-10-26 10:47:41</td></tr>
+          <tr><td class="mono">v_reserve_cadres_latest</td><td>现有取批次逻辑（待改）</td><td>视图定义，取 max(batch_date)</td></tr>
+          <tr><td class="mono">hr_persons_all</td><td>在职双源核验 state=0</td><td>2026-10-26</td></tr>
+          <tr><td class="mono">wx_contacts_daily</td><td>企微花名册在册</td><td>最新快照日</td></tr>
+          <tr><td class="mono">tacit_rules</td><td>口径规则号</td><td>2026-10-26 11:03</td></tr>
+          <tr><td class="mono">hr_roster_confirmed_active</td><td>确认层结构参照（6 列）</td><td>2026-10-23</td></tr>
+        </table>
+        <div style="margin-top:9px">
+          <span class="rule">TACIT-20261026-25</span>
+          <span class="rule">TACIT-20261014-06</span>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h4>双重凭据（#62 Q5）</h4>
+        <div class="cred">
+          <div class="ch2">凭据 1 · 卡正文变更包 <span>— 批次级：口径从「取最新」变成「取已确认」</span></div>
+          <div>表名 / 旧值（新旧<b>口径</b>对照，不只是字段值） / 影响行数 31 / 预估快照 83,000（在职 64,000、待招 19,000）/ 双日期 / 历史批次处置 / 写入位置。</div>
+        </div>
+        <div class="cred">
+          <div class="ch2">凭据 2 · 群消息标识</div>
+          <div class="mono" style="font-size:12px">
+            chatid = wrAjuPVwAAzEXAIFdSl6K1hLYpVF2xsg<br>
+            msgid　= session-d05cfd64-…:464（模拟）<br>
+            from_userid = 23484（汪洋）<br>
+            捕获通道：<span class="mono">wecom_bot_messages</span>（msgid / chatid / from_userid / raw_body 已在同步）
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h4>写库留痕 · 模拟写入行</h4>
+        <div class="rev">
+          <span class="k">table_name</span> hr_reserve_cadres<br>
+          <span class="k">revision_date</span> 2026-10-26<br>
+          <span class="k">change_type</span> <b style="color:#4A3D7A">定稿</b>　<span style="color:#7A7566">← 枚举新增值，机器可识别</span><br>
+          <span class="k">target_key</span> 批次 2026-10-17（定稿批次）<br>
+          <span class="k">field</span> batch_confirmed<br>
+          <span class="k">old_value</span> 无人工确认（视图自动取 max(batch_date)）<br>
+          <span class="k">new_value</span> 2026-10-17<br>
+          <span class="k">source</span> 企微定稿卡 C-20261026-02 · chatid=wrAjuPVwAAzEXAIFdSl6K1hLYpVF2xsg · msgid=session-d05cfd64-…:464 · from_userid=23484<br>
+          <span class="k">note</span> 批次日期 2026-10-17；确认日期 2026-10-26；影响 31 行（在职26/待招5）；津贴合计 83,000（在职 64,000 / 待招 19,000）；2026-08-25 批次保留为对比基准
+        </div>
+        <div class="note">
+          <b>为什么必须有「定稿」这个 change_type：</b>「答案只来自定稿库」的闸门要机器能判定「这批数据已定稿」。
+          若定稿仍记成「修改」，机器分不出定稿动作，闸门就落不了地（#62 Q5 已被否方案：定稿＝普通修改记录）。
+        </div>
+      </div>
+
+      <div class="panel">
+        <h4>署名与分工</h4>
+        <div class="sig">
+          <div class="s"><div class="r">口径</div><div class="d">出定稿卡、定义「定稿」语义与写入位置</div><div class="by">口径治理专家</div></div>
+          <div class="s"><div class="r">管道</div><div class="d">报两批次共存实况、给 updated_at</div><div class="by">数据管道专家</div></div>
+          <div class="s"><div class="r">Chief</div><div class="d">对外唯一署名出口、发起定稿</div><div class="by">队长</div></div>
+          <div class="s"><div class="r">汪洋</div><div class="d">唯一裁定人：定哪批为定稿</div><div class="by">工号 23484</div></div>
+        </div>
+        <div class="note">分析、面板两个专家在确认卡链路里<b>不出现</b> —— 确认卡是主数据动作，分析结论与面板投影是派生层（自动落库，不走确认卡）。</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 底部 ================= -->
+<section class="pick">
+  <h2>本原型回答了什么 · 没回答什么</h2>
+  <div class="lead">供维护者挑刺。请直接改下面这份 HTML，或在 #58 票下回执。</div>
+
+  <div class="cols2">
+    <div>
+      <h3>已回答（票 #58 第 2 项）</h3>
+      <ul>
+        <li><span class="badge b-done">已覆盖</span> 主数据变更 → 确认卡 → 回「同意」→ 写库留痕，<b>完整 2 则</b>：单行字段修正 + 批次定稿。</li>
+        <li><span class="badge b-done">已覆盖</span> 变更包 6 要素（表名/字段/旧值/新值/影响行数/预估快照）在卡正文里的<b>实际排版</b>。</li>
+        <li><span class="badge b-done">已覆盖</span> 双重凭据的<b>两个载体</b>：卡正文 + 群消息 chatid/msgid/from_userid。</li>
+        <li><span class="badge b-done">已覆盖</span> 署名分工在群里的呈现：起草（口径/管道）→ 署名（Chief）→ 确认（汪洋）。</li>
+        <li><span class="badge b-done">已覆盖</span> 契约三项标注（来源表/视图 + 数据截至日 + 口径规则号）与双日期如何落在卡上。</li>
+      </ul>
+    </div>
+    <div>
+      <h3>没回答（本次按你的选择后补）</h3>
+      <ul>
+        <li><span class="badge b-new">后补</span> 票 #58 第 1 项：群内问答样例 3 则（含数据截至日与口径脚注）。</li>
+        <li><span class="badge b-new">后补</span> 票 #58 第 3 项：答不了／数据过期／口径未定时怎么回（#63 的四种硬拒答 + 三级降级的对外表达）。</li>
+        <li><span class="badge b-open">未决</span> 卡<b>过期</b>机制：发出后多久没回自动作废？现在没有。</li>
+        <li><span class="badge b-open">未决</span> 用户回「同意」但带修正（「同意，但津贴也调 2000」）怎么解析？现在只认纯「同意」。</li>
+        <li><span class="badge b-open">未决</span> 31 行整批一次确认 vs 逐行确认？样例 B 选了一次确认整批。</li>
+        <li><span class="badge b-open">未决</span> 只有 Chief 能发确认卡，还是队员也能发起（Chief 只转署）？</li>
+        <li><span class="badge b-open">未决</span> 口径冲突（TACIT-20261026-27 四定表 vs 储备一览表）卡上只提示，没给裁决路径。</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>数据出处（全部现查，可复算）</h3>
+  <ul>
+    <li>云库 <span class="mono">public.hr_reserve_cadres</span>：批次 2026-10-17 共 31 行（在职 26 / 待招 5），津贴合计 83,000（在职 64,000 / 待招 19,000）；批次 2026-08-25 共 25 行，<span class="mono">base_salary</span>／<span class="mono">allowance</span> 全空。</li>
+    <li>云库 <span class="mono">public.hr_data_revision</span>：真实行 id=40（汪洋 base_salary 16000→18000，source 无 chatid/msgid）、id=41（郑佳佳 新增行）、id=39（hr_org_rank_limit 口径裁定）。</li>
+    <li>云库 <span class="mono">public.tacit_rules</span>：26 条 active，引用到 <span class="mono">TACIT-20261026-25</span>、<span class="mono">TACIT-20261014-06</span>、<span class="mono">TACIT-20261026-27</span>、<span class="mono">TACIT-20261022-18</span>、<span class="mono">TACIT-20261023-20</span>。</li>
+    <li>云库 <span class="mono">public.wecom_bot_messages</span>：真实 msgid 形如 <span class="mono">session-d05cfd64-6217-4d87-b3fb-c662e5f35d11:460</span>，chatid <span class="mono">wrAjuPVwAAzEXAIFdSl6K1hLYpVF2xsg</span>，from_userid <span class="mono">23484</span>，from_name <span class="mono">汪洋</span>。</li>
+    <li>口径与留痕依据：#62（已结）、#63（已结）；建队与署名依据：<span class="mono">work/hr-data-center/build/建队执行清单.md</span> §4 群规。</li>
+  </ul>
+
+  <div class="note">
+    <b>用法：</b>直接用浏览器打开本文件；无需构建、无需联网、无外部依赖。<b>用完即弃</b>，不要合并进 main；确认后的决定请写进 #58 票面结论与真实实现代码。
+  </div>
+</section>
+
+</div>
+</body>
+</html>

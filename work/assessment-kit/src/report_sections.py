@@ -259,16 +259,13 @@ def build_blocks(data, m1, m2, m3, compose, m1meta, narrative, cred, radar_png, 
     # ---------------- 3.0　人才综合素质与潜力（总）
     blocks.append({"t": "h1", "num": "3.0", "text": "人才综合素质与潜力"})
     # 3.0.1 三类表现 + 综合素质给分
-    # 3.0.1 三项分数与三档（每一项各自与自己的满分比，不做跨项平均）
+    # 3.0.1 三项总览：每行 = 一句话核心特征 + 保留分数
+    blocks.append({"t": "h2", "text": "3.0.1　三项总览"})
     blocks.append({"t": "table",
-                   "header": ["测试", "得分", "占满分", "档位", "折算口径"],
-                   "rows": [[x["name"], x["score_text"], "%.1f%%" % x["pct"], x["band"], x["basis"]]
+                   "header": ["测试", "核心特征", "得分（占满分 · 档位）"],
+                   "rows": [[x["name"], x["text"], "%s · %.1f%% · %s" % (x["score_text"], x["pct"], x["band"])]
                             for x in TB["parts"]],
-                   "align": ["l", "l", "r", "c", "l"]})
-    blocks.append({"t": "note", "text": TB["note"]})
-    for x in TB["parts"]:
-        blocks.append({"t": "p", "text": "%s（%s，%.1f%%）：%s"
-                       % (x["name"], x["band"], x["pct"], x["text"])})
+                   "align": ["l", "l", "r"]})
     blocks.append({"t": "h2", "text": "3.0.2　提升方向"})
     if TB["gap_to_top"] <= 0:
         blocks.append({"t": "callout", "text":

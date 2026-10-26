@@ -91,6 +91,7 @@ def three_band(m1, m2, m3):
     """
     p1 = sum(d["score"] / float(d["max"]) for d in m1["dims"]) / max(1, len(m1["dims"]))
     p2 = float(m2["total"]) / 5.0
+    # 逻辑评价用「难度加权答对分 ÷ 40」口径（用户裁定：直接根据满分分成三档）
     p3 = float(m3["total"]) / 40.0
     parts = [
         {"name": "性格特质", "score_text": m1["score_text"], "pct": round(p1 * 100, 1),

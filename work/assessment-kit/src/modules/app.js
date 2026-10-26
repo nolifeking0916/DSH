@@ -209,7 +209,12 @@
   function answeredOf(mk) {
     if (mk === "m1") return S.a.m1.filter((x) => x !== null && x !== undefined).length;
     if (mk === "m2") return Object.keys(S.a.m2).length;
-    return Object.keys(S.a.m3).length;
+    /* 第三项：**数真正有值的题位**，不能用 Object.keys(S.a.m3).length ——
+       那是数组长度（localStorage 恢复后的 null 空洞也占位）⇒ 会虚报「已答 40/40」。
+       2026-10-26 修（票 #26 根因）：崔婵那份浏览器本地 40 题全有值，
+       但落库只剩 18 题有值（选 C/D 的被客户端丢成 null）；
+       顶栏当时显示「已答 40 / 40」⇒ 她以为做完了。计数必须诚实。 */
+    return S.a.m3.filter((x) => x !== null && x !== undefined).length;
   }
   function curItem(mk) {
     if (mk === "m1") return { kind: "ab", i: S.cur.m1 };

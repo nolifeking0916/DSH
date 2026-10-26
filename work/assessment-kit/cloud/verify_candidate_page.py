@@ -181,6 +181,19 @@ def check_page(path=None, url=None, verbose=True):
     if path:
         problems.extend(check_render(path, verbose=verbose))
 
+    # 7. **防回归断言（2026-10-26 · 票 #26 根因）** ——
+    #    两个 bug 曾经静默发生，静态就能查：
+    #      a) 客户端 normalize 只认 0/1 ⇒ **第三项选 C/D 的答案被丢成 null**
+    #         （库里那份 40 题只存进去 18 题，候选人却看到「已答 40/40」）；
+    #      b) 第三项的「已答数」用 Object.keys(数组).length 统计 ⇒ **把 null 空洞算成已答**。
+    #    这两条一旦回退，发布会静默通过、真人数据整批作废 ⇒ 进门里。
+    if "normalize(a.m3, nM3(), [0, 1, 2, 3])" not in html:
+        problems.append("第三项的归一化值域不是 [0,1,2,3]（选 C/D 的答案会被丢成未作答）")
+    if "S.a.m3.filter(" not in html:
+        problems.append("第三项的已答计数还在用 Object.keys（会把 null 空洞算成已答）")
+    if "function completeness()" not in html:
+        problems.append("页面里没有交卷前的完整度闸门（有未答题也会静默交卷）")
+
     if verbose:
         print("发布门检查：%s" % origin)
         print("  金丝雀 %d 条（96 条判据原文 + 40 条推理题解析）" % len(canaries))

@@ -1243,7 +1243,12 @@ window.REP = (function () {
   function answeredOf(mk) {
     if (mk === "m1") return S.a.m1.filter((x) => x !== null && x !== undefined).length;
     if (mk === "m2") return Object.keys(S.a.m2).length;
-    return Object.keys(S.a.m3).length;
+    /* 第三项：**数真正有值的题位**，不能用 Object.keys(S.a.m3).length ——
+       那是数组长度（localStorage 恢复后的 null 空洞也占位）⇒ 会虚报「已答 40/40」。
+       2026-10-26 修（票 #26 根因）：崔婵那份浏览器本地 40 题全有值，
+       但落库只剩 18 题有值（选 C/D 的被客户端丢成 null）；
+       顶栏当时显示「已答 40 / 40」⇒ 她以为做完了。计数必须诚实。 */
+    return S.a.m3.filter((x) => x !== null && x !== undefined).length;
   }
   function curItem(mk) {
     if (mk === "m1") return { kind: "ab", i: S.cur.m1 };
@@ -1636,7 +1641,7 @@ window.REP = (function () {
      （-1 表示未答、带客户端算的分数）与服务端约定不符 ⇒ 会和服务端抢同一行，
      谁先到谁写进去 ⇒ 有可能把一份「客户端算的全 0 分数」写进库。 */
   window.__cloudRuntime = true;
-  var st = { sending: false, sent: false, err: null, submitted: false };
+  var st = { sending: false, sent: false, err: null, submitted: false, incomplete: null, forceSubmit: false };
 
   function appState() {
     try { return (window.APP && window.APP.S) ? window.APP.S() : null; } catch (e) { return null; }
@@ -1660,12 +1665,69 @@ window.REP = (function () {
     return (D.m3 && D.m3.questions ? D.m3.questions.length : 0);
   }
 
-  /* 把稀疏数组补成定长数组：没答的位置是 null（= 未作答），不是缺项 */
-  function normalize(list, len) {
+  /* ---- 完整度体检（2026-10-26 · 票 #26 根因之后加的闸门）--------------------
+     为什么要它：修好「选 C/D 被丢」那个 bug 之后，**空位就只可能表示真的没答**。
+     那就不能再让「带着空位交卷」悄悄发生 —— 候选人看到的是「已完成」，
+     施测人看到的是一份被按未作答计过分的成绩（这就是崔婵那份的经过）。
+     现在：走到完成页时先体检 ⇒ 有空位就**不自动交卷**，改为拦下来让她去补。 */
+  function completeness() {
+    var s = appState();
+    var a = (s && s.a) || {};
+    function countFilled(arr) {
+      if (!Array.isArray(arr)) return 0;
+      var n = 0;
+      for (var i = 0; i < arr.length; i++) if (arr[i] !== null && arr[i] !== undefined) n++;
+      return n;
+    }
+    var m1n = nItems(), m2n = nM2(), m3n = nM3();
+    var m1a = countFilled(a.m1);
+    var m2a = a.m2 && typeof a.m2 === "object" ? Object.keys(a.m2).length : 0;
+    var m3a = countFilled(a.m3);
+    var r = { m1: { done: m1a, total: m1n }, m2: { done: m2a, total: m2n },
+              m3: { done: m3a, total: m3n } };
+    r.missing = { m1: Math.max(0, m1n - m1a), m2: Math.max(0, m2n - m2a), m3: Math.max(0, m3n - m3a) };
+    r.total = r.missing.m1 + r.missing.m2 + r.missing.m3;
+    /* 第一处空位在哪（用于「去补答」跳转） */
+    r.firstEmpty = null;
+    if (r.missing.m1) {
+      for (var i = 0; i < m1n; i++) if (a.m1[i] === null || a.m1[i] === undefined) { r.firstEmpty = { mod: "m1", i: i }; break; }
+    } else if (r.missing.m2) {
+      for (var j = 0; j < m2n; j++) if (!a.m2 || a.m2[j] === undefined) { r.firstEmpty = { mod: "m2", i: j }; break; }
+    } else if (r.missing.m3) {
+      for (var k = 0; k < m3n; k++) if (a.m3[k] === null || a.m3[k] === undefined) { r.firstEmpty = { mod: "m3", i: k }; break; }
+    }
+    return r;
+  }
+
+  /* 跳到第一处未答题（借 app.js 的公开 API：APP.S() 拿状态，APP.go('quiz') 触发重绘） */
+  function jumpToFirstEmpty() {
+    var c = completeness();
+    if (!c.firstEmpty) return false;
+    var s = appState();
+    if (!s) return false;
+    s.mod = c.firstEmpty.mod;
+    s.cur[c.firstEmpty.mod] = c.firstEmpty.i;
+    try { if (window.APP && window.APP.save) window.APP.save(); } catch (e) { }
+    try { if (window.APP && window.APP.go) window.APP.go("quiz"); } catch (e) { }
+    return true;
+  }
+
+  /* 把稀疏数组补成定长数组：没答的位置是 null（= 未作答），不是缺项。
+     ⚠ 2026-10-26 修（票 #26 的根因）：这个函数原来**只认 0 和 1**，
+       而它是给**第一项的二极题**（选 a / 选 b）写的；后来被原样用在
+       **第三项的四选项题**（选项下标 0/1/2/3）上 ⇒
+       **凡选 C(2) 或 D(3) 的答案，在浏览器端就被丢成 null（= 未作答）**。
+       后果：库里的第三项逐题作答里，选了 C/D 的题位全是 null，
+       服务端按「未作答」计 ⇒ 分数被系统性压低，而候选人**确实答了**。
+       实证：崔婵那份（EQ-20261026-L52MPC-2A49）浏览器本地 40 题全有值、值域 {0,1,2,3}，
+       落库后只剩 18 个有值且只有 0/1。
+     ⇒ 现在按模块分别给定允许值域：第一项 [0,1]、第三项 [0,1,2,3]。 */
+  function normalize(list, len, allowed) {
+    var ok = allowed || [0, 1];
     var out = new Array(len);
     for (var i = 0; i < len; i++) {
       var v = (list && list.length > i) ? list[i] : null;
-      out[i] = (v === 0 || v === 1) ? v : null;
+      out[i] = (v !== null && v !== undefined && ok.indexOf(v) >= 0) ? v : null;
     }
     return out;
   }
@@ -1690,9 +1752,10 @@ window.REP = (function () {
       group: s.group || null,
       level: s.level || null,
       dept: s.dept || null,
-      m1_raw: normalize(a.m1, nItems()),
+      m1_raw: normalize(a.m1, nItems(), [0, 1]),
       m2_answers: m2,
-      m3_answers: normalize(a.m3, nM3()),
+      /* 第三项是四选项（0/1/2/3）—— 允许值域必须给全，否则 C/D 被丢成未作答 */
+      m3_answers: normalize(a.m3, nM3(), [0, 1, 2, 3]),
       started_at: s.t0 ? new Date(s.t0).toISOString() : null,
       duration_ms: s.t0 ? Math.round(Date.now() - s.t0) : null,
       limit_hint: s.limitHint || null
@@ -1759,7 +1822,20 @@ window.REP = (function () {
      复核 / 更正 / 删除的入口在**作答前的告知卡第 7 条**里已经给过，完成页不再重复。 */
   function doneHtml(s) {
     var status;
-    if (st.sent) {
+    if (st.incomplete) {
+      /* 未答完 ⇒ **不交卷**（2026-10-26 · 票 #26 根因之后加的闸门）。
+         这时候页面不能显示「已完成」—— 她还没做完，显示了就是骗人。 */
+      var c = st.incomplete;
+      var parts = [];
+      if (c.missing.m1) parts.push("第一项 " + c.missing.m1 + " 题");
+      if (c.missing.m2) parts.push("第二项 " + c.missing.m2 + " 题");
+      if (c.missing.m3) parts.push("第三项 " + c.missing.m3 + " 题");
+      status = "<div class=\"warn\" style=\"margin-top:var(--sp-3)\">还有 <b>" + c.total +
+        "</b> 道题没有作答（" + parts.join("、") + "）。没作答的题会按未作答计分，" +
+        "<b>请先补答再交卷</b>。</div>" +
+        "<button class=\"btn btn-primary btn-full\" style=\"margin-top:var(--sp-2)\" onclick=\"window.__cloudJump()\">去补答</button>" +
+        "<button class=\"btn btn-quiet btn-full\" style=\"margin-top:var(--sp-2)\" onclick=\"window.__cloudForceSubmit()\">仍然提交（按未作答计分）</button>";
+    } else if (st.sent) {
       status = "<div class=\"panel\"><p class=\"hint\">成功提交</p></div>";
     } else if (st.sending) {
       status = "<div class=\"panel\"><p class=\"hint\">提交中…</p></div>";
@@ -1809,14 +1885,30 @@ window.REP = (function () {
     var s = appState();
     if (!s) return;
     if (s.screen === "done") {
-      paint();
+      /* 完整度闸门：还有空位 ⇒ 不自动交卷，先让她去补（2026-10-26 · 票 #26）。
+         补完（或她明确选择「仍然提交」）才交。 */
+      if (!st.submitted && !st.incomplete && !st.forceSubmit) {
+        var c = completeness();
+        if (c.total > 0) { st.incomplete = c; st.submitted = true; paint(); return; }
+      }
       if (!st.submitted) { st.submitted = true; submit(); }
+      paint();
     } else {
       hideHrEntry();
     }
   }
 
   window.__cloudRetry = function () { st.err = null; st.submitted = false; tick(); };
+  /* 去补答：跳到第一处未答题，回到答题屏 */
+  window.__cloudJump = function () {
+    st.incomplete = null; st.submitted = false; st.forceSubmit = false;
+    if (jumpToFirstEmpty()) { try { if (window.APP && window.APP.go) window.APP.go("quiz"); } catch (e) { } }
+  };
+  /* 仍然提交：明确同意按未作答计分 */
+  window.__cloudForceSubmit = function () {
+    st.incomplete = null; st.submitted = false; st.forceSubmit = true;
+    submit();
+  };
 
   function boot() {
     var obs = new MutationObserver(function () { tick(); });

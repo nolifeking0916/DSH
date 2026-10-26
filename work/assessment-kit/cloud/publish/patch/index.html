@@ -68,6 +68,12 @@ body{margin:0;background:var(--cream);color:var(--ink);
       请把下面这 <b id="nq2"></b> 道题答完并提交；提交后系统会把这批题**合并**进你原来那份作答，并重算第三项成绩。
       <br>本页面是临时页面，**用完即删**；如需更正或删除本次作答，请联系集团人力资源部。
     </div>
+    <div id="restore" style="display:none;background:#EFF4F0;border:1px solid #C9D8CE;border-radius:10px;padding:var(--sp-2) var(--sp-3);margin-bottom:var(--sp-3)">
+      <div style="font-weight:600;margin-bottom:4px">检测到这台设备上还留着这次作答的完整记录</div>
+      <div style="font-size:var(--fs-1);color:var(--muted);margin-bottom:8px">第三项的 40 道题你当时**都答了**（服务器收到的只是其中 22 道被产品丢弃的答案）。
+        点下面的按钮，系统会**直接把这台设备上保存的答案**补进去，你不用再答一遍。</div>
+      <button class="btn" id="restoreBtn">从本机恢复第三项答案</button>
+    </div>
     <div id="qs"></div>
     <div class="sticky">
       <button class="btn" id="submit" disabled>提交补答</button>
@@ -112,6 +118,51 @@ box.addEventListener('click', e => {
   document.getElementById('submit').disabled = n < D.qs.length;
   document.getElementById('st').textContent = n < D.qs.length ? ('已答 ' + n + ' / ' + D.qs.length) : '已答完，可以提交';
 });
+/* ---- 从本机恢复（2026-10-26）：她这台设备上其实存着完整的 40 题 ----
+   根因：客户端 normalize 只认 0/1，把第三项选 C/D 的答案丢成了 null（已修）。
+   ⇒ 库里那份的 22 个 null，在**她本机**其实是完整答案。 */
+const LS = 'assessment_core_v1';
+let localM3 = null;
+try {
+  const raw = localStorage.getItem(LS);
+  if (raw) {
+    const s2 = JSON.parse(raw);
+    if (s2 && s2.code === D.code && s2.a && Array.isArray(s2.a.m3)) {
+      const filled = s2.a.m3.filter(v => v !== null && v !== undefined).length;
+      const hasCD = s2.a.m3.some(v => v === 2 || v === 3);
+      if (filled >= D.qs.length && hasCD) localM3 = s2.a.m3;
+    }
+  }
+} catch (e) { localM3 = null; }
+if (localM3) {
+  document.getElementById('restore').style.display = 'block';
+  document.getElementById('restoreBtn').addEventListener('click', () => {
+    const st = document.getElementById('st');
+    const btn = document.getElementById('restoreBtn');
+    btn.disabled = true; st.className = 'status'; st.textContent = '正在从本机恢复…';
+    const payload = {};
+    localM3.forEach((v, i) => { if (v !== null && v !== undefined) payload[String(i)] = v; });
+    fetch(D.api, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: D.code, m3_answers: payload }) })
+     .then(r => r.text().then(t => ({ ok: r.ok, j: (function(){try{return JSON.parse(t)}catch(e){return {raw:t}}})() })))
+     .then(res => {
+       const j = res.j || {};
+       if (res.ok && j.ok) {
+         st.className = 'status ok';
+         st.textContent = '已从本机恢复：服务器合并 ' + (j.filled||[]).length + ' 道题，第三项成绩已重算' +
+           (j.remaining_empty ? ('（仍有 ' + j.remaining_empty + ' 道空题）') : '（第三项已答完）') +
+           (j.m3_grade ? ('，第三项等级：' + j.m3_grade) : '') + '。本临时页面现在可以关闭。';
+         document.getElementById('restore').style.display = 'none';
+         document.getElementById('bar').style.width = '100%';
+       } else {
+         st.className = 'status err';
+         st.textContent = '恢复未成功：' + (j.error || '未知错误') + '（请改用下方逐题作答）';
+         btn.disabled = false;
+       }
+     })
+     .catch(e => { st.className = 'status err'; st.textContent = '网络异常：' + e + '（请改用下方逐题作答）'; btn.disabled = false; });
+  });
+}
 document.getElementById('submit').addEventListener('click', () => {
   const st = document.getElementById('st');
   if (Object.keys(ans).length < D.qs.length) { st.className='status err'; st.textContent='还有题没答'; return; }

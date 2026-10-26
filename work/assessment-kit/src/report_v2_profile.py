@@ -30,9 +30,18 @@ ORDER = ["待提升", "合格", "良好", "优秀", "顶尖"]
 TILT_MIN = 13
 
 
-def _band(v):
-    return ("顶尖" if v >= 85 else "优秀" if v >= 70 else "良好" if v >= 55
-            else "合格" if v >= 40 else "待提升")
+def band3(pct):
+    """三档只看占满分的比例（维护者 2026-10-26 裁定）：≥85 突出 / 70-85 常规 / <70 待补。"""
+    if pct >= 85:
+        return "突出"
+    if pct >= 70:
+        return "常规"
+    return "待补"
+
+
+def dim_band3(score, mx):
+    """维度档：同样只看占满分的比例。"""
+    return band3(round(score / float(mx) * 100, 1)) if mx else "待补"
 
 
 def type_profile(m1):
@@ -74,38 +83,38 @@ def animal_profile(m1, m2, m3):
     return {"key": k, "name": a.get("name", ""), "why": a.get("why", ""), "strength": strength}
 
 
-def talent_score(m1, m2, m3):
-    """人才综合素质（0–100）与潜力（可达分 / 空间）。"""
+def three_band(m1, m2, m3):
+    """每一项各自与自己的满分比，分三档；**不做跨项平均、不做加权合成**。
+
+    维护者 2026-10-26 裁定：报告的档位只从「结果本身、分数本身」得出 ——
+    每个人类测试的得分除以它自己的满分，得到一个百分比，再按百分比切三档。
+    """
     p1 = sum(d["score"] / float(d["max"]) for d in m1["dims"]) / max(1, len(m1["dims"]))
     p2 = float(m2["total"]) / 5.0
-    p3 = float(m3["pct"]) / 100.0
-    comp = round((p1 + p2 + p3) / 3.0 * 100, 1)
-    grade = _band(comp)
-    # 潜力：把最短板那一类补到三类平均水平的可达综合分
-    parts = {"性格特质": p1, "情绪特质": p2, "逻辑评价": p3}
-    short_name = min(parts, key=lambda k: parts[k])
-    avg = (p1 + p2 + p3) / 3.0
-    lifted = list(parts.values())
-    lifted[list(parts).index(short_name)] = avg
-    potential = round(sum(lifted) / 3.0 * 100, 1)
-    space = round(potential - comp, 1)
-    pgrade = _band(potential)
-    note_key = "high" if space >= 12 else ("mid" if space >= 6 else "low")
-    return {
-        "comprehensive": comp, "grade": grade,
-        "parts": [{"name": "性格特质", "pct": round(p1 * 100, 1), "basis": "四维命中率平均"},
-                  {"name": "情绪特质", "pct": round(p2 * 100, 1), "basis": "加权总分 ÷ 5.00"},
-                  {"name": "逻辑评价", "pct": round(p3 * 100, 1), "basis": "参考分布百分位"}],
-        "potential": potential, "potential_grade": pgrade, "space": space,
-        "short_name": short_name,
-        "potential_note": PROFILES["potential_note"][note_key],
-        "talent_text": PROFILES["talent"][grade],
-    }
+    p3 = float(m3["total"]) / 40.0
+    parts = [
+        {"name": "性格特质", "score_text": m1["score_text"], "pct": round(p1 * 100, 1),
+         "max_text": "四维 0–24（各维独立，无总档）", "basis": "四维命中率平均 ÷ 24"},
+        {"name": "情绪特质", "score_text": "%.2f / 5.00" % m2["total"], "pct": round(p2 * 100, 1),
+         "max_text": "0–5.00", "basis": "模块总分 ÷ 5.00"},
+        {"name": "逻辑评价", "score_text": "%.1f / 40" % m3["total"], "pct": round(p3 * 100, 1),
+         "max_text": "难度加权 0–40", "basis": "难度加权答对分 ÷ 40"},
+    ]
+    for x in parts:
+        x["band"] = band3(x["pct"])
+        x["text"] = PROFILES["bands"][x["name"]].get(x["band"], "")
+    weak = min(parts, key=lambda x: x["pct"])
+    # 提升方向：把最弱的一项补到 85% 需要的增量（只算这一项，不做合成）
+    need = max(0.0, round(85.0 - weak["pct"], 1))
+    return {"parts": parts, "weakest": weak, "gap_to_top": need,
+            "note": PROFILES.get("band_note", "")}
 
 
-def overall_sentence(m1, m2, m3, tp, an, ta):
+def overall_sentence(m1, m2, m3, tp, an, tb):
     """整体画像一句话：性格特质 + 情绪特质 + 逻辑评价。"""
-    p = PROFILES["m2_summary"].get(m2["grade"], "")
-    l = PROFILES["m3_summary"].get(m3["grade"], "")
+    tb = tb or {}
+    parts = {x["name"]: x for x in (tb.get("parts") or [])}
+    p = (parts.get("情绪特质") or {}).get("text", "")
+    l = (parts.get("逻辑评价") or {}).get("text", "")
     return ("性格上属于%s（%s），%s；情绪上%s；逻辑上%s"
             % (tp["type_name"] or "未定型", tp["code"], tp["type_desc"], p, l))

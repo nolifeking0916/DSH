@@ -61,6 +61,12 @@ def build_blocks(data, m1, m2, m3, compose, m1meta, narrative, cred, radar_png, 
             return it["text"]
         return fallback
 
+    import report_v2_profile as V2
+    TP = V2.type_profile(m1)
+    AN = V2.animal_profile(m1, m2, m3)
+    TB = V2.three_band(m1, m2, m3)
+    TB_SUMMARY = " · ".join("%s %s" % (x["name"], x["band"]) for x in TB["parts"])
+
     blocks = []
 
     # ---------------- 封面页
@@ -73,7 +79,7 @@ def build_blocks(data, m1, m2, m3, compose, m1meta, narrative, cred, radar_png, 
                               ("报告日期", (data.get("date") or "")[:10] or "—"),
                               ("报告性质", "内部判读材料：只产出追问清单，不作录用评分项"),
                               ("施测与归档", ORG)],
-                   "grade": compose.get("grade"),
+                   "grade": TB_SUMMARY,
                    "score": compose.get("score"),
                    "org": ORG,
                    "notice": "本报告由测评结果生成，只用于招聘环节的面谈追问；"
@@ -81,17 +87,13 @@ def build_blocks(data, m1, m2, m3, compose, m1meta, narrative, cred, radar_png, 
                              "候选人如对结果有疑问，可在 5 个工作日内向集团人力资源部提出复核。"})
 
     # ---------------- 1　整体画像（总）
-    import report_v2_profile as V2
-    TP = V2.type_profile(m1)
-    AN = V2.animal_profile(m1, m2, m3)
-    TA = V2.talent_score(m1, m2, m3)
     blocks.append({"t": "h1", "num": "1", "text": "整体画像"})
     blocks.append({"t": "p", "text":
-                   "这位候选人的整体画像是：%s" % V2.overall_sentence(m1, m2, m3, TP, AN, TA)})
+                   "这位候选人的整体画像是：%s" % V2.overall_sentence(m1, m2, m3, TP, AN, TB)})
     # 1.1 形象类比
     blocks.append({"t": "h2", "text": "1.1　形象类比"})
     blocks.append({"t": "callout", "text":
-                   "如果要给这三种能力找一个形象参照，最接近的是「%s」：%s。本次三项的表现属于%s。"
+                   "如果要给这三种能力找一个形象参照，最接近的是「%s」：%s。本次三项的情况是%s。"
                    % (AN["name"], AN["why"], AN["strength"])})
     blocks.append({"t": "note", "text":
                    "类比只用来帮施测人快速形成印象（取自行为倾向的三个关键轴：主动推动 / 等待配合、事实先行 / 趋势先导、定时收口 / 随机应对），不构成任何结论，也不是对候选人的评价性标签。"})
@@ -247,43 +249,30 @@ def build_blocks(data, m1, m2, m3, compose, m1meta, narrative, cred, radar_png, 
     # ---------------- 3.0　人才综合素质与潜力（总）
     blocks.append({"t": "h1", "num": "3.0", "text": "人才综合素质与潜力"})
     # 3.0.1 三类表现 + 综合素质给分
-    blocks.append({"t": "h2", "text": "3.0.1　综合素质"})
-    # 三类测试的表现（总表）
+    # 3.0.1 三项分数与三档（每一项各自与自己的满分比，不做跨项平均）
     blocks.append({"t": "table",
-                   "header": ["测试", "分数口径", "得分", "等级", "最弱的一维"],
-                   "rows": [[NAME_M1, "四维 0–24 分（各维独立，无总档）", m1["score_text"], "无总档", m1["short_text"]],
-                            [NAME_M2, "八维加权 0–5.00", "%.2f / 5.00" % m2["total"], m2["grade"], m2["short_text"]],
-                            [NAME_M3, "难度加权 0–40 → 参考分布百分位",
-                             "%.1f 分 · P%s · T %s" % (m3["total"], m3["pct"], m3["t"]),
-                             m3["grade"], m3["short_text"]]],
+                   "header": ["测试", "得分", "占满分", "档位", "折算口径"],
+                   "rows": [[x["name"], x["score_text"], "%.1f%%" % x["pct"], x["band"], x["basis"]]
+                            for x in TB["parts"]],
                    "align": ["l", "l", "r", "c", "l"]})
-    # 综合素质给分
-    blocks.append({"t": "callout", "text":
-                   "人才综合素质：%.1f / 100（%s）" % (TA["comprehensive"], TA["grade"])})
-    blocks.append({"t": "table",
-                   "header": ["构成面", "归一分", "折算口径"],
-                   "rows": [[x["name"], "%.1f / 100" % x["pct"], x["basis"]] for x in TA["parts"]] +
-                            [["综合素质", "%.1f / 100" % TA["comprehensive"],
-                              "三面归一后等权平均（%s）" % TA["grade"]]],
-                   "align": ["l", "r", "l"]})
+    blocks.append({"t": "note", "text": TB["note"]})
+    for x in TB["parts"]:
+        blocks.append({"t": "p", "text": "%s（%s，%.1f%%）：%s"
+                       % (x["name"], x["band"], x["pct"], x["text"])})
+    blocks.append({"t": "h2", "text": "3.0.2　提升方向"})
+    if TB["gap_to_top"] <= 0:
+        blocks.append({"t": "callout", "text":
+                       "三项都在突出水平，没有明显短板；接下来的成长更多来自经验与场景复杂度，而不是补哪一项。"})
+    else:
+        blocks.append({"t": "callout", "text":
+                       "最值得补的是%s（当前 %.1f%%，%s）；补到 85%% 还差 %.1f 个百分点。"
+                       % (TB["weakest"]["name"], TB["weakest"]["pct"], TB["weakest"]["band"],
+                          TB["gap_to_top"])})
     blocks.append({"t": "p", "text":
-                   "综合评估 %s（三类等级等权合成，序数分 %.2f / 5）。%s"
-                   % (compose["grade"], compose["score"], TA["talent_text"])})
-    blocks.append({"t": "note", "text":
-                   "综合素质分的口径：性格面取四维命中率平均，情绪面取加权总分 ÷ 5.00，"
-                   "逻辑面取参考分布百分位，三面归一到 0–100 后等权平均。"
-                   + "它把三类能力放在同一把尺子上看，不是加总原始分，也不产生淘汰动作。"})
+                   "提升方向只看最弱的那一项，不做跨项合成：这一项补上来，最明显的短板就消失了，其余两项维持现状即可。"})
+    blocks.append({"t": "h2", "text": "3.0.3　适合的方向"})
     blocks.append({"t": "p", "text": ov("fit", "综合三类测试的表现，下面给出方向性建议；具体岗位还需结合专业技能与工作样本。")})
-    blocks.append({"t": "h2", "text": "3.0.2　潜力"})
-    blocks.append({"t": "callout", "text":
-                   "潜力可达：%.1f / 100（%s）；相对当前 %.1f 分，结构空间 %.1f 分。%s"
-                   % (TA["potential"], TA["potential_grade"], TA["comprehensive"], TA["space"],
-                      TA["potential_note"])})
-    blocks.append({"t": "p", "text":
-                   "潜力分的算法：把最短板的那一面（本次是%s）补到三类平均水平，其余两面不动，得到的综合分就是可达水平；与当前分的差就是结构空间。这是基于本次三项结构的推算、不是预测：空间大说明短板补上来收益明显，空间小说明已经接近这套结构的上限，接下来更多靠经验与场景复杂度。"
-                   % TA["short_name"]})
     blocks.append({"t": "p", "text": ov("potential", "潜力判断以现有分数与短板分布为依据，成长空间主要取决于短板维度。")})
-
     blocks.append({"t": "h2", "text": "3.0.4　面谈追问清单"})
     blocks.append({"t": "note", "text": "测评只产出追问清单，不作录用评分项。下列问题按短板与复核项生成，供面谈现场取证："})
     blocks.append({"t": "ol", "items": compose.get("questions") or []})

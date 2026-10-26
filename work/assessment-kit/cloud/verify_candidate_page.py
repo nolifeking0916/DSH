@@ -193,6 +193,11 @@ def check_page(path=None, url=None, verbose=True):
         problems.append("第三项的已答计数还在用 Object.keys（会把 null 空洞算成已答）")
     if "function completeness()" not in html:
         problems.append("页面里没有交卷前的完整度闸门（有未答题也会静默交卷）")
+    # 8. **票 #53** —— 云版产物中不允许出现 APP.download 按钮：
+    #    云版候选页已剥 answer 键 ⇒ 客户端 REP.score() 算不出分（必然全 0）；
+    #    且云版交卷即落库，失败有「重试」，不需要「带走原始作答」的旁路。
+    if "APP.download()" in html:
+        problems.append("产物中出现 APP.download() 按钮——云版候选页已剥 answer 键，客户端算分必然全 0（票 #53）")
 
     if verbose:
         print("发布门检查：%s" % origin)

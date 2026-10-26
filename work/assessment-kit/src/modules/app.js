@@ -359,16 +359,18 @@
        离线版的「下载结果文件 + 回传给施测人」整套话术与入口一并撤掉（云版直接落库，没有回传动作）；
        候选人侧的「清除本机」入口也一并撤掉（本机残留由候选人自行清浏览器数据）。
        撤回通道做成可选：这里只留一句「如需删除本次记录，请联系集团人力资源部」。
-       **云上测试版的两处例外**：上传状态行与「下载结果文件」兜底按钮只在云上版出现
-       （build.py --cloud）—— 上传失败时作答需要一条能带走的出口；离线版严格按 D6，两样都没有。 */
+       **云上测试版**：上传状态行只在云上版出现（build.py --cloud）；
+       「下载结果文件」兜底按钮**已移除**（票 #53 · 2026-10-26 · 维护者定方案 A）——
+       云版交卷即落库，失败有「重试」这一条路；再加一个「带走原始作答」的出口
+       等于给候选人一条绕过交卷的旁路（票 #39 已把下载/回传入口删过一轮）。
+       且云版候选页已剥 answer 键，客户端 REP.score() 算不出分（全 0），按钮留着只会产出错误文件。
+       离线版（CLOUD.enabled=false）仍保留 download() 入口（施测人本地用）。 */
     return '<div class="wrap"><div class="sheet" style="margin-top:var(--sp-4);padding:var(--sp-6) var(--sp-4)">' +
       '<div class="done-seal">✓</div>' +
       '<h2 style="font-size:var(--fs-6);text-align:center">' + esc(C.doneTitle) + "</h2>" +
       '<p class="hint" style="max-width:330px;margin:var(--sp-2) auto 0;text-align:center">' + esc(C.doneLead) + "</p>" +
       (CLOUD.enabled ? '<p class="hint" id="cloud-state" style="max-width:330px;margin:var(--sp-1) auto 0;text-align:center">正在提交本次作答…</p>' : "") +
       '<p class="hint" style="max-width:330px;margin:var(--sp-1) auto 0;text-align:center">' + esc(C.doneWithdraw) + "</p>" +
-      /* 兜底出口只在云上测试版出现（上传失败时作答要能被带走）；离线版严格按 D6，没有这个入口 */
-      (CLOUD.enabled ? '<button class="btn btn-primary btn-full" style="margin-top:var(--sp-3)" onclick="APP.download()">下载结果文件（JSON）</button>' : "") +
       '<button class="btn btn-quiet btn-full" style="margin-top:var(--sp-2)" onclick="APP.reset()">再测一次</button>' +
       "</div>" + footHTML() + "</div>";
   }

@@ -220,7 +220,7 @@
         "<button class=\"btn btn-primary btn-full\" style=\"margin-top:var(--sp-2)\" onclick=\"window.__cloudRetry()\">重新提交</button>" +
         /* 兜底出口：上传失败时，作答要能被带走（app.js 的云版完成页本来就有这一条，
            但 paint() 换掉整块 .sheet 会把它抹掉 ⇒ 这里补回来） */
-        "<button class=\"btn btn-quiet btn-full\" style=\"margin-top:var(--sp-2)\" onclick=\"APP.download()\">下载结果文件（JSON）</button></div>";
+        "</div>";
     } else {
       status = "<div class=\"panel\"><p class=\"hint\">提交中…</p></div>";
     }

@@ -425,7 +425,7 @@ def add_header_footer(doc, data):
     sec = doc.sections[0]
     hp = sec.header.paragraphs[0]
     hp.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-    run_fmt(hp.add_run("施测人报告 ｜ %s ｜ 编号 %s%s" % (
+    run_fmt(hp.add_run("%s的核心人才三联测试 ｜ 编号 %s%s" % (
         data.get("name") or "—", (data.get("code") or "")[:18],
         (" ｜ 末4位 " + data["idLast4"]) if data.get("idLast4") else "")),
         size=8.5, color="5C6A60", cn=CN_FONT)
@@ -917,9 +917,9 @@ def render_html(data, m1, m2, m3, compose, m1meta, radar_png):
     o = []
     A = o.append
     A("<!DOCTYPE html><html lang=\"zh-CN\"><head><meta charset=\"UTF-8\">")
-    A("<title>施测人报告 · %s</title>" % h(data.get("name") or ""))
-    runhead = "施测人报告 ｜ %s ｜ 编号 %s%s" % (
-        h(data.get("name") or "—"), h((data.get("code") or "")[:18]),
+    A("<title>%s的核心人才三联测试</title>" % h(data.get("name") or ""))
+    runhead = "%s的核心人才三联测试 ｜ 编号 %s%s" % (
+        h(data.get("name") or "候选人"), h((data.get("code") or "")[:18]),
         (" ｜ 末4位 " + h(data["idLast4"])) if data.get("idLast4") else "")
     A("<style>%s</style></head><body>" % template_css(runhead))
     A('<div class="runhead">%s</div>' % runhead)
@@ -1112,13 +1112,13 @@ def render_html_blocks_page(data, blocks, radar_png=None):
         with open(radar_png, "rb") as f:
             radar_b64 = base64.b64encode(f.read()).decode("ascii")
     import report_sections as RS
-    runhead = "施测人报告 ｜ %s ｜ 编号 %s%s" % (
+    runhead = "%s的核心人才三联测试 ｜ 编号 %s%s" % (
         h(data.get("name") or "—"), h((data.get("code") or "")[:18]),
         (" ｜ 末4位 " + h(data["idLast4"])) if data.get("idLast4") else "")
     o = []
     A = o.append
     A("<!DOCTYPE html><html lang=\"zh-CN\"><head><meta charset=\"UTF-8\">")
-    A("<title>施测人报告 · %s</title>" % h(data.get("name") or ""))
+    A("<title>%s的核心人才三联测试</title>" % h(data.get("name") or ""))
     A("<style>%s</style></head><body>" % template_css(runhead))
     A('<div class="runhead">%s</div>' % runhead)
     A(RS.render_html_blocks(blocks, radar_b64))
@@ -1151,7 +1151,7 @@ def main():
     os.makedirs(args.outdir, exist_ok=True)
     code = (data.get("code") or "REPORT").replace("/", "-")
     stamp = (data.get("date") or "")[:10].replace("-", "") or "00000000"
-    base = "施测人报告_%s_%s" % (code, stamp)
+    base = "%s的核心人才三联测试_%s" % ((data.get("name") or "候选人").replace("/", "-"), stamp)
     docx_path = os.path.join(args.outdir, base + ".docx")
 
     # 雷达图 → PNG

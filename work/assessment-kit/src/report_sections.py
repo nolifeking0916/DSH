@@ -65,8 +65,8 @@ def build_blocks(data, m1, m2, m3, compose, m1meta, narrative, cred, radar_png, 
 
     # ---------------- 封面页
     blocks.append({"t": "cover", "brand": "云上文旅集团 · 核心人才系列测试",
-                   "title": "施测人报告",
-                   "sub": "结果 · 解析 · 对候选人的判断",
+                   "title": "%s的核心人才三联测试" % (data.get("name") or "候选人"),
+                   "sub": "性格特质 · 情绪特质 · 逻辑评价　|　施测人报告",
                    "fields": [("候选人", data.get("name") or "—"),
                               ("测评编号", data.get("code") or "—"),
                               ("身份标识", ("末 4 位 " + data["idLast4"]) if data.get("idLast4") else "—"),
@@ -80,13 +80,23 @@ def build_blocks(data, m1, m2, m3, compose, m1meta, narrative, cred, radar_png, 
                              "不作录用评分项，不设淘汰线，不构成心理或医学诊断。"
                              "候选人如对结果有疑问，可在 5 个工作日内向集团人力资源部提出复核。"})
 
-    # ---------------- 一、总体画像（总）
-    blocks.append({"t": "h1", "num": "一", "text": "总体画像"})
+    # ---------------- 1　整体画像（总）
+    import report_v2_profile as V2
+    TP = V2.type_profile(m1)
+    AN = V2.animal_profile(m1, m2, m3)
+    TA = V2.talent_score(m1, m2, m3)
+    blocks.append({"t": "h1", "num": "1", "text": "整体画像"})
     blocks.append({"t": "p", "text":
-                   "这位候选人的整体画像是：%s" % ov("profile", compose.get("headline") or "见下表逐项说明。")})
-    blocks.append({"t": "h2", "text": "1.1　性格画像（%s）" % NAME_M1})
-    blocks.append({"t": "p", "text":
-                   "%s 分四个维度看，下面是每一维的分数、两极倾向与工作方式上的表现。" % NAME_M1})
+                   "这位候选人的整体画像是：%s" % V2.overall_sentence(m1, m2, m3, TP, AN, TA)})
+    # 1.1 形象类比
+    blocks.append({"t": "h2", "text": "1.1　形象类比"})
+    blocks.append({"t": "callout", "text":
+                   "如果要给这三种能力找一个形象参照，最接近的是「%s」：%s。本次三项的表现属于%s。"
+                   % (AN["name"], AN["why"], AN["strength"])})
+    blocks.append({"t": "note", "text":
+                   "类比只用来帮施测人快速形成印象（取自行为倾向的三个关键轴：主动推动 / 等待配合、事实先行 / 趋势先导、定时收口 / 随机应对），不构成任何结论，也不是对候选人的评价性标签。"})
+    # 1.2 本次作答的可信度
+    blocks.append({"t": "h2", "text": "1.2　本次作答的可信度"})
     # 可信度低时，先说清楚：下面的画像不能当结论用
     cred1 = cred.get("m1") or {}
     if cred1.get("level") == "低":
@@ -108,16 +118,8 @@ def build_blocks(data, m1, m2, m3, compose, m1meta, narrative, cred, radar_png, 
             side = "%s（%d : %d）" % (nar.get("pole_label") or "—", a_cnt, b_cnt)
         rows.append([d["name"], "%d / %d" % (d["score"], d["max"]), d["grade"],
                      side, nar.get("text") or d.get("brief") or ""])
-    blocks.append({"t": "table", "header": ["维度", "得分", "等级", "两极倾向（极a : 极b）", "工作方式上的表现"],
-                   "rows": rows, "align": ["l", "r", "c", "l", "l"]})
-    blocks.append({"t": "note", "text":
-                   "「两极倾向」由 96 道两极题的逐题选择统计得出（极a : 极b，两极相当时直接标出比值），"
-                   "描述的是工作方式上的倾向，不是性格类型，也不是诊断结论。"
-                   "极的归口用逐题映射表 data/m1_pole_map.json（题库里 a/b 两列正反混排，"
-                   "不能直接按 a/b 列的占比算）。"})
 
     # 可信度
-    blocks.append({"t": "h2", "text": "1.2　本次作答的可信度"})
     crows = []
     for key, label in (("m1", NAME_M1), ("m2", NAME_M2), ("m3", NAME_M3)):
         c = cred.get(key) or {}
@@ -132,41 +134,57 @@ def build_blocks(data, m1, m2, m3, compose, m1meta, narrative, cred, radar_png, 
                    "下面的分数只作参考，面试取证优先。" % (("（%s）" % cred["overall"]["speed"]) if cred.get("overall", {}).get("speed") else "")})
 
     # 三类能力总表
-    blocks.append({"t": "h2", "text": "1.3　三类能力的总体表现"})
-    blocks.append({"t": "table",
-                   "header": ["测试", "分数口径", "得分", "等级", "最弱的一维"],
-                   "rows": [[NAME_M1, "四维 0–24 分（各维独立，无总档）", m1["score_text"], "无总档", m1["short_text"]],
-                            [NAME_M2, "八维加权 0–5.00", "%.2f / 5.00" % m2["total"], m2["grade"], m2["short_text"]],
-                            [NAME_M3, "难度加权 0–40 → 参考分布百分位",
-                             "%.1f 分 · P%s · T %s" % (m3["total"], m3["pct"], m3["t"]),
-                             m3["grade"], m3["short_text"]]],
-                   "align": ["l", "l", "r", "c", "l"]})
-    blocks.append({"t": "p", "text":
-                   "综合评估 %s。综合评估由三类的等级合成（顶尖 5 / 优秀 4 / 良好 3 / 合格 2 / 待提升 1，"
-                   "等权平均后切档），不代表总分，也不是淘汰线，只用来决定面谈追问什么。"
-                   % compose["grade"]})
 
     # ---------------- 二、分项详评（分）
-    blocks.append({"t": "h1", "num": "二", "text": "分项详评"})
+    blocks.append({"t": "h1", "num": "2", "text": "分项"})
 
-    # 2.1 人格特质
-    blocks.append({"t": "h2", "text": "2.1　%s" % NAME_M1})
-    rows = []
-    for d in m1["dims"]:
-        nar = P.get(d["key"]) or {}
-        rows.append([d["name"], "%d / %d" % (d["score"], d["max"]), d["grade"],
-                     nar.get("text") or d.get("brief") or ""])
-    blocks.append({"t": "table", "header": ["维度", "得分", "等级", "判读"], "rows": rows,
-                   "align": ["l", "r", "c", "l"]})
+    # 2.1 性格特质 · 类型归类
+    blocks.append({"t": "h2", "text": "2.1　%s · 类型归类" % NAME_M1})
+    blocks.append({"t": "callout", "text":
+                   "%s（%s）· %s" % (TP["type_name"] or "未定型", TP["code"], TP["type_desc"])})
+    blocks.append({"t": "p", "text":
+                   "按四个行为轴归类：%s。" % TP["summary"]})
+    for ax in TP["axes"]:
+        blocks.append({"t": "p", "text":
+                       "%s（%s 轴）：%s（%d / %d，%s）——%s。"
+                       % (ax["name"], ax["axis"], ax["side_label"], ax["score"], ax["max"],
+                          ax["grade"], ax["desc"])})
+    blocks.append({"t": "note", "text":
+                   "归类口径：每个行为轴按「更有效的一端」在 24 题中的命中数归边，严格过半（13 题及以上）算偏这一侧，否则算偏另一侧，四轴拼成四字母。这是基于本测评四维行为倾向的类型化归类，与通行的 MBTI 测评题不同、轴的含义也不同（此处是工作方式上的行为倾向，不是心理类型），不可当作 MBTI 结果对外使用。"})
+    blocks.append({"t": "h2", "text": "2.1.1　对应详情"})
+    blocks.append({"t": "table", "header": ["维度", "得分", "等级", "两极倾向（极a : 极b）", "工作方式上的表现"],
+                   "rows": rows, "align": ["l", "r", "c", "l", "l"]})
+    blocks.append({"t": "note", "text":
+                   "「两极倾向」由 96 道两极题的逐题选择统计得出（极a : 极b，两极相当时直接标出比值），"
+                   "描述的是工作方式上的倾向，不是性格类型，也不是诊断结论。"
+                   "极的归口用逐题映射表 data/m1_pole_map.json（题库里 a/b 两列正反混排，"
+                   "不能直接按 a/b 列的占比算）。"})
     blocks.append({"t": "p", "text":
                    "口径：每一题是一道两极对比，两端都是行为频率陈述；每题锚定「更有效的一端」计 1 分，"
-                   "每维 24 题、0–24 分，**各维独立、没有总档**。本部分采用绝对锚点切档，"
+                   "每维 24 题、0–24 分，各维独立、没有总档。本部分采用绝对锚点切档，"
                    "内部样本到量后再校准参照分布。最弱的一维是 %s。" % m1["short_text"]})
     blocks.append({"t": "cred", "level": (cred.get("m1") or {}).get("level", "—"),
                    "text": "；".join((cred.get("m1") or {}).get("flags") or []) or "无异常信号"})
 
-    # 2.2 情景处理
-    blocks.append({"t": "h2", "text": "2.2　%s" % NAME_M2})
+    # 2.2 情绪特质（情景处理）
+    blocks.append({"t": "h2", "text": "2.2　%s（%s）分析" % (NAME_M2, "情绪特质")})
+    strong = sorted([d for d in m2["dims"] if d["grade"] in ("顶尖", "优秀")],
+                    key=lambda d: -ORDER.index(d["grade"]))[:3]
+    weak = sorted([d for d in m2["dims"] if d["grade"] in ("合格", "待提升")],
+                  key=lambda d: ORDER.index(d["grade"]))[:3]
+    if not strong:
+        strong = sorted(m2["dims"], key=lambda d: -ORDER.index(d["grade"]))[:2]
+    if not weak:
+        weak = sorted(m2["dims"], key=lambda d: ORDER.index(d["grade"]))[:2]
+    TR = V2.PROFILES["m2_traits"]
+    def _trait_line(dim, field):
+        tt = (TR.get(dim["key"]) or {}).get(field, dim.get("read", ""))
+        return "%s——%s" % (dim["name"], tt)
+    blocks.append({"t": "kv", "rows": [
+        ["善于什么", "；".join([_trait_line(d, "strong") for d in strong])],
+        ["不善于什么", "；".join([_trait_line(d, "weak") for d in weak])]]})
+    blocks.append({"t": "p", "text": "总结：%s" % V2.PROFILES["m2_summary"].get(m2["grade"], "")})
+    blocks.append({"t": "h2", "text": "2.2.1　对应详情"})
     rows = []
     for d in m2["dims"]:
         nar = S.get(d["key"]) or {}
@@ -189,8 +207,22 @@ def build_blocks(data, m1, m2, m3, compose, m1meta, narrative, cred, radar_png, 
     blocks.append({"t": "cred", "level": (cred.get("m2") or {}).get("level", "—"),
                    "text": "；".join((cred.get("m2") or {}).get("flags") or []) or "无异常信号"})
 
-    # 2.3 逻辑分析能力
-    blocks.append({"t": "h2", "text": "2.3　%s" % NAME_M3})
+    # 2.3 逻辑能力总结
+    blocks.append({"t": "h2", "text": "2.3　%s（%s）总结" % (NAME_M3, "逻辑评价")})
+    strong3 = sorted([d for d in m3["dims"] if d["grade"] in ("顶尖", "优秀")],
+                     key=lambda d: -ORDER.index(d["grade"]))[:3]
+    weak3 = sorted([d for d in m3["dims"] if d["grade"] in ("合格", "待提升")],
+                   key=lambda d: ORDER.index(d["grade"]))[:3]
+    if not strong3:
+        strong3 = sorted(m3["dims"], key=lambda d: -ORDER.index(d["grade"]))[:2]
+    if not weak3:
+        weak3 = sorted(m3["dims"], key=lambda d: ORDER.index(d["grade"]))[:2]
+    def _log_line(dim, field):
+        return "%s——%s" % (dim["name"], dim.get(field) or "")
+    blocks.append({"t": "kv", "rows": [
+        ["善于", "；".join([_log_line(d, "high") for d in strong3])],
+        ["不善于", "；".join([_log_line(d, "low") for d in weak3])]]})
+    blocks.append({"t": "h2", "text": "2.3.1　对应详情"})
     rows = []
     for d in m3["dims"]:
         nar = R.get(d["key"]) or {}
@@ -212,19 +244,50 @@ def build_blocks(data, m1, m2, m3, compose, m1meta, narrative, cred, radar_png, 
     blocks.append({"t": "cred", "level": (cred.get("m3") or {}).get("level", "—"),
                    "text": "；".join((cred.get("m3") or {}).get("flags") or []) or "无异常信号"})
 
-    # ---------------- 三、整体评价（总）
-    blocks.append({"t": "h1", "num": "三", "text": "整体评价"})
-    blocks.append({"t": "h2", "text": "3.1　适合的方向"})
+    # ---------------- 3.0　人才综合素质与潜力（总）
+    blocks.append({"t": "h1", "num": "3.0", "text": "人才综合素质与潜力"})
+    # 3.0.1 三类表现 + 综合素质给分
+    blocks.append({"t": "h2", "text": "3.0.1　综合素质"})
+    # 三类测试的表现（总表）
+    blocks.append({"t": "table",
+                   "header": ["测试", "分数口径", "得分", "等级", "最弱的一维"],
+                   "rows": [[NAME_M1, "四维 0–24 分（各维独立，无总档）", m1["score_text"], "无总档", m1["short_text"]],
+                            [NAME_M2, "八维加权 0–5.00", "%.2f / 5.00" % m2["total"], m2["grade"], m2["short_text"]],
+                            [NAME_M3, "难度加权 0–40 → 参考分布百分位",
+                             "%.1f 分 · P%s · T %s" % (m3["total"], m3["pct"], m3["t"]),
+                             m3["grade"], m3["short_text"]]],
+                   "align": ["l", "l", "r", "c", "l"]})
+    # 综合素质给分
+    blocks.append({"t": "callout", "text":
+                   "人才综合素质：%.1f / 100（%s）" % (TA["comprehensive"], TA["grade"])})
+    blocks.append({"t": "table",
+                   "header": ["构成面", "归一分", "折算口径"],
+                   "rows": [[x["name"], "%.1f / 100" % x["pct"], x["basis"]] for x in TA["parts"]] +
+                            [["综合素质", "%.1f / 100" % TA["comprehensive"],
+                              "三面归一后等权平均（%s）" % TA["grade"]]],
+                   "align": ["l", "r", "l"]})
+    blocks.append({"t": "p", "text":
+                   "综合评估 %s（三类等级等权合成，序数分 %.2f / 5）。%s"
+                   % (compose["grade"], compose["score"], TA["talent_text"])})
+    blocks.append({"t": "note", "text":
+                   "综合素质分的口径：性格面取四维命中率平均，情绪面取加权总分 ÷ 5.00，"
+                   "逻辑面取参考分布百分位，三面归一到 0–100 后等权平均。"
+                   + "它把三类能力放在同一把尺子上看，不是加总原始分，也不产生淘汰动作。"})
     blocks.append({"t": "p", "text": ov("fit", "综合三类测试的表现，下面给出方向性建议；具体岗位还需结合专业技能与工作样本。")})
-    blocks.append({"t": "h2", "text": "3.2　潜力与成长空间"})
+    blocks.append({"t": "h2", "text": "3.0.2　潜力"})
+    blocks.append({"t": "callout", "text":
+                   "潜力可达：%.1f / 100（%s）；相对当前 %.1f 分，结构空间 %.1f 分。%s"
+                   % (TA["potential"], TA["potential_grade"], TA["comprehensive"], TA["space"],
+                      TA["potential_note"])})
+    blocks.append({"t": "p", "text":
+                   "潜力分的算法：把最短板的那一面（本次是%s）补到三类平均水平，其余两面不动，得到的综合分就是可达水平；与当前分的差就是结构空间。这是基于本次三项结构的推算、不是预测：空间大说明短板补上来收益明显，空间小说明已经接近这套结构的上限，接下来更多靠经验与场景复杂度。"
+                   % TA["short_name"]})
     blocks.append({"t": "p", "text": ov("potential", "潜力判断以现有分数与短板分布为依据，成长空间主要取决于短板维度。")})
-    blocks.append({"t": "h2", "text": "3.3　擅长与不擅长"})
-    blocks.append({"t": "kv", "rows": [["擅长", ov("strength", "见上表各维判读。")],
-                                       ["不擅长 / 需要补", ov("caution", "见上表各维判读与最短板维度。")]]})
-    blocks.append({"t": "h2", "text": "3.4　面谈追问清单"})
+
+    blocks.append({"t": "h2", "text": "3.0.4　面谈追问清单"})
     blocks.append({"t": "note", "text": "测评只产出追问清单，不作录用评分项。下列问题按短板与复核项生成，供面谈现场取证："})
     blocks.append({"t": "ol", "items": compose.get("questions") or []})
-    blocks.append({"t": "h2", "text": "3.5　使用边界"})
+    blocks.append({"t": "h2", "text": "3.0.5　使用边界"})
     blocks.append({"t": "kv", "rows": [
         ["结果性质", "只产出追问清单，不作录用评分项；同一岗位对所有候选人使用同一套题、同一权重、同一阈值。"],
         ["与面试冲突时", "以面试与工作样本为主，并记录冲突原因。"],
@@ -247,7 +310,7 @@ def build_blocks(data, m1, m2, m3, compose, m1meta, narrative, cred, radar_png, 
                    "%s看陌生问题上的推理与判断。三者同涨同跌时需要复核题目是否重叠，而不是直接加分。"
                    % (NAME_M1, NAME_M2, NAME_M3))})
     blocks.append({"t": "kv", "rows": [
-        ["报告名称", "云上文旅集团 · 核心人才系列测试 · 施测人报告"],
+        ["报告名称", "%s的核心人才三联测试" % (data.get("name") or "候选人")],
         ["施测与归档单位", ORG],
         ["报告日期", (data.get("date") or "")[:10] or "—"],
         ["测评编号", data.get("code") or "—"],

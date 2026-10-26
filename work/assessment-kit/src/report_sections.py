@@ -80,7 +80,8 @@ def build_blocks(data, m1, m2, m3, compose, m1meta, narrative, cred, radar_png, 
                               ("报告性质", "内部判读材料：只产出追问清单，不作录用评分项"),
                               ("施测与归档", ORG)],
                    "grade": TB_SUMMARY,
-                   "score": compose.get("score"),
+                   "score": None,
+                   "band_note": TB["note"],
                    "org": ORG,
                    "notice": "本报告由测评结果生成，只用于招聘环节的面谈追问；"
                              "不作录用评分项，不设淘汰线，不构成心理或医学诊断。"
@@ -280,7 +281,7 @@ def build_blocks(data, m1, m2, m3, compose, m1meta, narrative, cred, radar_png, 
     blocks.append({"t": "kv", "rows": [
         ["结果性质", "只产出追问清单，不作录用评分项；同一岗位对所有候选人使用同一套题、同一权重、同一阈值。"],
         ["与面试冲突时", "以面试与工作样本为主，并记录冲突原因。"],
-        ["不是淘汰线", "本产品不设淘汰线；综合评估与单项等级同样不产生淘汰动作。"],
+        ["不是淘汰线", "本产品不设淘汰线；三档档位与单项等级同样不产生淘汰动作。"],
         ["不做什么", "不测量性格，不测量智力，不属于临床心理评估，不对心理健康状况作判断。"],
         ["谁能看到", "集团人力资源部 2–3 名工作人员（含用人部门负责人），用于招聘环节的评估；不向其他人提供。"],
         ["留存与复核", "结果由集团人力资源部归档；候选人如对结果有疑问，可在 5 个工作日内提出复核。"],
@@ -325,15 +326,15 @@ def render_html_blocks(blocks, radar_b64=None):
             for k, v in b["fields"]:
                 A('<tr><td class="k">%s</td><td>%s</td></tr>' % (_esc(k), _esc(v)))
             A("</table>")
-            A('<p class="coverpage-grade"><span class="coverpage-label">综合评估</span>'
-              '<span class="lv %s">%s</span>'
-              '<span class="coverpage-score">三类等级等权合成，序数分 %.2f / 5</span></p>'
-              % (B.lv_class(b["grade"]), _esc(b["grade"]), b["score"]))
+            A('<p class="coverpage-grade"><span class="coverpage-label">三项档位</span>'
+              '<span class="coverpage-grade-text">%s</span></p>' % _esc(b.get("grade") or ""))
+            if b.get("band_note"):
+                A('<p class="coverpage-score">%s</p>' % _esc(b["band_note"]))
             A('<p class="coverpage-org">%s</p>' % _esc(b["org"]))
             A('<p class="coverpage-notice">%s</p>' % _esc(b["notice"]))
             A("</section>")
         elif t == "h1":
-            A('<div class="sec"><h1>%s、%s</h1>' % (_esc(b["num"]), _esc(b["text"])))
+            A('<div class="sec"><h1>%s、%s</h1></div>' % (_esc(b["num"]), _esc(b["text"])))
         elif t == "h2":
             A('<h2>%s</h2>' % _esc(b["text"]))
         elif t == "p":
@@ -416,11 +417,10 @@ def render_docx_blocks(doc, blocks, radar_png=None):
             B.kv_table(doc, b["fields"], widths=(3.4, 11.8))
             B.para(doc, "", after=8)
             p = B.para(doc, "", after=6)
-            B.run_fmt(p.add_run("综合评估　"), size=13, bold=True, color=B.GREEN, cn=B.CN_HEAD)
-            B.run_fmt(p.add_run(b["grade"]), size=13, bold=True,
-                      color=B.LV_INK.get(b["grade"], B.INK), cn=B.CN_HEAD)
-            B.run_fmt(p.add_run("　（三类等级等权合成，序数分 %.2f / 5）" % b["score"]),
-                      size=10.5, color=B.INK2, cn=B.CN_FONT)
+            B.run_fmt(p.add_run("三项档位　"), size=13, bold=True, color=B.GREEN, cn=B.CN_HEAD)
+            B.run_fmt(p.add_run(b.get("grade") or "—"), size=13, bold=True, color=B.INK, cn=B.CN_FONT)
+            if b.get("band_note"):
+                B.para(doc, b["band_note"], size=10.5, color=B.INK2, cn=B.CN_FONT, after=6)
             B.para(doc, "", after=10)
             B.rich(doc, [(b["org"], {"bold": True, "color": B.GREEN, "cn": B.CN_HEAD, "size": 11.5})],
                    after=6)

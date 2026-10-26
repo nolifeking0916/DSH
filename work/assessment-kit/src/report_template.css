@@ -278,7 +278,9 @@ h3 {
 }
 .lead { color: var(--label-secondary); margin-bottom: var(--sp-5); }
 .note { font-size: var(--text-subhead); line-height: var(--lead-subhead); color: var(--label-secondary); }
-.sec { break-before: page; }
+/* .sec 不再强制分页（票 #72 布局优化）：强制分页会留下「半页空」与「一行孤页」。
+   封面仍独立成页（.coverpage 的 break-after: page），其余大章自然续排，
+   标题不落单由 break-after: avoid 保证。 */
 
 /* ============================================================================
    表格：发丝线 + 深绿表头
@@ -480,3 +482,16 @@ h3 {
   .cover { box-shadow: none; }
   body { padding-top: 0; }
 }
+
+/* ============================================================================
+   分页控制（票 #72 · 2026-10-26）：不让「几行字就换页」
+   ========================================================================= */
+p { orphans: 3; widows: 3; }
+h1, h2 { break-after: avoid; page-break-after: avoid; }
+.sec { break-inside: avoid; }
+.note, .callout, .cred, .cap { break-inside: avoid; }
+.qs li { break-inside: avoid; }
+.kv, .radar { break-inside: avoid; }
+.radar + .cap { break-before: avoid; }
+.tbl thead { display: table-header-group; }
+.tbl tfoot { display: table-footer-group; }

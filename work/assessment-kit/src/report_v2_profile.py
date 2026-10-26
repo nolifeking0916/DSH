@@ -31,17 +31,17 @@ TILT_MIN = 13
 
 
 def band3(pct):
-    """三档只看占满分的比例（维护者 2026-10-26 裁定）：≥85 突出 / 70-85 常规 / <70 待补。"""
+    """三档只看占满分的比例（维护者 2026-10-26 裁定）：≥85 突出 / 70-85 常规 / <70 偏弱。"""
     if pct >= 85:
         return "突出"
     if pct >= 70:
         return "常规"
-    return "待补"
+    return "偏弱"
 
 
 def dim_band3(score, mx):
     """维度档：同样只看占满分的比例。"""
-    return band3(round(score / float(mx) * 100, 1)) if mx else "待补"
+    return band3(round(score / float(mx) * 100, 1)) if mx else "偏弱"
 
 
 def type_profile(m1):

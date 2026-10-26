@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>第三项补答</title>
+<style>
+:root{
+  --green:#1E4634; --green-2:#2A5C46; --gold:#6E5B36; --gold-2:#B08D57;
+  --cream:#F5F0E4; --paper:#FBF8F1; --ink:#22322B; --muted:#5C6A60;
+  --line:#D9D2C2; --sp-1:6px; --sp-2:12px; --sp-3:18px; --sp-4:26px;
+  --fs-1:13px; --fs-2:15px; --fs-3:17px; --fs-4:20px; --fs-5:24px; --fs-6:28px;
+  --r:12px;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--cream);color:var(--ink);
+  font:400 var(--fs-2)/1.65 -apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  -webkit-text-size-adjust:100%}
+.topbar{background:var(--green);color:var(--cream);padding:var(--sp-3) 0}
+.wrap{max-width:720px;margin:0 auto;padding:0 var(--sp-3)}
+.brand{font-size:var(--fs-1);letter-spacing:.12em;opacity:.75}
+.title{font-size:var(--fs-5);font-weight:700;margin:var(--sp-1) 0 0}
+.meta{font-size:var(--fs-1);opacity:.85;margin-top:var(--sp-1)}
+.pbar{height:5px;background:rgba(245,240,228,.22);border-radius:99px;margin-top:var(--sp-2);overflow:hidden}
+.pbar i{display:block;height:100%;width:0;background:var(--gold-2);transition:width .2s}
+.sheet{background:var(--paper);border-radius:var(--r);padding:var(--sp-4) var(--sp-3);
+  box-shadow:0 1px 0 rgba(0,0,0,.05);margin:var(--sp-3) 0 var(--sp-4)}
+.note{background:#EEF3EE;border-left:3px solid var(--green-2);border-radius:6px;
+  padding:var(--sp-2) var(--sp-3);font-size:var(--fs-1);color:var(--muted);margin-bottom:var(--sp-3)}
+.note b{color:var(--ink)}
+.q{padding:var(--sp-3) 0;border-top:1px solid var(--line)}
+.q:first-of-type{border-top:0}
+.qh{display:flex;gap:var(--sp-2);align-items:baseline;margin-bottom:var(--sp-2)}
+.qn{font-size:var(--fs-1);color:var(--muted);letter-spacing:.04em}
+.qstem{font-size:var(--fs-3);font-weight:600;line-height:1.6;margin:0 0 var(--sp-2);overflow-wrap:anywhere}
+.grid{font-family:ui-monospace,Menlo,monospace;font-size:var(--fs-2);line-height:1.5;
+  background:#F1EEE5;border-radius:8px;padding:var(--sp-2);margin:0 0 var(--sp-2);
+  white-space:pre;overflow-x:auto}
+.opts{display:flex;flex-direction:column;gap:var(--sp-1)}
+.opt{display:flex;gap:var(--sp-2);align-items:flex-start;width:100%;text-align:left;min-width:0;
+  background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 12px;
+  font:inherit;color:var(--ink);cursor:pointer}
+.opt:hover{border-color:var(--green-2)}
+.opt[aria-pressed="true"]{border-color:var(--green);background:#EFF4F0;box-shadow:inset 0 0 0 1px var(--green)}
+.opt .k{flex:0 0 22px;height:22px;flex-shrink:0;background:#EDE8DB;color:var(--muted);
+  font-size:12px;display:flex;align-items:center;justify-content:center;font-weight:700}
+.opt[aria-pressed="true"] .k{background:var(--green);color:var(--cream)}
+.sticky{position:sticky;bottom:0;background:linear-gradient(180deg,rgba(245,240,228,0),var(--cream) 28%);
+  padding:var(--sp-3) 0 calc(var(--sp-3) + env(safe-area-inset-bottom))}
+.btn{display:block;width:100%;border:0;border-radius:10px;padding:14px 16px;font:600 var(--fs-3)/1.4 inherit;
+  background:var(--green);color:var(--cream);cursor:pointer}
+.btn[disabled]{background:#C9C4B6;cursor:not-allowed}
+.btn.ghost{background:transparent;color:var(--muted);border:1px solid var(--line);margin-top:var(--sp-2)}
+.status{margin-top:var(--sp-2);font-size:var(--fs-1);color:var(--muted);text-align:center}
+.status.err{color:#8C2F1E}
+.status.ok{color:var(--green-2);font-weight:600}
+.foot{font-size:var(--fs-1);color:var(--muted);line-height:1.6}
+.foot hr{border:0;border-top:1px solid var(--line);margin:var(--sp-3) 0}
+</style></head><body>
+<div class="topbar"><div class="wrap">
+  <div class="brand">云上文旅集团 · 核心人才系列测试</div>
+  <div class="title" id="ttl">第三项补答</div>
+  <div class="meta" id="meta"></div>
+  <div class="pbar"><i id="bar"></i></div>
+</div></div>
+<div class="wrap">
+  <div class="sheet">
+    <div class="note">
+      <b>这是第三项的补答页。</b>你上次作答时，第三项有 <b id="nq"></b> 道题没有作答记录（第一项、第二项**不用重做**，那两项的成绩不受影响）。
+      请把下面这 <b id="nq2"></b> 道题答完并提交；提交后系统会把这批题**合并**进你原来那份作答，并重算第三项成绩。
+      <br>本页面是临时页面，**用完即删**；如需更正或删除本次作答，请联系集团人力资源部。
+    </div>
+    <div id="restore" style="display:none;background:#EFF4F0;border:1px solid #C9D8CE;border-radius:10px;padding:var(--sp-2) var(--sp-3);margin-bottom:var(--sp-3)">
+      <div style="font-weight:600;margin-bottom:4px">检测到这台设备上还留着这次作答的完整记录</div>
+      <div style="font-size:var(--fs-1);color:var(--muted);margin-bottom:8px">第三项的 40 道题你当时**都答了**（服务器收到的只是其中 22 道被产品丢弃的答案）。
+        点下面的按钮，系统会**直接把这台设备上保存的答案**补进去，你不用再答一遍。</div>
+      <button class="btn" id="restoreBtn">从本机恢复第三项答案</button>
+    </div>
+    <div id="qs"></div>
+    <div class="sticky">
+      <button class="btn" id="submit" disabled>提交补答</button>
+      <button class="btn ghost" id="again" style="display:none">返回修改</button>
+      <div class="status" id="st"></div>
+    </div>
+    <div class="foot"><hr>
+      本次补答只写入第三项的空白题位，**已作答的题目不会被改动**。第三项共 40 道题，本次需补答的题位见每题标题。
+    </div>
+  </div>
+</div>
+<script>
+const D = {"code": "EQ-20261026-L52MPC-2A49", "name": "崔婵", "api": "https://uu-one-d4gc4ot78a702cb70-1257197409.ap-shanghai.app.tcloudbase.com/api/assessment?action=patch_m3", "qs": [{"slot": 11, "id": "CON-2", "dim": "约束分析与约束求解", "stem": "某集团三个部门今年的培训预算与参训人数为：A 部 30 万元、150 人；B 部 40 万元、100 人；C 部 50 万元、200 人。小李与小王各负责其中一个不同的部门，已知两人负责的部门都不是人均培训预算最高的部门，且小李负责的部门参训人数更多。那么两人分别负责的部门是：", "grid": null, "opts": ["小李 A 部、小王 C 部", "小李 C 部、小王 A 部", "小李 C 部、小王 B 部", "小李 A 部、小王 B 部"]}, {"slot": 14, "id": "PLN-2", "dim": "计划与执行推理", "stem": "周一上午你只有半天时间处理四件事：①恢复一名新员工的电脑登录，否则他上午没法带新同事；②回复审计部关于两家供应商付款流程的书面问询，问询写明当天 18:00 前回复；③审批一位中层提交的加班申请；④确认三处排班冲突后发给三个部门。按先办有硬时限且涉及对外承诺的事这一原则，应先做哪一件？", "grid": null, "opts": ["①恢复新员工电脑登录", "②回复审计部的书面问询", "③审批加班申请", "④确认三处排班冲突"]}, {"slot": 16, "id": "DED-3", "dim": "演绎推理", "stem": "财务制度规定：一笔加班费用必须同时满足两项条件才能计入补偿——已提交加班申请，且经直属主管批准；任一项不满足，该笔费用不予补偿。本季度共记录超时工作 18 笔，其中 6 笔未计入补偿，另外 12 笔已计入补偿并完成发放。由此能够推出的是哪一项？", "grid": null, "opts": ["那 6 笔都没有提交加班申请", "那 6 笔中已有部分获得主管批准", "那 6 笔都至少有一项条件不满足", "只要主管批准，加班费用即可计入补偿"]}, {"slot": 17, "id": "IND-3", "dim": "归纳推理与模式识别", "stem": "集团为五个试点单位分配了编号：11、13、17、19、21。下列编号中，与其余四个不属于同一类的是哪一个？", "grid": null, "opts": ["编号 11", "编号 13", "编号 17", "编号 21"]}, {"slot": 18, "id": "NUM-3", "dim": "数量推理与数据素养", "stem": "某市场部年初预算 200 万元，上半年实际执行 108 万元，下半年计划支出 92 万元。年中复盘时，该部门按本期执行额除以年初预算的口径汇报，预算执行率是：", "grid": null, "opts": ["46%", "54%", "100%", "108%"]}, {"slot": 19, "id": "CON-3", "dim": "约束分析与约束求解", "stem": "某分公司三个营业网点合计编制 36 人，三个网点人数互不相同，且每个网点人数都是不小于 6 人的 6 的倍数。已知甲网点人数多于乙网点，丙网点人数少于乙网点。那么乙网点的人数是：", "grid": null, "opts": ["18 人", "24 人", "12 人", "6 人"]}, {"slot": 20, "id": "SPA-3", "dim": "图形与空间推理", "stem": "一张正方形纸先沿中线上下对折，再沿中线左右对折，折痕把原纸分成 2×2 四个区域（见下图，● 所在区域是打洞位置，○、△、□ 只是位置标记）。把折好的纸叠齐，在 ● 对应的位置打 1 个穿透所有纸层的洞，再把纸完全展开。原纸上一共有几个洞？", "grid": ["● | ○", "△ | □"], "opts": ["1 个", "2 个", "4 个", "8 个"]}, {"slot": 21, "id": "CRI-3", "dim": "组合与逻辑组合", "stem": "集团季度报告写道：本季度人均差旅费同比上升 20%，说明差旅费用管控有所放松。财务补充说明：同期差旅总支出只上升约 3%，而在册人数减少了约 14%。以下哪项最能解释这组数据？", "grid": null, "opts": ["员工出差报销标准比去年放宽了", "出差频次随业务增长明显提高", "人均上升主因在人数减少，分母变小", "两个部门统计口径不一致，数据有误"]}, {"slot": 22, "id": "PLN-3", "dim": "计划与执行推理", "stem": "一个跨部门项目拆成五步：①数据口径确认（2 天）、②系统开发（5 天）、③数据迁移（3 天）、④用户验收测试（2 天）、⑤上线培训（1 天）。②完成才能开始③，③完成才能开始④；①与②可同时开工，①完成后也不阻塞后续。客户要求 11 天内上线。以下哪项判断正确？", "grid": null, "opts": ["①是瓶颈，缩短①能提前两天", "②和③不在关键路径上，可同时压缩", "关键路径为②→③→④→⑤，①并行不延长工期", "缩短⑤对压缩总工期没有作用"]}, {"slot": 23, "id": "RSK-3", "dim": "风险与不确定性判断", "stem": "年度活动前的安全评审列出三项隐患：仓库消防通道堆放纸箱，每季度都可能发生、单次影响轻微；索道年检过期三天，约十年才遇到一次，一旦发生要停业整改并赔偿；财务付款审批权限划分不清，每季度遇到一次、影响中等。以下哪项处置方式最合适？", "grid": null, "opts": ["对消防通道堆放按月通报即可", "年检十年才一次，口头提醒即可", "对年检过期按低概率高损失处置并准备预案", "三项统一按季度巡检频率同步处理"]}, {"slot": 24, "id": "DED-4", "dim": "演绎推理", "stem": "门店规定：员工只有在完成合规培训并通过考核后，才能独立带客；新员工未在入职 30 天内完成合规培训的，门店须把该情况报总部备案。本季度有 3 名新员工未按期完成培训，其中 2 名在第二个月补完培训并通过考核，1 名始终未参加培训。以下哪一项与上述规定相符？", "grid": null, "opts": ["这 3 名新员工目前都可以独立带客", "报总部备案意味着这 3 人一律不能独立带客", "那 3 名员工都不满足独立带客的必要条件", "那 1 名始终未参加培训的员工目前不能独立带客"]}, {"slot": 27, "id": "CON-4", "dim": "约束分析与约束求解", "stem": "集团三名中层分别分管销售、生产、运营三条线，各获甲、乙、丙三个专项奖中的一项。已知：①分管销售的人拿乙奖；②分管生产的人不拿甲奖；③分管运营的人不拿乙奖；④李拿丙奖；⑤张不拿乙奖。那么下列对应关系正确的是：", "grid": null, "opts": ["张—生产—甲奖", "王—运营—甲奖", "李—销售—丙奖", "李—生产—丙奖"]}, {"slot": 28, "id": "SPA-4", "dim": "图形与空间推理", "stem": "下面是某部门整理的一张 3×3 数字表，每格填一个数字。观察可发现：每一行从左到右，后一个数都等于这一行前两个数相加；每一列从上到下也是同样的加法关系。请推出右下角问号处应填的数字。", "grid": ["1 | 2 | 3", "2 | 3 | 5", "3 | 5 | ?"], "opts": ["9", "6", "7", "8"]}, {"slot": 29, "id": "CRI-4", "dim": "组合与逻辑组合", "stem": "为优化客服排班，行政部复盘了上季度满意度评分排在前列的 30 名客服，总结出这 30 人全部通过了某项认证培训，据此决定在全公司推广认证培训。以下哪项最可能是这次复盘方法的问题？", "grid": null, "opts": ["30 人样本量太小，结论难推广", "应把满意度评分换成投诉率再比较", "复盘时应一并记录培训的具体内容", "只挑高满意度样本，说不清二者的关系"]}, {"slot": 30, "id": "PLN-4", "dim": "计划与执行推理", "stem": "集团要更换票务系统供应商，三个方案：甲 维持现有供应商一年，改动最小，但明年续约价格可能上调；乙 立即切换新供应商，报价低，但需迁移历史数据，切换失败影响面大；丙 新旧并行运行一个月后再切换，成本居中，员工要同时熟悉两套流程。以下哪项判断最站得住？", "grid": null, "opts": ["新供应商报价最低，应立即切换，效率优先", "现有供应商明年涨价，说明应当马上切换", "并行一个月纯属浪费，应当直接跳过", "并行的代价是短期成本上升，好处是保留回退空间"]}, {"slot": 31, "id": "RSK-4", "dim": "风险与不确定性判断", "stem": "项目延期可能性评估会上，一位负责人说类似项目我们做过三次都按期完成，这次也一样，我有九成把握能按期。会上没有人追问前三次的条件和这次是否相同。以下哪项判断最站得住？", "grid": null, "opts": ["负责人有实际经验，他的判断应当被采纳", "九成把握只是主观估计，不需要核验", "过去的成功经验越多，对本次把握就越大", "先比对本项目与前三次的差异，再看估计是否可信"]}, {"slot": 34, "id": "NUM-5", "dim": "数量推理与数据素养", "stem": "某景区四个门店的日均客流与面积分别为：A 店 450 人、300 ㎡；B 店 600 人、500 ㎡；C 店 480 人、400 ㎡；D 店 720 人、500 ㎡。按每平方米日均客流从高到低排列（相同者并列），正确顺序是：", "grid": null, "opts": ["A>B=C>D", "A=D>B>C", "A>B>C>D", "A>D>B=C"]}, {"slot": 35, "id": "CON-5", "dim": "约束分析与约束求解", "stem": "国庆 3 天，景区每天需要 6 名志愿者，共 9 人报名，每人最多上 2 天。其中 2 人第 3 天有事不能上，2 人第 1 天要送孩子不能上，其余 5 人 3 天都能上。第二天上班的 6 人中，3 天都能上的有几人？", "grid": null, "opts": ["4 人", "3 人", "1 人", "2 人"]}, {"slot": 36, "id": "SPA-5", "dim": "图形与空间推理", "stem": "下面是一个 3 行 4 列的方格布局，● 是出发点，★ 是目标点。每次只能向上、下、左、右移动到相邻的一格，不能斜着走，也不能停在原地。请问从 ● 走到 ★ 至少要走多少步？", "grid": ["● | ○ | △ | □", "◇ | ○ | □ | ○", "▽ | ◇ | ○ | ★"], "opts": ["4 步", "6 步", "5 步", "3 步"]}, {"slot": 37, "id": "CRI-5", "dim": "组合与逻辑组合", "stem": "某景区一次客诉升级处理不当引发关注，随后行政部提出：今后所有客诉一律不再升级，全部由客服部当场处理。以下哪项最能指出这个建议的问题所在？", "grid": null, "opts": ["是否对外说明应统一由品牌部门决定", "升级处理前应增加一次部门负责人复核", "建议应先明确客诉升级的权限划分", "一次处理不当只说明升级环节有瑕疵，不能就此否定升级机制"]}, {"slot": 38, "id": "PLN-5", "dim": "计划与执行推理", "stem": "某景区连续三周出现同一类客诉：客人到店后才发现当日无房。运营复盘时提出原因是前台没及时把满房状态同步给渠道，理由是三次发生时前台系统里的房态确实是满的。以下哪种复盘做法最有助于找到真正的根因？", "grid": null, "opts": ["对三次客诉涉及的员工进行通报处理", "沿着为什么到店才发现无房连续追问到可改做法", "直接更换前台系统供应商，消除同步环节", "要求前台与渠道每天固定三次核对房态"]}, {"slot": 39, "id": "RSK-5", "dim": "风险与不确定性判断", "stem": "一次产品改版评审先请三位资深同事发言，三人都说保持现状更好；随后五位年轻同事发言，其中四位也说保持现状更好。最终结论是保持现状，理由是大家都这么看。以下哪项最可能是这场讨论的问题所在？", "grid": null, "opts": ["参与讨论的人数太少，结论缺乏代表性", "讨论中没有引用外部市场数据作为依据", "后发言者顺着前面方向调整看法，反对意见没留下", "应该把最终结论交给级别最高的人拍板"]}]};
+const ans = {};
+document.getElementById('ttl').textContent = D.name ? ('第三项补答 · ' + D.name) : '第三项补答';
+document.getElementById('meta').textContent = '测评编号 ' + D.code + ' · 需补答 ' + D.qs.length + ' 道题';
+document.getElementById('nq').textContent = D.qs.length;
+document.getElementById('nq2').textContent = D.qs.length;
+const box = document.getElementById('qs');
+D.qs.forEach((q, n) => {
+  const wrap = document.createElement('div');
+  wrap.className = 'q';
+  let h = '<div class="qh"><span class="qn">第 ' + (n+1) + ' / ' + D.qs.length + ' 道 · 原第 ' + (q.slot+1) + ' 题位 · ' + q.id + '（' + q.dim + '）</span></div>';
+  h += '<p class="qstem">' + q.stem.replace(/[<>&]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[c])) + '</p>';
+  if (q.grid) h += '<pre class="grid">' + (Array.isArray(q.grid)? q.grid.join('\n') : q.grid) + '</pre>';
+  h += '<div class="opts" id="o' + n + '">';
+  q.opts.forEach((o, k) => {
+    h += '<button type="button" class="opt" data-q="' + n + '" data-v="' + k + '" aria-pressed="false">' +
+         '<span class="k">' + 'ABCD'[k] + '</span><span>' + o + '</span></button>';
+  });
+  h += '</div>';
+  wrap.innerHTML = h;
+  box.appendChild(wrap);
+});
+box.addEventListener('click', e => {
+  const b = e.target.closest('.opt'); if (!b) return;
+  const q = +b.dataset.q, v = +b.dataset.v;
+  ans[D.qs[q].slot] = v;
+  document.querySelectorAll('#o' + q + ' .opt').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+  const n = Object.keys(ans).length;
+  document.getElementById('bar').style.width = (n / D.qs.length * 100) + '%';
+  document.getElementById('submit').disabled = n < D.qs.length;
+  document.getElementById('st').textContent = n < D.qs.length ? ('已答 ' + n + ' / ' + D.qs.length) : '已答完，可以提交';
+});
+/* ---- 从本机恢复（2026-10-26）：她这台设备上其实存着完整的 40 题 ----
+   根因：客户端 normalize 只认 0/1，把第三项选 C/D 的答案丢成了 null（已修）。
+   ⇒ 库里那份的 22 个 null，在**她本机**其实是完整答案。 */
+const LS = 'assessment_core_v1';
+let localM3 = null;
+try {
+  const raw = localStorage.getItem(LS);
+  if (raw) {
+    const s2 = JSON.parse(raw);
+    if (s2 && s2.code === D.code && s2.a && Array.isArray(s2.a.m3)) {
+      const filled = s2.a.m3.filter(v => v !== null && v !== undefined).length;
+      const hasCD = s2.a.m3.some(v => v === 2 || v === 3);
+      if (filled >= D.qs.length && hasCD) localM3 = s2.a.m3;
+    }
+  }
+} catch (e) { localM3 = null; }
+if (localM3) {
+  document.getElementById('restore').style.display = 'block';
+  document.getElementById('restoreBtn').addEventListener('click', () => {
+    const st = document.getElementById('st');
+    const btn = document.getElementById('restoreBtn');
+    btn.disabled = true; st.className = 'status'; st.textContent = '正在从本机恢复…';
+    const payload = {};
+    localM3.forEach((v, i) => { if (v !== null && v !== undefined) payload[String(i)] = v; });
+    fetch(D.api, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: D.code, m3_answers: payload }) })
+     .then(r => r.text().then(t => ({ ok: r.ok, j: (function(){try{return JSON.parse(t)}catch(e){return {raw:t}}})() })))
+     .then(res => {
+       const j = res.j || {};
+       if (res.ok && j.ok) {
+         st.className = 'status ok';
+         st.textContent = '已从本机恢复：服务器合并 ' + (j.filled||[]).length + ' 道题，第三项成绩已重算' +
+           (j.remaining_empty ? ('（仍有 ' + j.remaining_empty + ' 道空题）') : '（第三项已答完）') +
+           (j.m3_grade ? ('，第三项等级：' + j.m3_grade) : '') + '。本临时页面现在可以关闭。';
+         document.getElementById('restore').style.display = 'none';
+         document.getElementById('bar').style.width = '100%';
+       } else {
+         st.className = 'status err';
+         st.textContent = '恢复未成功：' + (j.error || '未知错误') + '（请改用下方逐题作答）';
+         btn.disabled = false;
+       }
+     })
+     .catch(e => { st.className = 'status err'; st.textContent = '网络异常：' + e + '（请改用下方逐题作答）'; btn.disabled = false; });
+  });
+}
+document.getElementById('submit').addEventListener('click', () => {
+  const st = document.getElementById('st');
+  if (Object.keys(ans).length < D.qs.length) { st.className='status err'; st.textContent='还有题没答'; return; }
+  const btn = document.getElementById('submit'); btn.disabled = true; st.className='status'; st.textContent='提交中…';
+  fetch(D.api, { method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ code: D.code, m3_answers: ans }) })
+   .then(r => r.text().then(t => ({ ok: r.ok, j: (function(){try{return JSON.parse(t)}catch(e){return {raw:t}}})() })))
+   .then(res => {
+     const j = res.j || {};
+     if (res.ok && j.ok) {
+       st.className='status ok';
+       st.textContent = '已提交：合并 ' + (j.filled||[]).length + ' 道题，第三项成绩已重算' +
+         (j.remaining_empty ? ('（仍有 ' + j.remaining_empty + ' 道空题）') : '（第三项已答完）') +
+         (j.m3_grade ? ('，第三项等级：' + j.m3_grade) : '') + '。本临时页面现在可以关闭。';
+       document.getElementById('again').style.display = 'none';
+       document.getElementById('bar').style.width = '100%';
+     } else {
+       st.className='status err';
+       st.textContent = '提交未成功：' + (j.error || ('HTTP ' + (res.j && res.j.raw ? res.j.raw.slice(0,80) : '未知')));
+       btn.disabled = false;
+     }
+   })
+   .catch(e => { st.className='status err'; st.textContent = '网络异常：' + e; btn.disabled = false; });
+});
+document.getElementById('again').addEventListener('click', () => location.reload());
+</script>
+</body></html>

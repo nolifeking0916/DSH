@@ -1,6 +1,6 @@
 {
   "updated_at": "2026-10-26",
-  "note": "经维护者确认的**有效真人作答**登记册（与《剔除清单_真人样本.json》对称：那里记被剔的，这里记算数的）。一份一行：身份、落库时刻、三项作答数、第一项读数与数据体检读数、确认人与出处。机器不自己裁决「算不算真人样本」—— 由人确认后写进来。",
+  "note": "有效真人样本登记册。**只有维护者确认过的才进这里**（机器不判定「是不是真人」）。口径见 work/assessment-kit/待确定清单_20261025.md 与票 #26。",
   "samples": [
     {
       "id": "EQ-20261026-L52MPC-2A49",
@@ -59,7 +59,215 @@
         },
         "补答后答对": "27/40（随机期望 10）⇒ 真人作答，不是补出来的机械答案",
         "根因": "客户端 normalize 只认 0/1，把第三项选 C/D 的答案丢成 null（票 #26 根因，2026-10-26 已修）"
-      }
+      },
+      "page_version": "修复前旧版（10:5x 修复上线前打开的）",
+      "m2_grade": "优秀",
+      "short_dim": "关注重点"
+    },
+    {
+      "id": "EQ-20261026-W5BWFD-746C",
+      "name": "杨绍会",
+      "id_last4": null,
+      "batch": "云上小范围测试 · 2026-10-26 下午（/v2 路径发链接前的那批）",
+      "confirmed_by": "维护者（口头确认已完成）",
+      "confirmed_at": "2026-10-26",
+      "source": "维护者 2026-10-26 13:4x 口头确认「他们说也都完成了」",
+      "reason": "维护者确认是真人作答。",
+      "keep_in_db": true,
+      "m1_answered": 96,
+      "m2_answered": 76,
+      "m3_answered": 40,
+      "whole_complete": true,
+      "first_item_complete": true,
+      "submitted_at": "2026-10-26 13:29:22",
+      "duration_min": 90,
+      "m3_grade": "顶尖",
+      "m2_grade": "顶尖",
+      "short_dim": "互动方式",
+      "page_version": "修复后新版（GET / res=206785，11:59:05 打开）",
+      "note": "**完整有效样本**：三项全满（M1 96/96、M2 76/76、M3 40/40）；第三项值域 {0,1,2,3}、答对 26/40 ⇒ 新客户端行为正确。正式报告已出。",
+      "m3_correct": "26/40",
+      "m1_dims": [
+        {
+          "key": "INT",
+          "max": 24,
+          "name": "互动方式",
+          "grade": "优秀",
+          "score": 21
+        },
+        {
+          "key": "SNT",
+          "max": 24,
+          "name": "关注重点",
+          "grade": "优秀",
+          "score": 18
+        },
+        {
+          "key": "TFS",
+          "max": 24,
+          "name": "行事依据",
+          "grade": "顶尖",
+          "score": 22
+        },
+        {
+          "key": "JPS",
+          "max": 24,
+          "name": "行事节奏",
+          "grade": "顶尖",
+          "score": 23
+        }
+      ],
+      "m3_dims": [
+        {
+          "t": 45.5,
+          "key": "DED",
+          "pct": 33,
+          "name": "演绎推理",
+          "rate": 40,
+          "grade": "合格",
+          "score": 3.2,
+          "short": "从前提推结论",
+          "total": 5,
+          "correct": 2
+        },
+        {
+          "t": 51.6,
+          "key": "IND",
+          "pct": 56,
+          "name": "归纳推理与模式识别",
+          "rate": 60,
+          "grade": "良好",
+          "score": 4.2,
+          "short": "从现象找规律",
+          "total": 5,
+          "correct": 3
+        },
+        {
+          "t": 51.6,
+          "key": "NUM",
+          "pct": 56,
+          "name": "数量推理与数据素养",
+          "rate": 60,
+          "grade": "良好",
+          "score": 4.2,
+          "short": "读数换口径比量级",
+          "total": 5,
+          "correct": 3
+        },
+        {
+          "t": 51.6,
+          "key": "CON",
+          "pct": 56,
+          "name": "约束分析与约束求解",
+          "rate": 60,
+          "grade": "良好",
+          "score": 4.2,
+          "short": "多条件下的唯一解",
+          "total": 5,
+          "correct": 3
+        },
+        {
+          "t": 71,
+          "key": "SPA",
+          "pct": 98,
+          "name": "图形与空间推理",
+          "rate": 100,
+          "grade": "顶尖",
+          "score": 7.4,
+          "short": "无文字依赖的结构推理",
+          "total": 5,
+          "correct": 5
+        },
+        {
+          "t": 51.6,
+          "key": "CRI",
+          "pct": 56,
+          "name": "批判性思维与论证评估",
+          "rate": 60,
+          "grade": "良好",
+          "score": 4.2,
+          "short": "看结论站不站得住",
+          "total": 5,
+          "correct": 3
+        },
+        {
+          "t": 60.1,
+          "key": "PLN",
+          "pct": 84,
+          "name": "规划与问题解决",
+          "rate": 80,
+          "grade": "优秀",
+          "score": 5.6,
+          "short": "排顺序分轻重",
+          "total": 5,
+          "correct": 4
+        },
+        {
+          "t": 54,
+          "key": "RSK",
+          "pct": 66,
+          "name": "风险判断与决策偏差",
+          "rate": 60,
+          "grade": "良好",
+          "score": 4.6,
+          "short": "不确定下的取舍",
+          "total": 5,
+          "correct": 3
+        }
+      ]
+    },
+    {
+      "id": "EQ-20261026-TPLULU-A77E",
+      "name": "孙梦雅",
+      "id_last4": null,
+      "batch": "云上小范围测试 · 2026-10-26 下午（/v2 路径发链接前的那批）",
+      "confirmed_by": "维护者（口头确认已完成）",
+      "confirmed_at": "2026-10-26",
+      "source": "维护者 2026-10-26 13:4x 口头确认「他们说也都完成了」",
+      "reason": "维护者确认是真人作答。",
+      "keep_in_db": true,
+      "m1_answered": 96,
+      "m2_answered": 76,
+      "m3_answered": 17,
+      "whole_complete": false,
+      "first_item_complete": true,
+      "submitted_at": "2026-10-26 11:44:48",
+      "duration_min": 54,
+      "m3_grade": "待提升（失真，不可用）",
+      "page_version": "**修复前旧版**（11:00 之后无其页面 GET ⇒ 10:xx 打开的）",
+      "pending": "第三项 23 题被旧客户端丢弃（值域只有 {0,1}）；补答页已就绪（一键从本机恢复）：/patch/TPLULU-A77E.html",
+      "note": "第一项 96/96、第二项 76/76 有效；第三项**不可用**（按 17/40 计分 = 把 C/D 答案全当没答）。等补答后再出正式报告。",
+      "short_dim": "关注重点",
+      "m1_dims": [
+        {
+          "key": "INT",
+          "max": 24,
+          "name": "互动方式",
+          "grade": "良好",
+          "score": 14
+        },
+        {
+          "key": "SNT",
+          "max": 24,
+          "name": "关注重点",
+          "grade": "合格",
+          "score": 9
+        },
+        {
+          "key": "TFS",
+          "max": 24,
+          "name": "行事依据",
+          "grade": "良好",
+          "score": 15
+        },
+        {
+          "key": "JPS",
+          "max": 24,
+          "name": "行事节奏",
+          "grade": "顶尖",
+          "score": 23
+        }
+      ]
     }
   ]
 }

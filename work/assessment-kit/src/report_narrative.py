@@ -267,6 +267,11 @@ def credibility(data, m1, m2, m3, m1_raw=None, m2_answers=None, m3_answers=None)
         elif run >= 15 or dom >= 0.70:
             level = "中" if level == "高" else level
             flags.append("同侧连答最长 %d 题、某一侧占比 %.0f%%，作答偏好偏集中" % (run, dom * 100))
+    if not m1_raw:
+        # 离线 9 字段路径（未留存逐题作答）：按规范 §11.4 判缺，不许默认给「高」。
+        # 与 m2(:302-304) / m3(:318-320) 的判缺分支同构；level 只从「高」降到「中」，不覆盖已判的「低」。
+        flags.append("本次未留存逐题作答，同侧作答与缺失只能看汇总口径")
+        level = "中" if level == "高" else level
     miss1 = data.get("unanswered_m1")
     if isinstance(miss1, int) and miss1 > 0:
         flags.append("第一项有 %d 题未作答" % miss1)

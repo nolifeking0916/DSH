@@ -69,11 +69,20 @@ def build_blocks(data, m1, m2, m3, compose, m1meta, narrative, cred, radar_png, 
 
     blocks = []
 
-    # ---------------- 封面页
+    # ---------------- 封面页（基础信息组 + 测评信息组）
+    prof = data.get("profile") or {}
+    def _pf(label, key):
+        v = prof.get(key)
+        return (label, v if v not in (None, "") else "—")
     blocks.append({"t": "cover", "brand": "云上文旅集团 · 核心人才系列测试",
                    "title": "%s的核心人才三联测试" % (data.get("name") or "候选人"),
                    "sub": "性格特质 · 情绪特质 · 逻辑评价　|　施测人报告",
-                   "fields": [("候选人", data.get("name") or "—"),
+                   "fields": [("姓名", data.get("name") or "—"),
+                              ("年龄", prof.get("age") or "—"),
+                              ("性别", prof.get("sex") or "—"),
+                              ("毕业信息", "%s · %s" % (prof.get("school") or "—", prof.get("major") or "—")),
+                              ("职级", prof.get("level") or "—"),
+                              ("职位及岗位", "%s · %s" % (prof.get("position") or "—", prof.get("unit") or "—")),
                               ("测评编号", data.get("code") or "—"),
                               ("身份标识", ("末 4 位 " + data["idLast4"]) if data.get("idLast4") else "—"),
                               ("报告日期", (data.get("date") or "")[:10] or "—"),

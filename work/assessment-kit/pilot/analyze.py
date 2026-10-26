@@ -510,50 +510,13 @@ def main():
            "samples_file": samples_path,
            "n_respondents": len(samples["respondents"])}
 
-    # ---- A. 交叉验算：Python 独立复算 vs 成品真实计分 ----
-    mismatch = 0
-    checked = 0
-    for s in scored:
-        r = resp_by_id[s["id"]]
-        dims, short_grade = score_m1_python(ITEMS, r["responses"])
-        for mine, theirs in zip(dims, s["m1"]["dims"]):
-            checked += 1
-            if mine["score"] != theirs["score"] or mine["grade"] != theirs["grade"]:
-                mismatch += 1
-        # 交叉验算的第一项口径 = 短板维档（ADR-0010：第一项无总档）
-        if short_grade != s["m1"]["short"]["grade"]:
-            mismatch += 1
-    res["cross_check"] = {"compared": checked, "mismatch": mismatch,
-                          "verdict": "两套独立实现逐格一致" if mismatch == 0 else "计分口径有分歧，必须先修"}
-
-    # ---- B. 异常样本盲检（合成数据有真值标签可对照；真人数据没有，只报检出） ----
-    tp = fp = fn = 0
-    det_rows = []
-    for s in scored:
-        r = resp_by_id[s["id"]]
-        flags = detect_anomalies(r)
-        has_truth = bool(r.get("behavior"))
-        truth = has_truth and r["behavior"] != "normal"
-        pred = len(flags) > 0
-        if truth and pred:
-            tp += 1
-        elif pred and not truth:
-            fp += 1
-        elif truth and not pred:
-            fn += 1
-        if pred or truth:
-            det_rows.append({"id": s["id"], "behavior": r.get("behavior"), "flags": flags,
-                             "detected": pred})
-    res["anomaly_detection"] = {"detected": tp + fp, "true_anomaly": tp + fn,
-                                "hit": tp, "false_alarm": fp, "missed": fn,
-                                "recall": round(tp / max(1, tp + fn), 3) if (tp + fn) else None,
-                                "precision": round(tp / max(1, tp + fp), 3) if (tp + fp) else None,
-                                "note": ("合成数据：召回/精确率是自检指标" if not real_mode
-                                         else "真人数据：无真值标签，只有检出清单，需施测人人工复核"),
-                                "rows": det_rows}
-
-    # ---- C. 每维信度 ----
-    # 合成数据下这些数字是生成模型的性质；真人数据下才是题目的性质。
+    # ---- 剔除清单：先算，后面的统计段一律只用**有效样本** ----
+    # 人工确认剔除的份子不进任何统计（信度 / 分布 / 极端题 / 校准 / 相关性 / 分组 /
+    # 异常盲检 / 第 13 条的两个数）——本票 §13 与 Q2=A 的口径：有问题的份子单独登记、
+    # 逐份留痕，不进统计。
+    # （合成数据的 behavior 标签是注入的异常，只影响信度那一段，行为不变 ⇒ 合成回归不受影响。）
+    # 2026-10-26 补：本段原来排在信度段之前 ⇒ 异常盲检与第 13 条两个数仍吃**全部**样本，
+    # 人工剔除的份子照样被算成「异常检出」「完成整卷」。真实数据一进来就暴露了。
     exclude = set()
     exclude_reasons = {}
     for excl_path in (args.exclude or []):
@@ -572,14 +535,64 @@ def main():
                     exclude_reasons[it["id"]] = {k: v for k, v in it.items() if k != "id"}
         else:
             exclude = set(x.strip() for x in raw.splitlines() if x.strip())
-    # 人工确认剔除的份子**不进任何统计**（信度 / 分布 / 极端题 / 校准 / 相关性 / 分组）：
-    # 本票 §13 与 Q2=A 的口径 —— 有问题的份子单独登记、逐份留痕，不进统计。
-    # （合成数据的 behavior 标签是注入的异常，只影响信度那一段，行为不变 ⇒ 合成回归不受影响。）
     scored_eff = [s for s in scored if s["id"] not in exclude]
     resp_eff = [r for r in samples["respondents"] if r["id"] not in exclude]
     res["n_excluded"] = len(exclude)
     res["excluded_reasons"] = exclude_reasons
     res["n_effective"] = len(scored_eff)
+    res["effective_sample_rule"] = (
+        "人工确认剔除的份子不进任何统计（含异常盲检与第 13 条的两个数）；"
+        "交叉验算是计分正确性检查，跑全部作答。")
+
+    # ---- A. 交叉验算：Python 独立复算 vs 成品真实计分 ----
+    mismatch = 0
+    checked = 0
+    for s in scored:
+        r = resp_by_id[s["id"]]
+        dims, short_grade = score_m1_python(ITEMS, r["responses"])
+        for mine, theirs in zip(dims, s["m1"]["dims"]):
+            checked += 1
+            if mine["score"] != theirs["score"] or mine["grade"] != theirs["grade"]:
+                mismatch += 1
+        # 交叉验算的第一项口径 = 短板维档（ADR-0010：第一项无总档）
+        if short_grade != s["m1"]["short"]["grade"]:
+            mismatch += 1
+    res["cross_check"] = {"compared": checked, "mismatch": mismatch,
+                          "scope": "全部作答（含人工剔除的份子）—— 这是计分正确性检查，不是统计量",
+                          "verdict": "两套独立实现逐格一致" if mismatch == 0 else "计分口径有分歧，必须先修"}
+
+    # ---- B. 异常样本盲检（合成数据有真值标签可对照；真人数据没有，只报检出） ----
+    # 口径：只跑**有效样本** —— 人工剔除的份子不进盲检（否则报告里会出现
+    # 「检出 1 份」，而那一份恰恰是登记册里已说明不该进统计的自测行）。
+    tp = fp = fn = 0
+    det_rows = []
+    for s in scored_eff:
+        r = resp_by_id[s["id"]]
+        flags = detect_anomalies(r)
+        has_truth = bool(r.get("behavior"))
+        truth = has_truth and r["behavior"] != "normal"
+        pred = len(flags) > 0
+        if truth and pred:
+            tp += 1
+        elif pred and not truth:
+            fp += 1
+        elif truth and not pred:
+            fn += 1
+        if pred or truth:
+            det_rows.append({"id": s["id"], "behavior": r.get("behavior"), "flags": flags,
+                             "detected": pred})
+    res["anomaly_detection"] = {"detected": tp + fp, "true_anomaly": tp + fn,
+                                "hit": tp, "false_alarm": fp, "missed": fn,
+                                "recall": round(tp / max(1, tp + fn), 3) if (tp + fn) else None,
+                                "precision": round(tp / max(1, tp + fp), 3) if (tp + fp) else None,
+                                "scope": "有效样本（人工剔除的份子不进盲检）",
+                                "note": ("合成数据：召回/精确率是自检指标" if not real_mode
+                                         else "真人数据：无真值标签，只有检出清单，需施测人人工复核"),
+                                "rows": det_rows}
+
+    # ---- C. 每维信度 ----
+    # 合成数据下这些数字是生成模型的性质；真人数据下才是题目的性质。
+    # （剔除清单已在上方算好：exclude / scored_eff / resp_eff / res["n_excluded"] 等。）
     if not scored_eff:
         res["note"] = ("有效样本 0 份：全部作答都被人工剔除 —— 本轮没有可用于信效度统计的真人样本。"
                        "剔除清单与理由见 excluded_reasons。")
@@ -589,8 +602,8 @@ def main():
             "sections": {"reliability": "无有效样本，不适用", "extreme_items": "无有效样本，不适用",
                          "anchor_audit": res.get("anchor_audit_simulated", {}).get("note", "未执行"),
                          "calibration": "无有效样本，不适用",
-                         "completion": "第 13 条的两个数仍可报（属链路事实）",
-                         "anomaly_detection": "异常样本检出清单仍可报（逐份登记 + 留痕）"},
+                         "completion": "无有效样本，不适用（第 13 条的两个数按有效样本口径算）",
+                         "anomaly_detection": "无有效样本，不适用（人工剔除的份子不进盲检）"},
         }
         with open(os.path.join(OUT, "analysis.json"), "w", encoding="utf-8") as f:
             json.dump(res, f, ensure_ascii=False, indent=1)
@@ -640,21 +653,48 @@ def main():
 
     # ---- C2. 第 13 条的两个数：完成整卷比例 / 省略作答比例 ----
     # 口径出处：票 #26 第 13 条 + research/限时口径与计时效应_20261024.md（Standards 4.14）。
-    # D3（到点只提示、不自动交卷）之后，「被自动交卷截断的份数」恒为 0，
-    # 这两个数变成「有多少人自己结束了」与「有多少人留了空题」，不再被截断污染。
-    n_all = len(samples["respondents"])
-    comp = {"n_total": n_all, "complete": 0, "incomplete": 0, "unanswered_total": 0,
-            "limit_hint_rows": [], "per_respondent": []}
-    for r in samples["respondents"]:
+    # D3（到点只提示、不自动交卷）之后，「被自动交卷截断的份数」恒为 0。
+    # 口径（2026-10-26 补）：只用**有效样本**（人工剔除的份子不进这两个数）。
+    # 并且要说清这个数的分母：**只有交卷才产生行**（中途退出的人不进库），
+    # 所以「完成整卷比例」是**已交卷份子里的完整率**，不是「有多少人做完了」——
+    # 后者在本设计下结构性测不到（票 #26 待定口径，见 D16）。
+    n_all = len(resp_eff)
+    comp = {"n_total": n_all, "complete": 0, "incomplete": 0, "first_item_complete": 0,
+            "omitted": 0, "unanswered_total": 0, "limit_hint_rows": [], "per_respondent": []}
+    for r in resp_eff:
         resp = r.get("responses") or []
         ans = sum(1 for x in resp if isinstance(x, (int, float)) and not isinstance(x, bool) and x in (0, 1))
         miss = len(resp) - ans
-        comp["unanswered_total"] += miss
-        if ans == len(resp) and len(resp) > 0:
+        m2 = r.get("m2_responses")
+        m3 = r.get("m3_responses")
+        m2_ans = sum(1 for x in m2 if x is not None) if isinstance(m2, list) else None
+        m3_ans = sum(1 for x in m3 if x is not None) if isinstance(m3, list) else None
+        m2_len = len(m2) if isinstance(m2, list) else None
+        m3_len = len(m3) if isinstance(m3, list) else None
+        whole_answered = ans + (m2_ans or 0) + (m3_ans or 0)
+        whole_miss = miss + ((m2_len - m2_ans) if m2_ans is not None else 0) + \
+            ((m3_len - m3_ans) if m3_ans is not None else 0)
+        have_three = m2_ans is not None and m3_ans is not None
+        comp["unanswered_total"] += whole_miss
+        # 整卷答完 = 三项都没有空位（第二、三项的逐题作答在 2026-10-26 起才进数据桥；
+        # 没有这两项数据时只能看第一项，判定标记为「仅第一项」）。
+        if have_three:
+            whole_ok = (miss == 0 and m2_ans == m2_len and m3_ans == m3_len and m2_len > 0 and m3_len > 0)
+        else:
+            whole_ok = (miss == 0 and len(resp) > 0)
+        if whole_ok:
             comp["complete"] += 1
         else:
             comp["incomplete"] += 1
-        row = {"id": r.get("id"), "answered": ans, "total": len(resp), "unanswered": miss}
+        if miss == 0 and len(resp) > 0:
+            comp["first_item_complete"] += 1
+        if whole_miss > 0:
+            comp["omitted"] += 1
+        row = {"id": r.get("id"), "answered": ans, "total": len(resp), "unanswered": miss,
+               "m2_answered": m2_ans, "m2_total": m2_len,
+               "m3_answered": m3_ans, "m3_total": m3_len,
+               "whole_answered": whole_answered, "whole_unanswered": whole_miss,
+               "scope": "三项" if have_three else "仅第一项（数据桥没有第二、三项逐题作答）"}
         hint = r.get("limit_hint")
         if hint:
             row["limit_hint"] = hint
@@ -662,8 +702,16 @@ def main():
         comp["per_respondent"].append(row)
     comp["complete_ratio"] = round(comp["complete"] / n_all, 4) if n_all else None
     comp["incomplete_ratio"] = round(comp["incomplete"] / n_all, 4) if n_all else None
-    comp["note"] = ("第 13 条：完成整卷比例 = 整卷答完的份数占比；省略作答比例 = 有未答题的份数占比。"
-                    "D3（到点只提示、不自动交卷）后不再有「被自动截断」的份数。")
+    comp["first_item_complete_ratio"] = round(comp["first_item_complete"] / n_all, 4) if n_all else None
+    comp["omitted_ratio"] = round(comp["omitted"] / n_all, 4) if n_all else None
+    comp["note"] = ("第 13 条（2026-10-26 改口径）：**完成整卷比例 = 三项都答完的份数占比**"
+                    "（第一项 96 + 第二项 76 + 第三项 40）；**省略作答比例 = 三项里任一项有未答题的份数占比**；"
+                    "另报 first_item_complete（第一项满答率）—— 信效度分析只看第一项。"
+                    "D3（到点只提示、不自动交卷）后不再有「被自动截断」的份数。"
+                    "口径：只算有效样本（人工剔除的份子不进这两个数）。"
+                    "⚠ 分母只含**已交卷**的份子 —— 中途退出的人不产生行，"
+                    "所以这是「已交卷者里的完成率」，不是「有多少人做完了」。")
+    comp["scope"] = "有效样本；分母只含已交卷的份子（中途退出者不产生行）"
     res["completion"] = comp
 
     # ---- D. α 自检对照：已知信度水平的数据集，α 计算器必须排对序 ----
@@ -904,7 +952,7 @@ def main():
                 "过" if r["alpha_pass"] else "不过",
                 "过" if r["split_pass"] else "不过"))
     cp = res["completion"]
-    print("  第13条：完成整卷 %d/%d（%s）  省略作答 %d/%d（%s）  未答题合计 %d  到点提示后仍作答 %d 份" % (
+    print("  第13条（有效样本口径 · 分母只含已交卷的份子）：完成整卷 %d/%d（%s）  省略作答 %d/%d（%s）  未答题合计 %d  到点提示后仍作答 %d  份" % (
         cp["complete"], cp["n_total"],
         ("%.1f%%" % (cp["complete_ratio"] * 100)) if cp["complete_ratio"] is not None else "—",
         cp["incomplete"], cp["n_total"],

@@ -45,7 +45,30 @@ KNOWN_COLUMNS = {
     "code", "respondent_name", "id_last4", "group_name", "level", "dept",
     "started_at", "submitted_at", "duration_ms", "m1_raw", "m1_scores",
     "m2_result", "m3_result", "limit_hint", "unanswered_m1", "created_at",
+    # 2026-10-26 补：第二、三项的**逐题作答**（云端 0e1f0fa 起才收这两列）。
+    # 之前这两列不在白名单里 ⇒ 数据桥把它们丢了 ⇒ 第三项漏答在分析里根本看不见
+    # （真实数据一进来就暴露：有一份第三项只答 18/40 仍交卷，旧口径却报「完成整卷 100%」）。
+    "m2_answers", "m3_answers",
 }
+
+# 整卷题数：M1 96（题库 items/m1_items.json）+ M2（自评 + 情境）+ M3（推理）。
+# 从仓内题库现读，不写死 —— 题库变了要自动跟上。
+M2_BANK = os.path.join(ROOT, "data", "eq_bank_encoded.json")
+M3_BANK = os.path.join(ROOT, "data", "logic_m3.json")
+
+
+def expected_counts(item_count):
+    """整卷期望题数：{m1, m2, m3, whole}。读不到题库时按已知值兜底并说明。"""
+    m2 = m3 = None
+    if os.path.exists(M2_BANK):
+        with open(M2_BANK, encoding="utf-8") as f:
+            eq = json.load(f)
+        m2 = len(eq.get("self_items") or []) + len(eq.get("sjt") or [])
+    if os.path.exists(M3_BANK):
+        with open(M3_BANK, encoding="utf-8") as f:
+            m3 = len(json.load(f).get("questions") or [])
+    return {"m1": item_count, "m2": m2, "m3": m3,
+            "whole": item_count + (m2 or 0) + (m3 or 0)}
 
 
 # --------------------------------------------------------------- dump 读取
@@ -129,13 +152,44 @@ def normalize_row(row):
     for k in ("m1_scores", "m2_result", "m3_result", "limit_hint"):
         if k in out:
             out[k] = parse_jsonb(out[k])
+    # 第二项：载荷里是**对象**（键 = 题序字符串）⇒ 摊成定长数组，空位 = None。
+    if "m2_answers" in out:
+        out["m2_answers"] = to_answer_list(out["m2_answers"])
+    # 第三项：载荷里就是**数组**（长度 40，null = 未作答）。
+    if "m3_answers" in out:
+        out["m3_answers"] = parse_pg_array(out["m3_answers"])
     return out
 
 
-def check_row(row, item_count):
+def to_answer_list(value):
+    """把第二项的逐题作答摊成数组：{ "0": 3, "2": 1 } → [3, None, 1]（空位 = 未答）。"""
+    if value is None:
+        return None
+    if isinstance(value, str):
+        try:
+            value = json.loads(value)
+        except Exception:
+            return None
+    if isinstance(value, dict):
+        out = [None] * len(value)
+        for k, v in value.items():
+            try:
+                i = int(k)
+            except (TypeError, ValueError):
+                continue
+            if 0 <= i < len(out):
+                out[i] = v
+        return out
+    if isinstance(value, list):
+        return value
+    return None
+
+
+def check_row(row, item_count, counts=None):
     """返回 (hard_errors, soft_warnings)。硬错误 = 整批阻断（与 ingest_real.py 同一纪律）。"""
     hard = []
     soft = []
+    counts = counts or {}
     code = row.get("code")
     if not code:
         hard.append("缺 code（测评编号）：无法作样本 id")
@@ -166,6 +220,21 @@ def check_row(row, item_count):
         soft.append("有 %s 题未答（省略作答；第 13 条要单列这个比例）" % row.get("unanswered_m1"))
     if not row.get("limit_hint"):
         soft.append("无 limit_hint 痕迹：到点提示后是否继续作答不可判")
+    # 第二、三项的漏答（第 13 条要单列；第二、三项的成绩只在答完时成立）
+    for key, label, total in (("m2_answers", "第二项", counts.get("m2")),
+                              ("m3_answers", "第三项", counts.get("m3"))):
+        seq = row.get(key)
+        if seq is None:
+            continue
+        if not isinstance(seq, list):
+            hard.append("%s 不是数组" % key)
+            continue
+        nulls = sum(1 for v in seq if v is None or v == "")
+        if total and len(seq) != total:
+            soft.append("%s 长度 %d ≠ 题库 %d（载荷被截断或题库版本不同）" % (label, len(seq), total))
+        if nulls:
+            soft.append("%s有 %d/%s 项未答（省略作答；该份的%s成绩不成立）"
+                        % (label, nulls, total if total else "?", label))
     return hard, soft
 
 
@@ -181,10 +250,16 @@ def to_respondent(row, item_count):
         except Exception:
             dur = None
     times = [int(round(dur / item_count))] * item_count if isinstance(dur, (int, float)) and dur else None
+    m2_seq = row.get("m2_answers")
+    m3_seq = row.get("m3_answers")
     resp = {
         "id": row["code"],
         "group": row.get("group_name") or "未填",
         "responses": raw,
+        # 第二、三项的逐题作答（2026-10-26 补：以前数据桥把这两列丢了，
+        # 第三项漏答在分析里根本看不见）。None = 未作答。
+        "m2_responses": m2_seq if isinstance(m2_seq, list) else None,
+        "m3_responses": m3_seq if isinstance(m3_seq, list) else None,
         "name": row.get("respondent_name"),
         "idLast4": row.get("id_last4"),
         "level": row.get("level"),
@@ -232,13 +307,17 @@ def main():
         print("用法：--dump PATH 或 --selftest")
         return 2
 
+    counts = expected_counts(item_count)
+    print("整卷题数：第一项 %d · 第二项 %s · 第三项 %s · 合计 %d"
+          % (counts["m1"], counts["m2"], counts["m3"], counts["whole"]))
+
     rows = [normalize_row(r) for r in read_dump(args.dump)]
     hard_all = []
     soft_all = []
     seen = {}
     good = []
     for i, row in enumerate(rows):
-        hard, soft = check_row(row, item_count)
+        hard, soft = check_row(row, item_count, counts)
         code = row.get("code")
         if code:
             if code in seen:
@@ -259,18 +338,44 @@ def main():
 
     respondents = [to_respondent(r, item_count) for r in good]
     n = len(respondents)
-    # 完成整卷 = 96 题全部有作答；未答数一律以 m1_raw 里的空位为准（列值只作交叉核对）
+    # ---- 第 13 条的两个数：口径分三层，别再混用 ----
+    # 2026-10-26 修：原来「完成整卷」= 第一项 96 题满答 ⇒ 一份第三项只答 18/40 的作答
+    # 也被算成「完成整卷 100%」。现在：
+    #   first_item_complete  第一项 96 题满答（信效度分析只看这一项）
+    #   whole_complete       整卷 212 位（96 + 76 + 40）全满
+    #   omitted              任一项有空位
     for r in respondents:
-        r["unanswered_count"] = sum(1 for x in r["responses"] if x is None)
-    complete = sum(1 for r in respondents if r["unanswered_count"] == 0)
+        m1_seq = r.get("responses") or []
+        m2_seq = r.get("m2_responses")
+        m3_seq = r.get("m3_responses")
+        r["m1_answered"] = sum(1 for x in m1_seq if x is not None)
+        r["m2_answered"] = sum(1 for x in m2_seq if x is not None) if isinstance(m2_seq, list) else None
+        r["m3_answered"] = sum(1 for x in m3_seq if x is not None) if isinstance(m3_seq, list) else None
+        r["m1_unanswered"] = sum(1 for x in m1_seq if x is None)
+        r["unanswered_count"] = r["m1_unanswered"]
+        if r["m2_answered"] is not None:
+            r["unanswered_count"] += (len(m2_seq) - r["m2_answered"])
+        if r["m3_answered"] is not None:
+            r["unanswered_count"] += (len(m3_seq) - r["m3_answered"])
+        r["first_item_complete"] = (r["m1_answered"] == item_count)
+        have_all_three = (r["m2_answered"] is not None) and (r["m3_answered"] is not None)
+        r["whole_complete"] = (r["first_item_complete"] and have_all_three
+                               and r["m2_answered"] == counts.get("m2")
+                               and r["m3_answered"] == counts.get("m3"))
+        r["whole_answered"] = r["m1_answered"] + (r["m2_answered"] or 0) + (r["m3_answered"] or 0)
+    complete = sum(1 for r in respondents if r["whole_complete"])
+    first_item_complete = sum(1 for r in respondents if r["first_item_complete"])
     incomplete = n - complete
+    omitted = sum(1 for r in respondents if r["unanswered_count"] > 0)
     limit_hint_rows = [r["id"] for r in respondents if r.get("limit_hint")]
 
-    # Q2=A（维护者 2026-10-25）：有未答题的份子**整份剔除**，逐份登记。
+    # Q2=A（维护者 2026-10-25）：**第一项**有未答题的份子整份剔除，逐份登记。
     # 要保留就显式加 --keep-unanswered。
+    # 分层口径（2026-10-26）：第二、三项漏答**不**剔除 —— 第一项满答的份子，
+    # 第一项的信效度统计仍然干净；但第二/三项的成绩不成立，报告里必须写明。
     excluded = []
     if not args.keep_unanswered:
-        excluded = [r["id"] for r in respondents if r["unanswered_count"] > 0]
+        excluded = [r["id"] for r in respondents if r["m1_unanswered"] > 0]
 
     samples = {
         "meta": {
@@ -295,10 +400,15 @@ def main():
 
     report = {
         "n_total": n,
+        "counts": counts,
         "complete": complete,
+        "first_item_complete": first_item_complete,
         "incomplete": incomplete,
+        "omitted": omitted,
         "complete_ratio": round(complete / n, 4) if n else None,
+        "first_item_complete_ratio": round(first_item_complete / n, 4) if n else None,
         "incomplete_ratio": round(incomplete / n, 4) if n else None,
+        "omitted_ratio": round(omitted / n, 4) if n else None,
         "unanswered_total": sum(r["unanswered_count"] for r in respondents),
         "limit_hint_rows": limit_hint_rows,
         "excluded_ids": excluded,
@@ -307,11 +417,21 @@ def main():
         "soft_warning_rows": soft_all,
         "per_respondent": [
             {"id": r["id"], "group": r["group"], "duration_ms": r.get("duration_ms"),
-             "unanswered": r["unanswered_count"], "limit_hint": bool(r.get("limit_hint"))}
+             "m1_answered": r["m1_answered"], "m2_answered": r["m2_answered"],
+             "m3_answered": r["m3_answered"], "whole_answered": r["whole_answered"],
+             "unanswered": r["unanswered_count"],
+             "first_item_complete": r["first_item_complete"],
+             "whole_complete": r["whole_complete"],
+             "limit_hint": bool(r.get("limit_hint"))}
             for r in respondents
         ],
-        "note": ("第 13 条的两个数：完成整卷比例 = 整卷答完的份数占比；省略作答比例 = 有未答题的份数占比。"
+        "note": ("第 13 条的两个数（2026-10-26 改口径）："
+                 "**完成整卷比例 = 整卷 212 位（第一项 96 + 第二项 76 + 第三项 40）全答的份数占比**；"
+                 "**省略作答比例 = 三项里任一项有未答题的份数占比**；"
+                 "另报 first_item_complete（第一项 96 题满答的份数占比）—— 信效度分析只看第一项。"
                  "D3（到点只提示、不自动交卷）后不再有「被自动截断」的份数。"
+                 "⚠ 分母只含**已交卷**的份子：中途退出的人不产生行，"
+                 "所以这是「已交卷者里的完成率」，不是「有多少人做完了」。"
                  "Q2=A（维护者 2026-10-25 裁定）：有未答题的份子**整份剔除**、逐份登记（见 excluded_ids）；"
                  "要保留就显式加 --keep-unanswered。"),
     }
@@ -319,10 +439,13 @@ def main():
         json.dump(report, f, ensure_ascii=False, indent=1)
 
     print("搬运 %d 份（跳过 %d 份硬错误行）" % (n, len(hard_all)))
-    print("第13条：完成整卷 %d/%d（%s）  省略作答 %d/%d（%s）  未答题合计 %d  到点提示后仍作答 %d 份" % (
+    print("第13条：整卷答完 %d/%d（%s）  第一项满答 %d/%d（%s）  有省略作答 %d/%d（%s）  未答合计 %d  到点提示后仍作答 %d 份" % (
         complete, n, ("%.1f%%" % (report["complete_ratio"] * 100)) if n else "—",
-        incomplete, n, ("%.1f%%" % (report["incomplete_ratio"] * 100)) if n else "—",
+        first_item_complete, n, ("%.1f%%" % (report["first_item_complete_ratio"] * 100)) if n else "—",
+        omitted, n, ("%.1f%%" % (report["omitted_ratio"] * 100)) if n else "—",
         report["unanswered_total"], len(limit_hint_rows)))
+    print("        （整卷 = 第一项 %d + 第二项 %s + 第三项 %s；分母只含已交卷的份子）"
+          % (counts["m1"], counts["m2"], counts["m3"]))
     if soft_all:
         print("提醒 %d 行（不阻断，归档前扫一眼）" % len(soft_all))
     print("产物：%s / %s / %s" % (out_samples, out_excluded, out_report))

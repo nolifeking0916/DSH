@@ -58,11 +58,11 @@
       "origin_status": "eligible_reviewed_intake"
     },
     {
-      "key": "4253a4263188474b832a69b34bf28c02:d35d3bb3c2fe5eb725dec9fde20e5628be381e6e4b8dadd436293d92fe09f345",
+      "key": "4253a4263188474b832a69b34bf28c02:af6eaa911bd5f540e4b7d279d0fec1f18f2f441f2710d6adcc9f7f06d345919c",
       "artifact_id": "4253a4263188474b832a69b34bf28c02",
       "target": "dsh-workspace/outputs/荐读摘句-度假景区专业观察-v2-Ardot版-2026-11-13.provenance.md",
-      "sha256": "d35d3bb3c2fe5eb725dec9fde20e5628be381e6e4b8dadd436293d92fe09f345",
-      "bytes": 5058,
+      "sha256": "af6eaa911bd5f540e4b7d279d0fec1f18f2f441f2710d6adcc9f7f06d345919c",
+      "bytes": 5416,
       "origin_status": "eligible_reviewed_intake"
     },
     {

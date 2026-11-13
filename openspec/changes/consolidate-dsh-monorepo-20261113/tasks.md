@@ -13,7 +13,7 @@
 - [x] Record the reviewed false-positive secret-pattern exception by exact SHA-256.
 - [ ] Resolve the four real-person-name files in hr-progress-table; they remain excluded.
 - [x] Project the 471 approved source files into the integration worktree.
-- [x] Re-pin hr-knowledge at 999e3748199e27c33cfad37f63f0f3aa558454f7 plus its reviewed semantic-only script change; project 434 tracked files.
+- [x] Re-pin hr-knowledge at 999e3748199e27c33cfad37f63f0f3aa558454f7 plus its reviewed semantic-only script change; project 434 reviewed source files, including tracked and unignored untracked files.
 - [x] Extract 18 reviewed local DSH source/spec files and the separately reviewed report_profile.js dependency; keep reports, generated aggregate HTML, ignored scoring keys and generated payloads out of Git.
 
 ## 3. History, synchronization and specification

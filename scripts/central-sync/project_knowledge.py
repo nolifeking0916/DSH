@@ -40,8 +40,9 @@ def source_paths():
     if not SOURCE.is_dir():
         raise RuntimeError("knowledge_source_not_directory")
     if (SOURCE / ".git").exists():
-        # 仓库集中只迁移 Git 跟踪内容；本地忽略的运行缓存不是源仓内容。
-        raw = subprocess.check_output(["git", "-C", str(SOURCE), "ls-files", "-z"])
+        # 中央仓接管 Git 后，源仓新文件可能尚未提交；纳入非忽略未跟踪文件，
+        # 同时让 .gitignore/.git/info/exclude 继续排除运行缓存。所有文件仍逐件过安全门。
+        raw = subprocess.check_output(["git", "-C", str(SOURCE), "ls-files", "-z", "--cached", "--others", "--exclude-standard"])
         for item in raw.split(b"\0"):
             if not item:
                 continue

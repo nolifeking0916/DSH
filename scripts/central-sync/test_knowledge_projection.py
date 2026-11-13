@@ -68,8 +68,22 @@ def main():
     report = json.loads((conflict_state / "knowledge-projection-report.json").read_text())
     assert any("existing_target_identity_mismatch" in x.get("reasons", []) for x in report["errors"]), report
 
+    git_source = BASE / "git-untracked" / "source"
+    git_root = BASE / "git-untracked" / "root"
+    git_state = BASE / "git-untracked" / "state"
+    write(git_source / "docs" / "tracked.md", "tracked synthetic\n")
+    subprocess.run(["git", "init", "-q", str(git_source)], check=True)
+    subprocess.run(["git", "-C", str(git_source), "add", "docs/tracked.md"], check=True)
+    subprocess.run(["git", "-C", str(git_source), "-c", "user.name=Test", "-c", "user.email=test@example.invalid", "commit", "-qm", "fixture"], check=True)
+    write(git_source / ".git" / "info" / "exclude", "cache/\n")
+    write(git_source / "docs" / "new-untracked.md", "new central synthetic\n")
+    write(git_source / "cache" / "ignored.md", "must stay local\n")
+    code, out = run(git_source, git_root, git_state)
+    assert code == 0 and (git_root / "hr-knowledge" / "docs" / "new-untracked.md").exists(), out
+    assert not (git_root / "hr-knowledge" / "cache" / "ignored.md").exists(), out
+
     result = {"status": "pass", "cases": ["adopt_same_hash", "modify", "rename", "delete_hold",
-              "sensitive_blocked_before_copy", "existing_identity_conflict_hold"]}
+              "sensitive_blocked_before_copy", "existing_identity_conflict_hold", "git_untracked_and_ignored"]}
     print(json.dumps(result, ensure_ascii=False))
 
 

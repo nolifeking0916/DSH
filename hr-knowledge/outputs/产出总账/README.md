@@ -16,11 +16,11 @@ type: note
 
 > 本页由 DSH 总账生成；OpenKnowledge 跟从展示。完整源路径和原始回执只保存在本机状态区。
 
-- 总账指纹：09dfccc4646ba3f397830b7710ada782dc3b92240025ce244f5328193c01d922
+- 总账指纹：730bc07254f594dd3ec84909c1998b998b3642492f9cd1e6e8c435bcb4e0d240
 - 本轮候选：24194 件
 - 唯一 artifact：18914 个
-- 文件身份匹配：24190 件；其中移动/改名：1 件；唯一哈希关联：1 件
-- 哈希缓存命中：11232 件；读取错误：0 件
+- 文件身份匹配：24194 件；其中移动/改名：0 件；唯一哈希关联：0 件
+- 哈希缓存命中：11234 件；读取错误：0 件
 - 原件策略：只读发现，不移动、不删除、不改名。
 
 ## 接收状态
@@ -30,9 +30,9 @@ type: note
 | already_in_knowledge | 2736 | 知识仓已有同内容，不重复收录 |
 | eligible_reviewed_intake | 28 | 来源明确，可进入安全接收复核 |
 | held_binary_review | 2090 | 图片等二进制内容需人工查看 |
-| held_changed_version | 4 | 内容变化，不能静默覆盖旧接收版 |
+| held_changed_version | 6 | 内容变化，不能静默覆盖旧接收版 |
 | held_cloud_not_local | 12956 | iCloud 占位文件，只登记，不触发下载 |
-| held_origin_review | 6379 | AI 来源未确认，等待人工判断 |
+| held_origin_review | 6377 | AI 来源未确认，等待人工判断 |
 | held_sensitive_path | 1 | 路径显示可能敏感，默认留在本地 |
 
 ## AI 来源分级

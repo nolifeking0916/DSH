@@ -272,6 +272,8 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--check-only", action="store_true")
     parser.add_argument("--skip-intake", action="store_true")
+    parser.add_argument("--skip-scan", action="store_true", help="Reuse the central ledger scan instead of scanning again")
+    parser.add_argument("--openviking-only", action="store_true", help="Skip Git entirely; keep semantic synchronization only")
     parser.add_argument("--only", action="append", choices=[*PUBLISH_ROOTS, *ROOT_FILES])
     args = parser.parse_args()
     STATE.mkdir(parents=True, exist_ok=True)
@@ -289,7 +291,8 @@ def main():
             try:
                 intake_summary = intake_legacy_outputs()
                 reviewed_intake_summary = intake_reviewed_sources()
-                output_ledger_summary = scan_output_ledger()
+                if not args.skip_scan:
+                    output_ledger_summary = scan_output_ledger()
             except Exception as e:
                 save_json(REPORT_FILE, {"status": "fail", "stage": "intake", "error": str(e)})
                 print(json.dumps({"status": "fail", "stage": "intake", "error": str(e)}, ensure_ascii=False))
@@ -317,7 +320,8 @@ def main():
                   "git": None, "uploaded": [], "skipped": [], "errors": []}
         save_json(REPORT_FILE, report)
         try:
-            report["git"] = git_sync()
+            report["git"] = ({"status": "skipped", "reason": "openviking_only"}
+                               if args.openviking_only else git_sync())
             state = load_state()
             roots = args.only or [*PUBLISH_ROOTS, *ROOT_FILES]
             raw_dir = STATE / "raw" / datetime.now().strftime("%Y%m%dT%H%M%S")

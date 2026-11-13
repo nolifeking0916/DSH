@@ -15,7 +15,7 @@
 run_once.py 严格按以下顺序执行：
 
 1. output_ledger.py --scan：刷新现有 DSH 产出总账；只有 status=pass 才能继续，锁竞争返回 skipped 也按本轮暂停处理。
-2. project_knowledge.py --apply：读取 hr-knowledge 的 Git 跟踪文件，投影到中央 hr-knowledge/；不读取本地缓存，不把删除当同步指令。
+2. project_knowledge.py --apply：读取 hr-knowledge 的 Git 跟踪文件及未被忽略的未跟踪文件，投影到中央 hr-knowledge/；尊重 .gitignore 与 .git/info/exclude，不读取本地缓存，不把删除当同步指令。
 3. project_outputs.py --apply：从最新总账选择 eligible_reviewed_intake 与 already_in_knowledge，按 artifact 与 SHA-256 去重后投影到 dsh-workspace/、hr-knowledge/ 或 manifests/。
 4. sync_online.py --git-only：再次执行中央安全扫描、删除/改名预审、remote-ahead 检查，然后只暂存中央脚本和 PUBLISH_ROOTS，commit/push 并回读 origin/main。
 
@@ -39,6 +39,8 @@ run_once.py 严格按以下顺序执行：
 - 源删除不删除中央副本；只有同SHA一对一改名可自动允许。
 - staged deletion必须为零；remote ahead必须为零，否则停止待审，不自动rebase、不强推。
 - hr-progress-table四个真实姓名文件未获批准，保持阻断，不得用“目标也是私有仓”自行放行。
+- STATE/excluded-targets.json 是逐件人工排除清单；排除只阻止新投影，不删除中央既有副本，也不伪装成源删除。
+- 本轮已将19项含真实姓名或人员路径的新产出列入该排除清单；原始文件只留在本机，未进入中央仓。
 
 ## 5. 本地检查
 

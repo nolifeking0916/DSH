@@ -28,9 +28,9 @@
 
 ## 4. Remote verification and cutover
 
-- [ ] Review the complete diff, commit and push the integration branch; verify commit/tree/blob state remotely.
-- [ ] Fast-forward DSH main without rewriting history and verify from an independent clone.
-- [ ] Enable central 60-second watch and 300-second fallback; prove a real remote update.
+- [x] Review the complete diff, commit and push the integration branch; verify commit/tree/blob state remotely.
+- [x] Fast-forward DSH main without rewriting history and verify from an independent clone.
+- [x] Enable central 60-second watch and 300-second fallback; prove real add, rename and failed-push recovery updates.
 - [x] Stop the three former Git writers before cutover.
-- [ ] Reload hr-knowledge as OpenViking-semantic-only and verify Git is not called.
-- [ ] Archive old first-party remotes only after central verification and the stability window.
+- [x] Reload hr-knowledge as OpenViking-semantic-only and verify Git is not called.
+- [x] Archive the five old first-party remotes after central verification and repeated successful runs.

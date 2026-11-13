@@ -1,0 +1,20 @@
+{
+  "captured_at": "2026-10-26T20:09:00+08:00",
+  "source": "public.responses（CloudBase PG，**只读 SELECT**，无任何写入）",
+  "how": "SELECT code, jsonb_array_length(m1_raw) AS m1_len, (SELECT count(*) FROM jsonb_object_keys(COALESCE(m2_answers,'{}'))) AS m2_keys, (SELECT min(k::int) … max(k::int) FROM jsonb_object_keys(COALESCE(m2_answers,'{}')) k) AS m2_min_key/m2_max_key, jsonb_array_length(m3_answers) AS m3_len, (SELECT count(*) FROM jsonb_array_elements(COALESCE(m3_answers,'[]')) e WHERE e <> 'null') AS m3_answered FROM public.responses ORDER BY submitted_at",
+  "why_only_shape": "只记**形状**（长度 / 键数 / 键范围 / 已答题数），**不含任何逐题作答内容**——真实候选人的作答不进仓。",
+  "row_count": 7,
+  "notes": [
+    "第 1 行（EQ-20261025-ZXN7TL-B454）提交于 2026-10-25 13:44，**早于 m2_answers / m3_answers 两列的加列时间**（2026-10-25 14:30）⇒ m2 无键、m3 为 null：这是**遗留形状**，新规则只作用于新交卷，不追溯历史行。",
+    "第 4、5 行（EQ-20261026-5NHU83-216C / EQ-20261026-DFE8M7-BB26）第三项**只答了 20 题**（40 个题位里 20 个是 null）——这是页面上「仍然提交（按未作答计分）」那条路径留下的真实数据 ⇒ 长度校验必须只查**长度 40**，不能查「答满 40 题」，否则会误伤这两份真实数据。"
+  ],
+  "rows": [
+    { "code": "EQ-20261025-ZXN7TL-B454", "m1_len": 96, "m2_keys": 0, "m2_min_key": null, "m2_max_key": null, "m3_len": null, "m3_answered": 0, "legacy": true },
+    { "code": "EQ-20261026-L52MPC-2A49", "m1_len": 96, "m2_keys": 76, "m2_min_key": 0, "m2_max_key": 75, "m3_len": 40, "m3_answered": 40, "legacy": false },
+    { "code": "EQ-20261026-XXA6M8-654E", "m1_len": 96, "m2_keys": 76, "m2_min_key": 0, "m2_max_key": 75, "m3_len": 40, "m3_answered": 40, "legacy": false },
+    { "code": "EQ-20261026-5NHU83-216C", "m1_len": 96, "m2_keys": 76, "m2_min_key": 0, "m2_max_key": 75, "m3_len": 40, "m3_answered": 20, "legacy": false },
+    { "code": "EQ-20261026-DFE8M7-BB26", "m1_len": 96, "m2_keys": 76, "m2_min_key": 0, "m2_max_key": 75, "m3_len": 40, "m3_answered": 20, "legacy": false },
+    { "code": "EQ-20261026-TPLULU-A77E", "m1_len": 96, "m2_keys": 76, "m2_min_key": 0, "m2_max_key": 75, "m3_len": 40, "m3_answered": 40, "legacy": false },
+    { "code": "EQ-20261026-W5BWFD-746C", "m1_len": 96, "m2_keys": 76, "m2_min_key": 0, "m2_max_key": 75, "m3_len": 40, "m3_answered": 40, "legacy": false }
+  ]
+}

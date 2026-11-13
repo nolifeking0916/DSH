@@ -1,0 +1,6 @@
+#!/bin/sh
+set -eu
+PYTHON="/Users/leto/.dsh/dsh-runtimes/dsh-primary-runtime/dependencies/python/bin/python3"
+ROOT=$(git rev-parse --show-toplevel)
+cd "$ROOT"
+exec "$PYTHON" scripts/safety_gate.py

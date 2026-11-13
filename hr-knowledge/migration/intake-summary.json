@@ -1,0 +1,17 @@
+{
+  "batch": "legacy-final-intake-recursive",
+  "verified_on": "2026-11-09",
+  "candidate_count": 55,
+  "present_after_latest_run": 36,
+  "unchanged_before_latest_run": 30,
+  "newly_copied_in_latest_run": 6,
+  "held": 19,
+  "changed_target_count_in_latest_run": 12,
+  "source_hash_mismatch_count": 0,
+  "safety_gate": {
+    "status": "pass",
+    "file_count": 245,
+    "blocked_count": 0
+  },
+  "counting_note": "This recursive intake batch is reported separately from the initial 160-record curated migration; historical runs are not added together."
+}

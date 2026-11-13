@@ -1,0 +1,58 @@
+{
+  "version": 1,
+  "home": "/Users/leto",
+  "ai_workspace_roots": [
+    "/Users/leto/.dsh/bot/workspace",
+    "/Users/leto/Documents/DSH"
+  ],
+  "scan_roots": [
+    "/Users/leto/Desktop",
+    "/Users/leto/Documents",
+    "/Users/leto/Downloads",
+    "/Users/leto/Pictures",
+    "/Users/leto/Public",
+    "/Users/leto/WorkBuddy",
+    "/Users/leto/.dsh/bot/workspace",
+    "/Users/leto/Library/Mobile Documents/com~apple~CloudDocs",
+    "/tmp"
+  ],
+  "excluded_roots": [
+    "/Users/leto/WorkBuddy/HR技术中台/hr-knowledge",
+    "/Users/leto/WorkBuddy/HR技术中台/review-inbox",
+    "/Users/leto/WorkBuddy/HR技术中台/installers"
+  ],
+  "excluded_dir_names": [
+    "Photos Library.photoslibrary",
+    ".git",
+    "node_modules",
+    "__pycache__",
+    ".venv",
+    "venv",
+    ".cache",
+    ".npm",
+    ".pnpm-store",
+    ".Trash",
+    ".idea",
+    ".vscode",
+    "dist",
+    "build-cache",
+    "coverage"
+  ],
+  "allowed_extensions": [
+    ".md",
+    ".markdown",
+    ".txt",
+    ".docx",
+    ".pptx",
+    ".xlsx",
+    ".pdf",
+    ".png",
+    ".jpg",
+    ".jpeg",
+    ".svg",
+    ".webp"
+  ],
+  "max_auto_hash_bytes": 104857600,
+  "auto_intake": false,
+  "download_dataless_files": false
+}

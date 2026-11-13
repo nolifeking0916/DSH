@@ -35,12 +35,20 @@ let ROWS = [
     group_name: null, level: null, dept: null, started_at: "2026-10-25T13:23:00+08:00",
     submitted_at: "2026-10-25T13:44:22+08:00", duration_ms: 1236174,
     m1_raw: new Array(96).fill(1), m1_scores: M1, m2_result: M2, m3_result: M3,
-    m2_answers: null, m3_answers: null, limit_hint: null, unanswered_m1: 0 },
+    /* 票 #87：第三项补成合法 40 题（原先 null 会被读侧判成形状坏行）；
+       历史遗留行另立 ROWS[2] 做 void 专用断言。 */
+    m2_answers: null, m3_answers: new Array(40).fill(0), limit_hint: null, unanswered_m1: 0 },
   { id: 2, code: "EQ-20261025-ABCDEF-1234", respondent_name: "李四", id_last4: "7890",
     group_name: "餐饮二部", level: "主管", dept: "餐饮部", started_at: "2026-10-25T14:00:00+08:00",
     submitted_at: "2026-10-25T14:20:00+08:00", duration_ms: 1200000,
     m1_raw: new Array(96).fill(0).map((v, i) => (i < 90 ? v : null)), m1_scores: M1, m2_result: M2, m3_result: M3,
-    m2_answers: null, m3_answers: null, limit_hint: null, unanswered_m1: 6 }
+    m2_answers: null, m3_answers: new Array(40).fill(0), limit_hint: null, unanswered_m1: 6 },
+  /* 票 #87：历史遗留行（第三项整缺＝加列前旧行）⇒ 读侧形状隔离，不出等级、不出报告。 */
+  { id: 3, code: "EQ-20261025-LEGACY-0001", respondent_name: "遗留样本", id_last4: "0001",
+    group_name: null, level: null, dept: null, started_at: "2026-10-25T13:23:00+08:00",
+    submitted_at: "2026-10-25T13:44:22+08:00", duration_ms: 1236174,
+    m1_raw: new Array(96).fill(1), m1_scores: M1, m2_result: M2, m3_result: M3,
+    m2_answers: null, m3_answers: null, limit_hint: null, unanswered_m1: 0 }
 ];
 let POSTED = [];
 
@@ -107,6 +115,7 @@ async function main() {
       respondent_name: "汪洋", id_last4: "5615",
       started_at: "2026-10-25T13:23:00Z", duration_ms: 1234,
       m1_raw: m1,
+      m3_answers: new Array(40).fill(0),   /* 票 #83：第三项必须是 40 题的数组 */
       m1_scores: { cheat: true },          /* 客户端自报分数 —— 必须不采信 */
       m2_result: { cheat: true },
       m3_result: { cheat: true },
@@ -116,13 +125,15 @@ async function main() {
     }));
     check("201 落库", r1.statusCode === 201, JSON.stringify(r1.body).slice(0, 200));
     const row = POSTED[0] || {};
-    /* 白名单 17 列（12 项客户端填 + 5 项服务端算）；另有 id 是数据库自己给的
-       （id BIGINT GENERATED ALWAYS AS IDENTITY），不属客户端可控的列。 */
-    const EXPECT = ["code", "respondent_name", "id_last4", "group_name", "level", "dept",
+    /* 白名单 18 列（13 项客户端填 + 5 项服务端算）；另有 id 是数据库自己给的
+       （id BIGINT GENERATED ALWAYS AS IDENTITY），不属客户端可控的列。
+       ⚠ 2026-10-26（票 #83）：票 #45 把 id_hash 加进 CLIENT_FIELDS 后门里没同步，
+         这条断言一直红着（HEAD 版实跑同样失败）⇒ 这里补上 id_hash。 */
+    const EXPECT = ["code", "respondent_name", "id_last4", "id_hash", "group_name", "level", "dept",
       "started_at", "duration_ms", "m1_raw", "m2_answers", "m3_answers", "limit_hint",
       "submitted_at", "m1_scores", "m2_result", "m3_result", "unanswered_m1", "id"];
     const got = Object.keys(row).sort();
-    check("落库列集合 = 白名单（17 列）+ 数据库自带的 id", JSON.stringify(got) === JSON.stringify(EXPECT.slice().sort()),
+    check("落库列集合 = 白名单（18 列）+ 数据库自带的 id", JSON.stringify(got) === JSON.stringify(EXPECT.slice().sort()),
       "实得 " + JSON.stringify(got));
     check("多传字段没落库（answered_at / evil_column）", !("answered_at" in row) && !("evil_column" in row));
     check("客户端自报分数不采信（m1_scores 是服务端算的）",
@@ -138,7 +149,7 @@ async function main() {
     const r3 = await fn(ev("POST", {}, { code: "EQ-20261025-ZXN7TL-B454", m1_raw: new Array(95).fill(0) }));
     check("不是 96 题 → 400", r3.statusCode === 400, String(r3.statusCode));
     process.env.CODE_CHECK = "off";
-    const r4 = await fn(ev("POST", {}, { code: "随便写一个", m1_raw: new Array(96).fill(0) }));
+    const r4 = await fn(ev("POST", {}, { code: "随便写一个", m1_raw: new Array(96).fill(0), m3_answers: new Array(40).fill(0) }));
     check("CODE_CHECK=off 时放行", r4.statusCode === 201, String(r4.statusCode));
     delete process.env.CODE_CHECK;
 
@@ -146,7 +157,8 @@ async function main() {
     realLog("③ list / export");
     const rl = await fn(ev("GET", { action: "list", limit: "50" }));
     const lrows = JSON.parse(rl.body).rows;
-    check("list 带姓名", lrows.length === 2 && lrows[0].respondent_name === "汪洋");
+    check("list 带姓名", lrows.length === 3 && lrows[0].respondent_name === "汪洋",
+      "实得 " + lrows.length + " 行");
     check("list 带等级（综合档）", lrows[0].grade === "待提升", JSON.stringify(lrows[0].grade));
     check("list 不回传逐题 / 分数", !("m1_raw" in lrows[0]) && !("m1_scores" in lrows[0]));
     check("list 的默认列齐（8 列 + 等级）",
@@ -172,7 +184,8 @@ async function main() {
     const pipe = JSON.parse(rp.body);
     check("管线导出：{meta, respondents}", !!pipe.meta && Array.isArray(pipe.respondents));
     check("管线导出：未答完的份子被排除并单列",
-      pipe.respondents.length === 1 && pipe.excluded.length === 1 && pipe.excluded[0].code === "EQ-20261025-ABCDEF-1234",
+      pipe.respondents.length === 1 && pipe.excluded.length === 2 &&
+      pipe.excluded.some((x) => x.code === "EQ-20261025-ABCDEF-1234"),
       JSON.stringify(pipe.excluded));
     check("管线导出：responses 是 96 个 0/1",
       pipe.respondents[0].responses.length === 96 && pipe.respondents[0].responses.every((v) => v === 0 || v === 1));
@@ -186,6 +199,40 @@ async function main() {
     check("日志含 时间 + 件数 + 来源",
       typeof j.at === "string" && typeof j.count === "number" && typeof j.source === "string" && j.source === "hr",
       lines[0]);
+
+    /* ---------- ⑤ 形状坏的历史遗留行：读侧隔离（票 #87 方案 A） ---------- */
+    realLog("⑤ 历史遗留行（第三项整缺）在读侧被隔离，不出等级、不出报告");
+    const LEGACY = "EQ-20261025-LEGACY-0001";
+    const rl2 = JSON.parse((await fn(ev("GET", { action: "list", limit: "50" }))).body);
+    const legacyRow = rl2.rows.find((r) => r.code === LEGACY);
+    const validRow = rl2.rows.find((r) => r.code === "EQ-20261025-ZXN7TL-B454");
+    check("list 遗留行 grade=null（不再显示旧档位）", legacyRow && legacyRow.grade === null,
+      JSON.stringify(legacyRow && legacyRow.grade));
+    check("list 遗留行带 voided 形状标记", legacyRow && legacyRow.voided && legacyRow.voided.kind === "shape",
+      JSON.stringify(legacyRow && legacyRow.voided));
+    check("list count_voided ≥1", typeof rl2.count_voided === "number" && rl2.count_voided >= 1,
+      "count_voided=" + rl2.count_voided);
+    check("list 合法行等级照算（非 null）", validRow && !validRow.voided && typeof validRow.grade === "string",
+      JSON.stringify(validRow && { grade: validRow.grade, voided: validRow.voided }));
+
+    const rv = JSON.parse((await fn(ev("GET", { action: "export", code: LEGACY, src: "hr" }))).body);
+    check("遗留行单份导出 kind=single-void 且 report=null", rv.kind === "single-void" && rv.report === null,
+      JSON.stringify({ kind: rv.kind, hasReport: !!rv.report }));
+    check("single-void 带原因（第三项形状）", rv.void && Array.isArray(rv.void.reasons) &&
+      rv.void.reasons[0].module === "m3" && rv.void.reasons[0].expected === 40 &&
+      rv.void.reasons[0].actual === null, JSON.stringify(rv.void));
+    check("single-void 的 note 写明不计成绩不出报告", rv.void && typeof rv.void.note === "string" &&
+      rv.void.note.indexOf("不计成绩") >= 0 && rv.void.note.indexOf("不出报告") >= 0, String(rv.void && rv.void.note));
+
+    const rb2 = JSON.parse((await fn(ev("GET", { action: "export", scope: "batch", limit: "50", src: "hr" }))).body);
+    check("batch 遗留行不进 rows", rb2.rows.every((r) => r.code !== LEGACY),
+      JSON.stringify(rb2.rows.map((r) => r.code)));
+    check("batch voided 数组含遗留行 code", Array.isArray(rb2.voided) &&
+      rb2.voided.some((x) => x.code === LEGACY), JSON.stringify((rb2.voided || []).map((x) => x.code)));
+
+    const rp2 = JSON.parse((await fn(ev("GET", { action: "export", scope: "batch", limit: "50", format: "pipeline", src: "hr" }))).body);
+    check("pipeline 遗留行进 excluded 且原因含「形状」", rp2.excluded.some((x) => x.code === LEGACY &&
+      String(x.reason).indexOf("形状") >= 0), JSON.stringify(rp2.excluded));
   } finally {
     console.log = realLog;
     srv.close();

@@ -14,7 +14,7 @@
   · 内嵌数据里没有答案键字段；
   · 判据原文与推理题解析一个字都不出现（与候选人页同一批金丝雀）；
   · 零外链资源；
-  · 页面脚本里**没有 m1_raw**（逐题作答不进汇总台，票 #45 的硬约束）；
+  · 内嵌数据里**没有逐题作答字段**（报告渲染器源码可引用字段名，但真实作答不进汇总台）；
   · headless Chrome 实跑：控制台不许报错，DOM 里要有首屏文案。
 
 用法：
@@ -116,6 +116,12 @@ SHELL = """<!DOCTYPE html>
 window.__DATA__ = {{DATA}};
 </script>
 <script>
+window.__REPORT_PROFILES__ = {{PROFILES}};
+window.__NARRATIVE_RULES__ = {{NARRATIVE}};
+</script>
+<script>{{REPORT_PROFILE}}</script>
+<script>{{REPORT_BLOCKS}}</script>
+<script>
 {{REPORT}}
 </script>
 <script>
@@ -192,6 +198,10 @@ def build(endpoint, out_path):
         ("{{DASH}}", DASH),
         ("{{COPY}}", kb.read("src/data/copy.js")),
         ("{{DATA}}", json.dumps(clean, ensure_ascii=False, separators=(",", ":"))),
+        ("{{PROFILES}}", json.dumps(kb.load_json("data/report_profiles.json"), ensure_ascii=False, separators=(",", ":"))),
+        ("{{NARRATIVE}}", json.dumps(kb.load_json("data/narrative_rules.json").get("rules", []), ensure_ascii=False, separators=(",", ":"))),
+        ("{{REPORT_PROFILE}}", kb.read("src/modules/report_profile.js")),
+        ("{{REPORT_BLOCKS}}", kb.read("src/modules/report_blocks.js")),
         ("{{REPORT}}", kb.read("src/modules/report.js")),
         ("{{APP}}", runtime),
     ]:

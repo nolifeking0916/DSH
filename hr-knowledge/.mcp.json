@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "openviking": {
+      "type": "http",
+      "url": "${OPENVIKING_MCP_URL}",
+      "headers": {
+        "Authorization": "Bearer ${OPENVIKING_API_KEY}"
+      }
+    }
+  }
+}

@@ -127,10 +127,14 @@
       "<th>生成时间</th><td>" + esc(fmtTime(d.generated_at)) + "</td></tr>";
     var el = $("#report");
     if (window.REP && r.m1 && r.m2 && r.m3 && r.compose) {
-      el.innerHTML = window.REP.reportHTML({
-        name: r.name, code: r.code, idLast4: r.idLast4,
-        m1: r.m1, m2: r.m2, m3: r.m3, compose: r.compose
-      });
+      var R = { name: r.name, code: r.code, idLast4: r.idLast4, date: r.submitted_at,
+                m1: r.m1, m2: r.m2, m3: r.m3, compose: r.compose,
+                profile: d.respondent_profile || null };
+      if (window.RBLOCKS && window.REP.buildBlocksReport) {
+        el.innerHTML = window.REP.buildBlocksReport(R);
+      } else {
+        el.innerHTML = window.REP.reportHTML(R);
+      }
     } else {
       el.innerHTML = '<p class="note bad">这一份的结果不完整（缺某一项的分数），渲染器不出报告。可先用「导出汇总」里的行看等级。</p>';
     }

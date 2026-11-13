@@ -1,0 +1,849 @@
+{
+  "meta": {
+    "version": "20261026",
+    "note": "三人对比衍生产物（对比总表 / 苹果风长图 / 汇总封面）的输入。分数与三份单份报告同源（见 result_profile 与 result_json 交叉核对）；判读文字是人工撰写、无法自动再生，只能在此维护。",
+    "date": "2026-10-26",
+    "brand": "云上文旅集团 · 核心人才系列测试",
+    "org_full": "浙江云上文旅集团 · 行政管理中心 · 行政人事部 · 干部管理组",
+    "org_short": "行政管理中心 · 行政人事部 · 干部管理组",
+    "org_short_inline": "行政管理中心干部管理组",
+    "footer": "内部判读材料",
+    "cover_footer": "本封面随三人正式报告一并归档"
+  },
+  "no_source": [
+    {
+      "path": "people[0].profile.edu_tier",
+      "value": "硕士",
+      "kind": "人工转录",
+      "why_no_source": "值与结果 JSON 的 major（农艺与种业（硕士））里的学历一致，本可从 major 拆出；但 spec 里它是独立字段，cross_check 不核 edu_tier，产物链路没有现成来源可对它。",
+      "human_basis": "人工按学历填写；研究生不参与统招本科四档（一本/二本）分档，故此处写「硕士」。",
+      "risk": "字段与 major 里的学历重复，两处不同步时不会有任何报警；脚本核不了。"
+    },
+    {
+      "path": "people[0].profile.org",
+      "value": "安吉半亩田",
+      "kind": "人工改写",
+      "why_no_source": "结果 JSON 的 position 是「安吉半亩田农业科技 · 运营部 · 运营专员」，org 是人工截取的简称；cross_check 不核 org，产物链路里没有这个字段。",
+      "human_basis": "人工从 JSON 的 position 串里截取机构名（HR 机构口径里该机构简称即「安吉半亩田」，可在 workbuddy-archive/sessions/202610031410_吉华丹 补上预约.md 的在职名单表里查到本人行），作封面/长图的「机构」列。",
+      "risk": "截取口径由人定；与 JSON 原文不是同一串字，脚本核不了。"
+    },
+    {
+      "path": "people[0].profile.hr_level",
+      "value": "专业三级",
+      "kind": "人工转录",
+      "why_no_source": "结果 JSON 里只有职级码（level=O4-2），没有「专业三级」这类职级名称字段；cross_check 只核职级码。",
+      "human_basis": "人工取 HR 在职名单表的「职级」列（该表在 workbuddy-archive/sessions/202610031410_吉华丹 补上预约.md 的会话记录里，含本人行「安吉半亩田·运营部 / 农业运营 / 专业三级」）；原始名单表不在仓内可读位置。",
+      "risk": "只有会话归档可作旁证、无机器可读字段，脚本核不了；这条只在汇总封面里出现。"
+    },
+    {
+      "path": "people[0].prose.eval_summary",
+      "value": "常规与突出之间：逻辑明显在线，性格与情绪中等偏稳，可放手交常规业务。",
+      "kind": "人工撰写",
+      "why_no_source": "结果 JSON 的全部字符串叶子字段只有 age/code/date/detail/explain/grade/id/idLast4/key/level/major/name/needReview/pair/position/school/sex/short/status/stem/tool/unit/version —— 不含任何结论/评语/建议字段，判读文字在仓内没有第二来源。",
+      "human_basis": "由撰稿人依据三项分数与档位人工成文；本条覆盖该受测人整块 prose（eval_summary / overall_line / conclusion / dim_comments），文字里的百分数已抽查可由 spec 算出，文字本身不可自动再生。",
+      "risk": "门禁不核 prose 与 JSON 的一致性（无源可核）；prose 被改，门禁只会把它当作新的基准。"
+    },
+    {
+      "path": "people[1].profile.edu_tier",
+      "value": "一本",
+      "kind": "人工转录",
+      "why_no_source": "结果 JSON 里跟学历有关的只有 major 里的「（本科）」，没有院校办学层次字段；pilot/out 全部结果 JSON 检索「一本」0 命中。产物链路里没有可被脚本读取的字段能推出这个值。",
+      "human_basis": "人工按 HR 的统招本科四档口径（985/211/一本/二本，「一本 = 双一流(非211) + 省属重点(稳妥)」）转录填写；口径文档在 workbuddy-archive/sessions/202610130835_学历学位专项面板 · 每周刷新.md，原始对照表在桌面 xlsx、不在仓内。",
+      "risk": "无机器可读字段，脚本核不了；该值已进入苹果风长图的「学历」列，与汇总封面的「本科」口径不一致（生成器 :277 用 pf[\"edu\"]，:379 用 pf.get(\"edu_tier\", …)）。"
+    },
+    {
+      "path": "people[1].profile.org",
+      "value": "云上余村",
+      "kind": "人工改写",
+      "why_no_source": "结果 JSON 的 position 是「浙江云上余村旅游 · 产品研发部 · 演艺策划」，org 是人工改写后的简称（去掉了「浙江/旅游」）；cross_check 不核 org。",
+      "human_basis": "人工按对外展示口径改写机构简称；HR 机构口径里的写法可在 workbuddy-archive/sessions/202610031410_吉华丹 补上预约.md 的在职名单表里查到。",
+      "risk": "与 JSON 原文不是同一串字，脚本核不了。"
+    },
+    {
+      "path": "people[1].profile.hr_level",
+      "value": "专业五级",
+      "kind": "人工转录",
+      "why_no_source": "结果 JSON 里只有职级码（level=O4-4），没有「专业五级」这类职级名称字段；cross_check 只核职级码。",
+      "human_basis": "人工取 HR 在职名单表的「职级」列（该表在 workbuddy-archive/sessions/202610031410_吉华丹 补上预约.md 的会话记录里）；原始名单表不在仓内可读位置。",
+      "risk": "只有会话归档可作旁证、无机器可读字段，脚本核不了；这条只在汇总封面里出现。"
+    },
+    {
+      "path": "people[1].prose.eval_summary",
+      "value": "偏弱偏多：性格与情绪都偏弱，逻辑有亮点但短板明显（数量 0/5），需先补基础再谈托付。",
+      "kind": "人工撰写",
+      "why_no_source": "结果 JSON 不含任何结论/评语字段，判读文字在仓内没有第二来源。",
+      "human_basis": "由撰稿人依据三项分数与档位人工成文；本条覆盖该受测人整块 prose。",
+      "risk": "门禁不核 prose 与 JSON 的一致性（无源可核）。"
+    },
+    {
+      "path": "people[2].profile.edu_tier",
+      "value": "一本",
+      "kind": "人工转录",
+      "why_no_source": "结果 JSON 里跟学历有关的只有 major 里的「（本科）」，没有院校办学层次字段；pilot/out 全部结果 JSON 检索「一本」0 命中。产物链路里没有可被脚本读取的字段能推出这个值。",
+      "human_basis": "人工按 HR 的统招本科四档口径（985/211/一本/二本，「一本 = 双一流(非211) + 省属重点(稳妥)」）转录填写；口径文档在 workbuddy-archive/sessions/202610130835_学历学位专项面板 · 每周刷新.md，原始对照表在桌面 xlsx、不在仓内。",
+      "risk": "无机器可读字段，脚本核不了；该值已进入苹果风长图的「学历」列，与汇总封面的「本科」口径不一致。"
+    },
+    {
+      "path": "people[2].profile.org",
+      "value": "云上度假村",
+      "kind": "人工改写",
+      "why_no_source": "结果 JSON 的 position 用的是机构全称「山川松鼠部落酒店 · 松鼠部落餐饮服务组 · 餐饮领班」，而「云上度假村」是 HR 的机构口径名（对照表：云上度假村 → 浙江云上草原旅游发展有限公司山川松鼠部落酒店）。两者不是同一串字，cross_check 不核 org。",
+      "human_basis": "人工按 HR 机构口径取业务板块名（可在 workbuddy-archive/sessions/202610031410_吉华丹 补上预约.md 的机构对照表里查到「云上度假村 | 浙江云上草原旅游发展有限公司山川松鼠部落酒店」）。",
+      "risk": "产物里显示的是业务板块名而非机构全名，读者可能对不上；脚本核不了，需业务侧确认对外口径用哪个。"
+    },
+    {
+      "path": "people[2].profile.hr_level",
+      "value": "专业三级",
+      "kind": "人工转录",
+      "why_no_source": "结果 JSON 里只有职级码（level=O3-2），没有「专业三级」这类职级名称字段；cross_check 只核职级码。",
+      "human_basis": "人工取 HR 在职名单表的「职级」列（该表在 workbuddy-archive/sessions/202610031410_吉华丹 补上预约.md 的会话记录里）；原始名单表不在仓内可读位置。",
+      "risk": "只有会话归档可作旁证、无机器可读字段，脚本核不了；这条只在汇总封面里出现。"
+    },
+    {
+      "path": "people[2].prose.eval_summary",
+      "value": "三项全突出：可直接托付难事，是三人中最稳的一类。",
+      "kind": "人工撰写",
+      "why_no_source": "结果 JSON 不含任何结论/评语字段，判读文字在仓内没有第二来源。",
+      "human_basis": "由撰稿人依据三项分数与档位人工成文；本条覆盖该受测人整块 prose。",
+      "risk": "门禁不核 prose 与 JSON 的一致性（无源可核）。"
+    },
+    {
+      "path": "meta.brand",
+      "value": "云上文旅集团 · 核心人才系列测试",
+      "kind": "人工填写",
+      "why_no_source": "品牌抬头不在结果 JSON 里；仓内只有单份报告 HTML 的封面抬头可作旁证，但那是同一批人工文案的复制，不是独立来源。",
+      "human_basis": "人工写的品牌抬头，三份产物共用。",
+      "risk": "与单份报告抬头不一致时，门禁不会发现（它只比三份衍生产物）。"
+    },
+    {
+      "path": "meta.org_full",
+      "value": "浙江云上文旅集团 · 行政管理中心 · 行政人事部 · 干部管理组",
+      "kind": "人工填写",
+      "why_no_source": "施测/归档部门不在结果 JSON 里（JSON 只有被测人字段）。单份报告 coverpage 的「施测与归档」行可作旁证，但同样是人工文案。",
+      "human_basis": "人工按施测组织填写的部门全称。",
+      "risk": "若实际施测组织变了，产物不会自动跟。"
+    },
+    {
+      "path": "meta.footer",
+      "value": "内部判读材料",
+      "kind": "人工填写",
+      "why_no_source": "材料性质与保密标注不在结果 JSON 里。",
+      "human_basis": "人工写的页脚与保密标注（cover_footer 同理）。",
+      "risk": "保密标注只能靠人守。"
+    },
+    {
+      "path": "dimensions",
+      "kind": "人工撰写",
+      "why_no_source": "各维度的一句话释义（brief：推动/等待配合 等）是给人看的口径说明，结果 JSON 里没有这一层文字。",
+      "human_basis": "人工撰写，用来在对比总表里解释每个维度考的是什么。",
+      "risk": "释义措辞随人改；产物一致不代表释义对。"
+    },
+    {
+      "path": "groups",
+      "kind": "人工撰写",
+      "why_no_source": "分组标签（人格特质/情景处理/逻辑分析能力，对外类目名；part_name 保留内部三面名 性格特质/情绪特质/逻辑评价 供同源计算查表）、序数与「一句话」行名是排版口径，结果 JSON 里没有。",
+      "human_basis": "人工写的分组标签，与单份报告的口径一致但无机器来源。",
+      "risk": "改名需同步改单份报告口径，机器无从发现。"
+    }
+  ],
+  "dimensions": {
+    "m1": [
+      {
+        "key": "INT",
+        "name": "互动方式",
+        "brief": "推动 / 等待配合"
+      },
+      {
+        "key": "SNT",
+        "name": "关注重点",
+        "brief": "事实 / 趋势"
+      },
+      {
+        "key": "TFS",
+        "name": "行事依据",
+        "brief": "依据 / 关系"
+      },
+      {
+        "key": "JPS",
+        "name": "行事节奏",
+        "brief": "定时收口 / 随机应对"
+      }
+    ],
+    "m2": [
+      {
+        "key": "regu",
+        "name": "情绪稳定",
+        "brief": "压力下是否稳住"
+      },
+      {
+        "key": "conf",
+        "name": "冲突处理",
+        "brief": "冲突时的应对"
+      },
+      {
+        "key": "rela",
+        "name": "关系经营",
+        "brief": "关系建设的主动性"
+      },
+      {
+        "key": "infl",
+        "name": "影响力说服",
+        "brief": "能否讲进别人心里"
+      },
+      {
+        "key": "empa",
+        "name": "同理心",
+        "brief": "能否接住别人情绪"
+      },
+      {
+        "key": "team",
+        "name": "协作补位",
+        "brief": "团队里是否兜底"
+      },
+      {
+        "key": "comm",
+        "name": "倾听表达",
+        "brief": "表达与倾听质量"
+      },
+      {
+        "key": "self",
+        "name": "自我觉察",
+        "brief": "对自己状态的认知"
+      }
+    ],
+    "m3": [
+      {
+        "key": "DED",
+        "name": "演绎推理",
+        "brief": "条件 → 结论的推演"
+      },
+      {
+        "key": "IND",
+        "name": "归纳推理",
+        "brief": "现象 → 规律的提炼"
+      },
+      {
+        "key": "NUM",
+        "name": "数量推理",
+        "brief": "数字与数据判断"
+      },
+      {
+        "key": "CON",
+        "name": "约束分析",
+        "brief": "多条件组合求解"
+      },
+      {
+        "key": "SPA",
+        "name": "图形空间",
+        "brief": "图形与空间想象"
+      },
+      {
+        "key": "CRI",
+        "name": "批判思维",
+        "brief": "结论靠什么成立"
+      },
+      {
+        "key": "PLN",
+        "name": "规划排程",
+        "brief": "多步先后与轻重"
+      },
+      {
+        "key": "RSK",
+        "name": "风险判断",
+        "brief": "不完整信息下的取舍"
+      }
+    ]
+  },
+  "groups": [
+    {
+      "key": "m1",
+      "ordinal": "一",
+      "label": "人格特质",
+      "item": "第一项",
+      "dims": "四维",
+      "total_label": "人格特质 · 一句话",
+      "part_name": "性格特质"
+    },
+    {
+      "key": "m2",
+      "ordinal": "二",
+      "label": "情景处理",
+      "item": "第二项",
+      "dims": "八维",
+      "total_label": "情景处理 · 一句话",
+      "part_name": "情绪特质"
+    },
+    {
+      "key": "m3",
+      "ordinal": "三",
+      "label": "逻辑分析能力",
+      "item": "第三项",
+      "dims": "八维",
+      "total_label": "逻辑分析能力 · 一句话",
+      "part_name": "逻辑评价"
+    }
+  ],
+  "people": [
+    {
+      "name": "崔婵",
+      "code": "EQ-20261026-L52MPC-2A49",
+      "result_json": "pilot/out/结果JSON_EQ-20261026-L52MPC-2A49.json",
+      "profile": {
+        "age": "24",
+        "sex": "女",
+        "school": "甘肃农业大学",
+        "major": "农艺与种业",
+        "edu": "硕士",
+        "level_code": "O4-2",
+        "hr_level": "专业三级",
+        "org": "安吉半亩田",
+        "dept": "运营部",
+        "position": "运营专员",
+        "edu_tier": "硕士"
+      },
+      "result_profile": {
+        "age": "24",
+        "sex": "女",
+        "school": "甘肃农业大学",
+        "major": "农艺与种业（硕士）",
+        "level": "O4-2",
+        "position": "安吉半亩田农业科技 · 运营部 · 运营专员",
+        "unit": "运营部 · 浙江区域"
+      },
+      "m1": {
+        "short_grade": "良好",
+        "dims": [
+          {
+            "key": "INT",
+            "name": "互动方式",
+            "score": 22,
+            "max": 24,
+            "grade": "顶尖"
+          },
+          {
+            "key": "SNT",
+            "name": "关注重点",
+            "score": 14,
+            "max": 24,
+            "grade": "良好"
+          },
+          {
+            "key": "TFS",
+            "name": "行事依据",
+            "score": 18,
+            "max": 24,
+            "grade": "优秀"
+          },
+          {
+            "key": "JPS",
+            "name": "行事节奏",
+            "score": 22,
+            "max": 24,
+            "grade": "顶尖"
+          }
+        ]
+      },
+      "m2": {
+        "total": 4.02,
+        "grade": "优秀",
+        "dims": [
+          {
+            "key": "regu",
+            "name": "情绪稳定",
+            "score": 9,
+            "max": 12
+          },
+          {
+            "key": "conf",
+            "name": "冲突处理",
+            "score": 8,
+            "max": 12
+          },
+          {
+            "key": "rela",
+            "name": "关系经营",
+            "score": 9,
+            "max": 12
+          },
+          {
+            "key": "infl",
+            "name": "影响力说服",
+            "score": 10,
+            "max": 12
+          },
+          {
+            "key": "empa",
+            "name": "同理心",
+            "score": 11,
+            "max": 12
+          },
+          {
+            "key": "team",
+            "name": "协作补位",
+            "score": 12,
+            "max": 12
+          },
+          {
+            "key": "comm",
+            "name": "倾听表达",
+            "score": 10,
+            "max": 12
+          },
+          {
+            "key": "self",
+            "name": "自我觉察",
+            "score": 9,
+            "max": 12
+          }
+        ]
+      },
+      "m3": {
+        "total": 38.2,
+        "grade": "顶尖",
+        "dims": [
+          {
+            "key": "DED",
+            "correct": 5,
+            "total": 5
+          },
+          {
+            "key": "IND",
+            "correct": 4,
+            "total": 5
+          },
+          {
+            "key": "NUM",
+            "correct": 3,
+            "total": 5
+          },
+          {
+            "key": "CON",
+            "correct": 3,
+            "total": 5
+          },
+          {
+            "key": "SPA",
+            "correct": 3,
+            "total": 5
+          },
+          {
+            "key": "CRI",
+            "correct": 3,
+            "total": 5
+          },
+          {
+            "key": "PLN",
+            "correct": 3,
+            "total": 5
+          },
+          {
+            "key": "RSK",
+            "correct": 3,
+            "total": 5
+          }
+        ]
+      },
+      "prose": {
+        "eval_summary": "常规与突出之间：逻辑明显在线，性格与情绪中等偏稳，可放手交常规业务。",
+        "overall_line": "逻辑明显在线、协作是亮点；关注重点（偏事实而非趋势）与冲突处理（偏弱）是后续培养方向。",
+        "conclusion": "24岁硕士，农业与种业专业，现任安吉半亩田运营专员（O4-2）。逻辑推理（95.5% 突出）与协作补位（100%）是明显强项；结合集团农业板块的品牌化与渠道运营方向，建议往「农业品牌运营 / 农产品渠道营销」发展——把逻辑拆解能力用在产品叙事与投放策略上，冲突处理偏弱可在跨部门项目里有意识练。",
+        "dim_comments": {
+          "INT": "顶尖水平，主动推动能力强",
+          "SNT": "偏弱，习惯凭数据做事",
+          "TFS": "常规，规则与人情兼顾",
+          "JPS": "顶尖水平，计划性强",
+          "regu": "常规，压力下基本稳住",
+          "conf": "偏弱，遇冲突会先让一步",
+          "rela": "常规，关系维护有分寸",
+          "infl": "良好，能讲进别人心里",
+          "empa": "顶尖，能接住别人情绪",
+          "team": "满分，团队里的兜底人",
+          "comm": "良好，表达清楚",
+          "self": "常规，对状态有自知",
+          "DED": "满分，条件→结论推得准",
+          "IND": "良好，能从现象提炼规律",
+          "NUM": "常规，数字判断中等",
+          "CON": "常规，多条件求解中等",
+          "SPA": "常规，空间能力中等",
+          "CRI": "常规，会追问依据",
+          "PLN": "常规，多步排程中等",
+          "RSK": "常规，不完整信息下能取舍"
+        }
+      }
+    },
+    {
+      "name": "孙梦雅",
+      "code": "EQ-20261026-TPLULU-A77E",
+      "result_json": "pilot/out/结果JSON_EQ-20261026-TPLULU-A77E.json",
+      "profile": {
+        "age": "22",
+        "sex": "女",
+        "school": "浙江音乐学院",
+        "major": "舞蹈编导",
+        "edu": "本科",
+        "level_code": "O4-4",
+        "hr_level": "专业五级",
+        "org": "云上余村",
+        "dept": "产品研发部",
+        "position": "演艺策划",
+        "edu_tier": "一本"
+      },
+      "result_profile": {
+        "age": "22",
+        "sex": "女",
+        "school": "浙江音乐学院",
+        "major": "舞蹈编导（本科）",
+        "level": "O4-4",
+        "position": "浙江云上余村旅游 · 产品研发部 · 演艺策划",
+        "unit": "产品研发部 · 浙江区域"
+      },
+      "m1": {
+        "short_grade": "合格",
+        "dims": [
+          {
+            "key": "INT",
+            "name": "互动方式",
+            "score": 14,
+            "max": 24,
+            "grade": "良好"
+          },
+          {
+            "key": "SNT",
+            "name": "关注重点",
+            "score": 9,
+            "max": 24,
+            "grade": "合格"
+          },
+          {
+            "key": "TFS",
+            "name": "行事依据",
+            "score": 15,
+            "max": 24,
+            "grade": "良好"
+          },
+          {
+            "key": "JPS",
+            "name": "行事节奏",
+            "score": 23,
+            "max": 24,
+            "grade": "顶尖"
+          }
+        ]
+      },
+      "m2": {
+        "total": 3.37,
+        "grade": "良好",
+        "dims": [
+          {
+            "key": "regu",
+            "name": "情绪稳定",
+            "score": 8,
+            "max": 12
+          },
+          {
+            "key": "conf",
+            "name": "冲突处理",
+            "score": 6,
+            "max": 12
+          },
+          {
+            "key": "rela",
+            "name": "关系经营",
+            "score": 8,
+            "max": 12
+          },
+          {
+            "key": "infl",
+            "name": "影响力说服",
+            "score": 8,
+            "max": 12
+          },
+          {
+            "key": "empa",
+            "name": "同理心",
+            "score": 8,
+            "max": 12
+          },
+          {
+            "key": "team",
+            "name": "协作补位",
+            "score": 9,
+            "max": 12
+          },
+          {
+            "key": "comm",
+            "name": "倾听表达",
+            "score": 10,
+            "max": 12
+          },
+          {
+            "key": "self",
+            "name": "自我觉察",
+            "score": 9,
+            "max": 12
+          }
+        ]
+      },
+      "m3": {
+        "total": 30.4,
+        "grade": "合格",
+        "dims": [
+          {
+            "key": "DED",
+            "correct": 1,
+            "total": 5
+          },
+          {
+            "key": "IND",
+            "correct": 4,
+            "total": 5
+          },
+          {
+            "key": "NUM",
+            "correct": 0,
+            "total": 5
+          },
+          {
+            "key": "CON",
+            "correct": 3,
+            "total": 5
+          },
+          {
+            "key": "SPA",
+            "correct": 4,
+            "total": 5
+          },
+          {
+            "key": "CRI",
+            "correct": 2,
+            "total": 5
+          },
+          {
+            "key": "PLN",
+            "correct": 3,
+            "total": 5
+          },
+          {
+            "key": "RSK",
+            "correct": 3,
+            "total": 5
+          }
+        ]
+      },
+      "prose": {
+        "eval_summary": "偏弱偏多：性格与情绪都偏弱，逻辑有亮点但短板明显（数量 0/5），需先补基础再谈托付。",
+        "overall_line": "归纳与图形是亮点；数量推理（0/5）与演绎推理（20%）是明显短板，情绪与性格待补基础后再托付。",
+        "conclusion": "22岁本科，舞蹈编导专业，现任云上余村演艺策划（O4-4）。归纳推理（80%）与图形空间（80%）突出，自我驱动强（行事节奏 96%）。结合余村文旅业态与演艺策划岗，建议往「沉浸式演艺策划 / 文旅内容创意」发展——把编导的叙事能力用在景区沉浸演出设计上；数量推理（0%）与演绎推理（20%）是短板，若往数据驱动或项目管理方向走需先补。",
+        "dim_comments": {
+          "INT": "偏弱，更习惯独立做事",
+          "SNT": "偏弱，容易只看眼前",
+          "TFS": "偏弱，规则与人情摇摆",
+          "JPS": "顶尖，自我驱动强",
+          "regu": "偏弱，压力下情绪波动",
+          "conf": "偏弱，遇冲突易回避",
+          "rela": "偏弱，关系经营被动",
+          "infl": "偏弱，说服力待练",
+          "empa": "偏弱，对他人情绪不够敏感",
+          "team": "常规，愿意补位",
+          "comm": "良好，表达清楚",
+          "self": "常规，对状态有自知",
+          "DED": "偏弱，条件→结论常断链",
+          "IND": "良好，能从现象提炼规律",
+          "NUM": "最弱，数字判断是短板",
+          "CON": "常规，多条件求解中等",
+          "SPA": "良好，空间想象不错",
+          "CRI": "偏弱，不常追问依据",
+          "PLN": "常规，多步排程中等",
+          "RSK": "常规，不完整信息下能取舍"
+        }
+      }
+    },
+    {
+      "name": "杨绍会",
+      "code": "EQ-20261026-W5BWFD-746C",
+      "result_json": "pilot/out/结果JSON_EQ-20261026-W5BWFD-746C.json",
+      "profile": {
+        "age": "28",
+        "sex": "女",
+        "school": "贵州师范大学",
+        "major": "酒店管理",
+        "edu": "本科",
+        "level_code": "O3-2",
+        "hr_level": "专业三级",
+        "org": "云上度假村",
+        "dept": "松鼠部落餐饮服务组",
+        "position": "餐饮领班",
+        "edu_tier": "一本"
+      },
+      "result_profile": {
+        "age": "28",
+        "sex": "女",
+        "school": "贵州师范大学",
+        "major": "酒店管理（本科）",
+        "level": "O3-2",
+        "position": "山川松鼠部落酒店 · 松鼠部落餐饮服务组 · 餐饮领班",
+        "unit": "松鼠部落餐饮服务组 · 浙江区域"
+      },
+      "m1": {
+        "short_grade": "优秀",
+        "dims": [
+          {
+            "key": "INT",
+            "name": "互动方式",
+            "score": 21,
+            "max": 24,
+            "grade": "优秀"
+          },
+          {
+            "key": "SNT",
+            "name": "关注重点",
+            "score": 18,
+            "max": 24,
+            "grade": "优秀"
+          },
+          {
+            "key": "TFS",
+            "name": "行事依据",
+            "score": 22,
+            "max": 24,
+            "grade": "顶尖"
+          },
+          {
+            "key": "JPS",
+            "name": "行事节奏",
+            "score": 23,
+            "max": 24,
+            "grade": "顶尖"
+          }
+        ]
+      },
+      "m2": {
+        "total": 4.42,
+        "grade": "顶尖",
+        "dims": [
+          {
+            "key": "regu",
+            "name": "情绪稳定",
+            "score": 10,
+            "max": 12
+          },
+          {
+            "key": "conf",
+            "name": "冲突处理",
+            "score": 10,
+            "max": 12
+          },
+          {
+            "key": "rela",
+            "name": "关系经营",
+            "score": 10,
+            "max": 12
+          },
+          {
+            "key": "infl",
+            "name": "影响力说服",
+            "score": 12,
+            "max": 12
+          },
+          {
+            "key": "empa",
+            "name": "同理心",
+            "score": 11,
+            "max": 12
+          },
+          {
+            "key": "team",
+            "name": "协作补位",
+            "score": 11,
+            "max": 12
+          },
+          {
+            "key": "comm",
+            "name": "倾听表达",
+            "score": 12,
+            "max": 12
+          },
+          {
+            "key": "self",
+            "name": "自我觉察",
+            "score": 9,
+            "max": 12
+          }
+        ]
+      },
+      "m3": {
+        "total": 37.6,
+        "grade": "顶尖",
+        "dims": [
+          {
+            "key": "DED",
+            "correct": 2,
+            "total": 5
+          },
+          {
+            "key": "IND",
+            "correct": 3,
+            "total": 5
+          },
+          {
+            "key": "NUM",
+            "correct": 3,
+            "total": 5
+          },
+          {
+            "key": "CON",
+            "correct": 3,
+            "total": 5
+          },
+          {
+            "key": "SPA",
+            "correct": 5,
+            "total": 5
+          },
+          {
+            "key": "CRI",
+            "correct": 3,
+            "total": 5
+          },
+          {
+            "key": "PLN",
+            "correct": 4,
+            "total": 5
+          },
+          {
+            "key": "RSK",
+            "correct": 3,
+            "total": 5
+          }
+        ]
+      },
+      "prose": {
+        "eval_summary": "三项全突出：可直接托付难事，是三人中最稳的一类。",
+        "overall_line": "三项全突出：执行力、协作、表达都是强项；演绎推理（40%）是唯一偏弱项，可在复杂决策场景补。",
+        "conclusion": "28岁本科，酒店管理专业，现任云上度假村餐饮领班（O3-2）。三项全突出（性格 87.5%、情绪 88.4%、逻辑 94.0%），影响力说服（100%）与倾听表达（100%）是顶尖水平。结合酒店餐饮业态与管理潜质，建议往「餐饮运营管理 / 连锁酒店运营」发展——把情绪稳定与说服力用在团队带教与 SOP 落地，演绎推理（40%）偏弱可在复杂经营决策场景补。",
+        "dim_comments": {
+          "INT": "突出，主动推动",
+          "SNT": "常规，事实与趋势兼顾",
+          "TFS": "顶尖，规则与执行清晰",
+          "JPS": "顶尖，计划性极强",
+          "regu": "良好，压力下稳得住",
+          "conf": "良好，冲突应对得当",
+          "rela": "良好，关系经营主动",
+          "infl": "满分，说服力极强",
+          "empa": "顶尖，能接住别人情绪",
+          "team": "顶尖，团队里的兜底人",
+          "comm": "满分，表达极清晰",
+          "self": "常规，对状态有自知",
+          "DED": "偏弱，条件→结论易跳步",
+          "IND": "常规，能提炼规律",
+          "NUM": "常规，数字判断中等",
+          "CON": "常规，多条件求解中等",
+          "SPA": "满分，空间想象强",
+          "CRI": "常规，会追问依据",
+          "PLN": "良好，多步排程清楚",
+          "RSK": "常规，不完整信息下能取舍"
+        }
+      }
+    }
+  ]
+}

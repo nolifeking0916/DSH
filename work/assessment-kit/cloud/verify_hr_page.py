@@ -7,8 +7,8 @@
   1. 内嵌数据里没有答案键字段（与候选人页同一套 sanitize）；
   2. 判据原文与推理题解析一个字都不出现（与候选人页同一批金丝雀，136 条）；
   3. 零外链资源；
-  4. **页面里不许出现 m1_raw** —— 汇总台只显示汇总列与分数档，
-     96 题逐题作答不进汇总台（票 #45 的硬约束，也是不扩大暴露面的底线）；
+  4. **内嵌数据里不许出现逐题作答字段** —— 汇总台只显示汇总列与分数档；
+     渲染器源码可以引用字段名，但真实作答不进汇总台；
   5. 占位符必须已替换（空白页事故的第一现场）；
   6. headless Chrome 实跑：控制台不许报错，DOM 里要有首屏文案。
 
@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import argparse
 import importlib.util
+import json
 import os
 import re
 import subprocess
@@ -36,6 +37,24 @@ def load_module(path, name):
 
 
 V = load_module(os.path.join(HERE, "verify_candidate_page.py"), "kb_cand_gate")
+
+
+RAW_ANSWER_FIELDS = {"m1_raw", "m2_answers", "m3_answers"}
+
+
+def raw_answer_fields(value, path="$"):
+    """递归返回内嵌 JSON 中的逐题字段路径；不扫描渲染器源码字符串。"""
+    found = []
+    if isinstance(value, dict):
+        for key, item in value.items():
+            child = path + "." + str(key)
+            if key in RAW_ANSWER_FIELDS:
+                found.append(child)
+            found.extend(raw_answer_fields(item, child))
+    elif isinstance(value, list):
+        for index, item in enumerate(value):
+            found.extend(raw_answer_fields(item, path + "[" + str(index) + "]"))
+    return found
 
 
 def check_render(path, verbose=True):
@@ -114,9 +133,19 @@ def check_page(path, verbose=True):
         if re.search(pat, html, re.I):
             problems.append("出现外链资源（%s）" % why)
 
-    # 4. 逐题作答不许进汇总台
-    if "m1_raw" in html:
-        problems.append("页面里出现了 m1_raw —— 96 题逐题作答不该进汇总台")
+    # 4. 逐题作答不许进**内嵌数据**。报告渲染器的源码会合法引用 m1_raw，
+    # 不能再用全文字符串匹配把代码误判为真实作答载荷。
+    data_match = re.search(r"window\.__DATA__\s*=\s*(.*?);\s*</script>", html, re.S)
+    if not data_match:
+        problems.append("找不到 window.__DATA__ 内嵌数据，无法核验逐题字段")
+    else:
+        try:
+            embedded = json.loads(data_match.group(1))
+            raw_fields = sorted(raw_answer_fields(embedded))
+            if raw_fields:
+                problems.append("内嵌数据出现逐题作答字段：" + "、".join(raw_fields[:10]))
+        except (TypeError, ValueError) as exc:
+            problems.append("window.__DATA__ 不是合法 JSON：" + str(exc))
 
     # 5. 占位符必须已替换
     if "__ENDPOINT__" in html or "__CLOUD_ON__" in html:

@@ -1,0 +1,151 @@
+# 策选迁移索引
+
+仅列在线仓内路径；源路径、哈希与排除原因见仓外复核清单。
+
+- build/_秘书终审回执-PPT成品-20261106.md → docs/evidence/ppt/_秘书终审回执-PPT成品-20261106.md
+- build/会后文件-2026-10-30/工会委员选举结果报告-报上级工会（待填）.docx → assets/working/meeting-templates/工会委员选举结果报告-报上级工会（待填）.docx; docs/extracted/meeting-templates/工会委员选举结果报告-报上级工会（待填）.md
+- build/会后文件-2026-10-30/工会委员选举结果报告-报同级党组织（待填）.docx → assets/working/meeting-templates/工会委员选举结果报告-报同级党组织（待填）.docx; docs/extracted/meeting-templates/工会委员选举结果报告-报同级党组织（待填）.md
+- build/干部制度审阅-20261104/31-PPT数据底稿-20261106/00-数量优化计算底稿-2026-11-06.md → docs/evidence/ppt/00-数量优化计算底稿-2026-11-06.md
+- build/干部制度审阅-20261104/31-PPT数据底稿-20261106/02-PPT数字清单-2026-11-06.md → docs/evidence/ppt/02-PPT数字清单-2026-11-06.md
+- build/干部制度审阅-20261104/31-PPT数据底稿-20261106/03-独立复算回执-数量优化-2026-11-06.md → docs/evidence/ppt/03-独立复算回执-数量优化-2026-11-06.md
+- build/干部制度审阅-20261104/员工版-20261106/00-员工版总目录.md → docs/current/employee/00-员工版总目录.md
+- build/干部制度审阅-20261104/员工版-20261106/S1-招聘/第01号-人才招聘与引荐-管理工具细则.md → docs/current/employee/第01号-人才招聘与引荐-管理工具细则.md
+- build/干部制度审阅-20261104/员工版-20261106/S1-招聘/第01号-人才招聘与引荐-管理流程细则.md → docs/current/employee/第01号-人才招聘与引荐-管理流程细则.md
+- build/干部制度审阅-20261104/员工版-20261106/S2-选用/第02号-干部选用与评价-管理工具细则.md → docs/current/employee/第02号-干部选用与评价-管理工具细则.md
+- build/干部制度审阅-20261104/员工版-20261106/S2-选用/第02号-干部选用与评价-管理流程细则.md → docs/current/employee/第02号-干部选用与评价-管理流程细则.md
+- build/干部制度审阅-20261104/员工版-20261106/S3-融入/第03号-试用期与入职融入-管理工具细则.md → docs/current/employee/第03号-试用期与入职融入-管理工具细则.md
+- build/干部制度审阅-20261104/员工版-20261106/S3-融入/第03号-试用期与入职融入-管理流程细则.md → docs/current/employee/第03号-试用期与入职融入-管理流程细则.md
+- build/干部制度审阅-20261104/员工版-20261106/S4-发展/第04号-中基层干部发展-管理工具细则.md → docs/current/employee/第04号-中基层干部发展-管理工具细则.md
+- build/干部制度审阅-20261104/员工版-20261106/S4-发展/第04号-中基层干部发展-管理流程细则.md → docs/current/employee/第04号-中基层干部发展-管理流程细则.md
+- build/干部制度审阅-20261104/员工版-20261106/S5-保留/第05号-干部保留与激励-管理工具细则.md → docs/current/employee/第05号-干部保留与激励-管理工具细则.md
+- build/干部制度审阅-20261104/员工版-20261106/S5-保留/第05号-干部保留与激励-管理流程细则.md → docs/current/employee/第05号-干部保留与激励-管理流程细则.md
+- build/干部制度审阅-20261104/员工版-20261106/S6-离任与洞察/第06号-干部离任与洞察-管理工具细则.md → docs/current/employee/第06号-干部离任与洞察-管理工具细则.md
+- build/干部制度审阅-20261104/员工版-20261106/S6-离任与洞察/第06号-干部离任与洞察-管理流程细则.md → docs/current/employee/第06号-干部离任与洞察-管理流程细则.md
+- build/干部制度审阅-20261104/员工版-20261106/_正式套docx-甲案改名-20261106/00-员工版总目录.docx → assets/employee/00-员工版总目录.docx
+- build/干部制度审阅-20261104/员工版-20261106/_正式套docx-甲案改名-20261106/00-员工版总目录.pdf → assets/employee/00-员工版总目录.pdf
+- build/干部制度审阅-20261104/员工版-20261106/_正式套docx-甲案改名-20261106/_交付清单-甲案改名-20261106.md → docs/evidence/employee/_交付清单-甲案改名-20261106.md
+- build/干部制度审阅-20261104/员工版-20261106/_正式套docx-甲案改名-20261106/第01号-人才招聘与引荐-管理工具细则.docx → assets/employee/第01号-人才招聘与引荐-管理工具细则.docx
+- build/干部制度审阅-20261104/员工版-20261106/_正式套docx-甲案改名-20261106/第01号-人才招聘与引荐-管理工具细则.pdf → assets/employee/第01号-人才招聘与引荐-管理工具细则.pdf
+- build/干部制度审阅-20261104/员工版-20261106/_正式套docx-甲案改名-20261106/第01号-人才招聘与引荐-管理流程细则.docx → assets/employee/第01号-人才招聘与引荐-管理流程细则.docx
+- build/干部制度审阅-20261104/员工版-20261106/_正式套docx-甲案改名-20261106/第01号-人才招聘与引荐-管理流程细则.pdf → assets/employee/第01号-人才招聘与引荐-管理流程细则.pdf
+- build/干部制度审阅-20261104/员工版-20261106/_正式套docx-甲案改名-20261106/第02号-干部选用与评价-管理工具细则.docx → assets/employee/第02号-干部选用与评价-管理工具细则.docx
+- build/干部制度审阅-20261104/员工版-20261106/_正式套docx-甲案改名-20261106/第02号-干部选用与评价-管理工具细则.pdf → assets/employee/第02号-干部选用与评价-管理工具细则.pdf
+- build/干部制度审阅-20261104/员工版-20261106/_正式套docx-甲案改名-20261106/第02号-干部选用与评价-管理流程细则.docx → assets/employee/第02号-干部选用与评价-管理流程细则.docx
+- build/干部制度审阅-20261104/员工版-20261106/_正式套docx-甲案改名-20261106/第02号-干部选用与评价-管理流程细则.pdf → assets/employee/第02号-干部选用与评价-管理流程细则.pdf
+- build/干部制度审阅-20261104/员工版-20261106/_正式套docx-甲案改名-20261106/第03号-试用期与入职融入-管理工具细则.docx → assets/employee/第03号-试用期与入职融入-管理工具细则.docx
+- build/干部制度审阅-20261104/员工版-20261106/_正式套docx-甲案改名-20261106/第03号-试用期与入职融入-管理工具细则.pdf → assets/employee/第03号-试用期与入职融入-管理工具细则.pdf
+- build/干部制度审阅-20261104/员工版-20261106/_正式套docx-甲案改名-20261106/第03号-试用期与入职融入-管理流程细则.docx → assets/employee/第03号-试用期与入职融入-管理流程细则.docx
+- build/干部制度审阅-20261104/员工版-20261106/_正式套docx-甲案改名-20261106/第03号-试用期与入职融入-管理流程细则.pdf → assets/employee/第03号-试用期与入职融入-管理流程细则.pdf
+- build/干部制度审阅-20261104/员工版-20261106/_正式套docx-甲案改名-20261106/第04号-中基层干部发展-管理工具细则.docx → assets/employee/第04号-中基层干部发展-管理工具细则.docx
+- build/干部制度审阅-20261104/员工版-20261106/_正式套docx-甲案改名-20261106/第04号-中基层干部发展-管理工具细则.pdf → assets/employee/第04号-中基层干部发展-管理工具细则.pdf
+- build/干部制度审阅-20261104/员工版-20261106/_正式套docx-甲案改名-20261106/第04号-中基层干部发展-管理流程细则.docx → assets/employee/第04号-中基层干部发展-管理流程细则.docx
+- build/干部制度审阅-20261104/员工版-20261106/_正式套docx-甲案改名-20261106/第04号-中基层干部发展-管理流程细则.pdf → assets/employee/第04号-中基层干部发展-管理流程细则.pdf
+- build/干部制度审阅-20261104/员工版-20261106/_正式套docx-甲案改名-20261106/第05号-干部保留与激励-管理工具细则.docx → assets/employee/第05号-干部保留与激励-管理工具细则.docx
+- build/干部制度审阅-20261104/员工版-20261106/_正式套docx-甲案改名-20261106/第05号-干部保留与激励-管理工具细则.pdf → assets/employee/第05号-干部保留与激励-管理工具细则.pdf
+- build/干部制度审阅-20261104/员工版-20261106/_正式套docx-甲案改名-20261106/第05号-干部保留与激励-管理流程细则.docx → assets/employee/第05号-干部保留与激励-管理流程细则.docx
+- build/干部制度审阅-20261104/员工版-20261106/_正式套docx-甲案改名-20261106/第05号-干部保留与激励-管理流程细则.pdf → assets/employee/第05号-干部保留与激励-管理流程细则.pdf
+- build/干部制度审阅-20261104/员工版-20261106/_正式套docx-甲案改名-20261106/第06号-干部离任与洞察-管理工具细则.docx → assets/employee/第06号-干部离任与洞察-管理工具细则.docx
+- build/干部制度审阅-20261104/员工版-20261106/_正式套docx-甲案改名-20261106/第06号-干部离任与洞察-管理工具细则.pdf → assets/employee/第06号-干部离任与洞察-管理工具细则.pdf
+- build/干部制度审阅-20261104/员工版-20261106/_正式套docx-甲案改名-20261106/第06号-干部离任与洞察-管理流程细则.docx → assets/employee/第06号-干部离任与洞察-管理流程细则.docx
+- build/干部制度审阅-20261104/员工版-20261106/_正式套docx-甲案改名-20261106/第06号-干部离任与洞察-管理流程细则.pdf → assets/employee/第06号-干部离任与洞察-管理流程细则.pdf
+- build/干部制度审阅-20261104/员工版-20261106/_秘书审校结案总单-员工版-20261106.md → docs/evidence/employee/_秘书审校结案总单-员工版-20261106.md
+- build/干部制度审阅-20261104/员工版-20261106/_秘书终审回执-员工版docx正式套-甲案改名-20261106.md → docs/evidence/employee/_秘书终审回执-员工版docx正式套-甲案改名-20261106.md
+- build/干部制度审阅-20261104/员工版-20261106/员工版实质规则对照-S3至S6.md → docs/current/employee/员工版实质规则对照-S3至S6.md
+- build/干部制度审阅-20261104/重建v5/S1-招聘/S1-招聘-修订说明.md → docs/working/revision-v5/S1-招聘-修订说明.md
+- build/干部制度审阅-20261104/重建v5/S2-选用/S2-选用-修订说明.md → docs/working/revision-v5/S2-选用-修订说明.md
+- build/干部制度审阅-20261104/重建v5/S3-融入/S3-融入-修订说明.md → docs/working/revision-v5/S3-融入-修订说明.md
+- build/干部制度审阅-20261104/重建v5/S4-发展/S4-发展-修订说明.md → docs/working/revision-v5/S4-发展-修订说明.md
+- build/干部制度审阅-20261104/重建v5/S5-保留/S5-保留-修订说明.md → docs/working/revision-v5/S5-保留-修订说明.md
+- build/干部制度审阅-20261104/重建v5/S6-离任与洞察/S6-离任与洞察-修订说明.md → docs/working/revision-v5/S6-离任与洞察-修订说明.md
+- build/干部制度审阅-20261104/重建v5/_工具写法规范.md → docs/working/revision-v5/_工具写法规范.md
+- build/干部制度审阅-20261104/重建v5/_待拍板决策单.md → docs/working/revision-v5/_待拍板决策单.md
+- build/干部制度审阅-20261104/重建v5/_进度台账.md → docs/working/revision-v5/_进度台账.md
+- build/干部制度审阅-20261104/重建v5/v5两件体例与留痕规则-20261105.md → docs/working/revision-v5/v5两件体例与留痕规则-20261105.md
+- build/干部制度审阅-20261104/重建v5/v5两件体例与留痕规则-v2-20261105.md → docs/working/revision-v5/v5两件体例与留痕规则-v2-20261105.md
+- build/干部制度新稿-20261104/00-新稿交付索引-2026-11-04.md → docs/working/revision/00-新稿交付索引-2026-11-04.md
+- build/干部制度新稿-20261104/00-理论源要点卡-2026-11-04.md → docs/working/revision/00-理论源要点卡-2026-11-04.md
+- build/干部制度新稿-20261104/S1-吸引/S1-人才吸引管理细则（正文稿）-2026-11-04.审校修订.md → docs/working/revision/S1-人才吸引管理细则（正文稿）-2026-11-04.审校修订.md
+- build/干部制度新稿-20261104/S2-招聘甄选/S2-招聘甄选管理细则（正文稿）-2026-11-04.审校修订.md → docs/working/revision/S2-招聘甄选管理细则（正文稿）-2026-11-04.审校修订.md
+- build/干部制度新稿-20261104/S3-入职融入/S3-入职融入管理细则（正文稿）-2026-11-04.审校修订.md → docs/working/revision/S3-入职融入管理细则（正文稿）-2026-11-04.审校修订.md
+- build/干部制度新稿-20261104/S4-人才发展/S4-人才发展管理细则（正文稿）-2026-11-04.审校修订.md → docs/working/revision/S4-人才发展管理细则（正文稿）-2026-11-04.审校修订.md
+- build/干部制度新稿-20261104/S5-保留与激励/S5-保留与激励管理细则（正文稿）-2026-11-04.审校修订.md → docs/working/revision/S5-保留与激励管理细则（正文稿）-2026-11-04.审校修订.md
+- build/干部制度新稿-20261104/S6-离职与组织洞察/S6-离职与组织洞察管理细则（正文稿）-2026-11-04.审校修订.md → docs/working/revision/S6-离职与组织洞察管理细则（正文稿）-2026-11-04.审校修订.md
+- build/干部制度新稿-20261104/六环节细则体例与命名编号草案.md → docs/working/revision/六环节细则体例与命名编号草案.md
+- build/干部制度新稿-20261104/审校清单-2026-11-04.md → docs/working/revision/审校清单-2026-11-04.md
+- build/干部制度新稿-20261104/待确认清单-2026-11-04.md → docs/working/revision/待确认清单-2026-11-04.md
+- build/核心人才管理-生命周期分类-20261104/00-生命周期分类总索引-2026-11-04.md → docs/working/research/00-生命周期分类总索引-2026-11-04.md
+- build/核心人才管理-生命周期分类-20261104/01-S1吸引阶段分类-v1-2026-11-04.md → docs/working/research/01-S1吸引阶段分类-v1-2026-11-04.md
+- build/核心人才管理-生命周期分类-20261104/02-S2招聘甄选阶段分类-v1-2026-11-04.md → docs/working/research/02-S2招聘甄选阶段分类-v1-2026-11-04.md
+- build/核心人才管理-生命周期分类-20261104/04-S4发展阶段分类-v1-2026-11-04.md → docs/working/research/04-S4发展阶段分类-v1-2026-11-04.md
+- build/核心人才管理-生命周期分类-20261104/05-S5保留阶段分类-v1-2026-11-04.md → docs/working/research/05-S5保留阶段分类-v1-2026-11-04.md
+- build/核心人才管理-生命周期分类-20261104/06-S6离职与组织洞察阶段分类-v1-2026-11-04.md → docs/working/research/06-S6离职与组织洞察阶段分类-v1-2026-11-04.md
+- build/核心人才管理-生命周期分类-20261104/07-数据底座-指标口径库与现状基线-v1-2026-11-04.md → docs/working/research/07-数据底座-指标口径库与现状基线-v1-2026-11-04.md
+- build/核心人才管理-生命周期分类-20261104/08-待拍清单合并版-2026-11-04.md → docs/working/research/08-待拍清单合并版-2026-11-04.md
+- build/职代会-机构填报表空表包-2026-10-29/00 机构填报表使用说明.docx → assets/working/templates/00 机构填报表使用说明.docx; docs/extracted/templates/00 机构填报表使用说明.md
+- build/职代会-机构填报表空表包-2026-10-29/1-会前-F10 名额与结构确认表（机构签收）.docx → assets/working/templates/1-会前-F10 名额与结构确认表（机构签收）.docx; docs/extracted/templates/1-会前-F10 名额与结构确认表（机构签收）.md
+- build/职代会-机构填报表空表包-2026-10-29/1-会前-F11 候选人提名登记表.docx → assets/working/templates/1-会前-F11 候选人提名登记表.docx; docs/extracted/templates/1-会前-F11 候选人提名登记表.md
+- build/职代会-机构填报表空表包-2026-10-29/1-会前-F12 代表选举公示情况表.docx → assets/working/templates/1-会前-F12 代表选举公示情况表.docx; docs/extracted/templates/1-会前-F12 代表选举公示情况表.md
+- build/职代会-机构填报表空表包-2026-10-29/1-会前-F20 会议通知签收-预告回执.docx → assets/working/templates/1-会前-F20 会议通知签收-预告回执.docx; docs/extracted/templates/1-会前-F20 会议通知签收-预告回执.md
+- build/职代会-机构填报表空表包-2026-10-29/1-会前-F21 代表参会预回执.docx → assets/working/templates/1-会前-F21 代表参会预回执.docx; docs/extracted/templates/1-会前-F21 代表参会预回执.md
+- build/职代会-机构填报表空表包-2026-10-29/1-会前-F22 材料讨论意见汇总表.docx → assets/working/templates/1-会前-F22 材料讨论意见汇总表.docx; docs/extracted/templates/1-会前-F22 材料讨论意见汇总表.md
+- build/职代会-机构填报表空表包-2026-10-29/1-会前-F24 职工提案征集表.docx → assets/working/templates/1-会前-F24 职工提案征集表.docx; docs/extracted/templates/1-会前-F24 职工提案征集表.md
+- build/职代会-机构填报表空表包-2026-10-29/1-会前-F25 机构提案初核清单.docx → assets/working/templates/1-会前-F25 机构提案初核清单.docx; docs/extracted/templates/1-会前-F25 机构提案初核清单.md
+- build/职代会-机构填报表空表包-2026-10-29/1-会前-F30 正式参会回执-请假报备表.docx → assets/working/templates/1-会前-F30 正式参会回执-请假报备表.docx; docs/extracted/templates/1-会前-F30 正式参会回执-请假报备表.md
+- build/职代会-机构填报表空表包-2026-10-29/2-会当天-F13 无记名投票结果表.docx → assets/working/templates/2-会当天-F13 无记名投票结果表.docx; docs/extracted/templates/2-会当天-F13 无记名投票结果表.md
+- build/职代会-机构填报表空表包-2026-10-29/2-会当天-F14 本机构选举情况报告.docx → assets/working/templates/2-会当天-F14 本机构选举情况报告.docx; docs/extracted/templates/2-会当天-F14 本机构选举情况报告.md
+- build/职代会-机构填报表空表包-2026-10-29/2-会当天-F15 当选代表名单.docx → assets/working/templates/2-会当天-F15 当选代表名单.docx; docs/extracted/templates/2-会当天-F15 当选代表名单.md
+- build/职代会-机构填报表空表包-2026-10-29/3-会后-F40 决议公示反馈表.docx → assets/working/templates/3-会后-F40 决议公示反馈表.docx; docs/extracted/templates/3-会后-F40 决议公示反馈表.md
+- build/职代会-机构填报表空表包-2026-10-29/3-会后-F42 决议落实进展反馈表.docx → assets/working/templates/3-会后-F42 决议落实进展反馈表.docx; docs/extracted/templates/3-会后-F42 决议落实进展反馈表.md
+- build/职代会-机构填报表空表包-2026-10-29/4-任期中-F50 代表变动登记表.docx → assets/working/templates/4-任期中-F50 代表变动登记表.docx; docs/extracted/templates/4-任期中-F50 代表变动登记表.md
+- build/职代会-机构填报表空表包-2026-10-29/4-任期中-F51 补选申请表.docx → assets/working/templates/4-任期中-F51 补选申请表.docx; docs/extracted/templates/4-任期中-F51 补选申请表.md
+- build/职代会-机构填报表空表包-2026-10-29/4-任期中-F52 补选结果表.docx → assets/working/templates/4-任期中-F52 补选结果表.docx; docs/extracted/templates/4-任期中-F52 补选结果表.md
+- build/职代会/条例版本核实-官方目录证据-2026-10-28.md → docs/reference/regulation/条例版本核实-官方目录证据-2026-10-28.md
+- build/职代会/浙江省企业民主管理条例-官方PDF.pdf → assets/reference/regulation/浙江省企业民主管理条例-官方PDF.pdf
+- build/职代会/浙江省企业民主管理条例-现取原文与核读-2026-10-28.md → docs/reference/regulation/浙江省企业民主管理条例-现取原文与核读-2026-10-28.md
+- build/职代会/浙江省职工代表大会操作规程试行-浙总工发2014-41号.pdf → assets/reference/regulation/浙江省职工代表大会操作规程试行-浙总工发2014-41号.pdf
+- build/行文/PPT页面文案-20261106.md → docs/current/ppt/PPT页面文案-20261106.md
+- build/议题二审议情况报告单-清单-2026-10-29.md → docs/working/meeting-templates/议题二审议情况报告单-清单-2026-10-29.md
+- build/议题审议情况报告单-2026-10-30/议题二审议情况报告单-云上余村演艺分公司-2026-10-30.docx → assets/working/meeting-templates/议题二审议情况报告单-云上余村演艺分公司-2026-10-30.docx; docs/extracted/meeting-templates/议题二审议情况报告单-云上余村演艺分公司-2026-10-30.md
+- build/议题审议情况报告单-2026-10-30/议题二审议情况报告单-云上草原商管-2026-10-30.docx → assets/working/meeting-templates/议题二审议情况报告单-云上草原商管-2026-10-30.docx; docs/extracted/meeting-templates/议题二审议情况报告单-云上草原商管-2026-10-30.md
+- build/议题审议情况报告单-2026-10-30/议题二审议情况报告单-云上草原度假村-2026-10-30.docx → assets/working/meeting-templates/议题二审议情况报告单-云上草原度假村-2026-10-30.docx; docs/extracted/meeting-templates/议题二审议情况报告单-云上草原度假村-2026-10-30.md
+- build/议题审议情况报告单-2026-10-30/议题二审议情况报告单-云上草原景区-2026-10-30.docx → assets/working/meeting-templates/议题二审议情况报告单-云上草原景区-2026-10-30.docx; docs/extracted/meeting-templates/议题二审议情况报告单-云上草原景区-2026-10-30.md
+- build/议题审议情况报告单-2026-10-30/议题二审议情况报告单-体育文化-2026-10-30.docx → assets/working/meeting-templates/议题二审议情况报告单-体育文化-2026-10-30.docx; docs/extracted/meeting-templates/议题二审议情况报告单-体育文化-2026-10-30.md
+- build/议题审议情况报告单-2026-10-30/议题二审议情况报告单-工程管理分公司-2026-10-30.docx → assets/working/meeting-templates/议题二审议情况报告单-工程管理分公司-2026-10-30.docx; docs/extracted/meeting-templates/议题二审议情况报告单-工程管理分公司-2026-10-30.md
+- build/议题审议情况报告单-2026-10-30/议题二审议情况报告单-恐龙酒店-2026-10-30.docx → assets/working/meeting-templates/议题二审议情况报告单-恐龙酒店-2026-10-30.docx; docs/extracted/meeting-templates/议题二审议情况报告单-恐龙酒店-2026-10-30.md
+- build/议题审议情况报告单-2026-10-30/议题二审议情况报告单-星空天文酒店-2026-10-30.docx → assets/working/meeting-templates/议题二审议情况报告单-星空天文酒店-2026-10-30.docx; docs/extracted/meeting-templates/议题二审议情况报告单-星空天文酒店-2026-10-30.md
+- build/议题审议情况报告单-2026-10-30/议题二审议情况报告单-景区管理分公司-2026-10-30.docx → assets/working/meeting-templates/议题二审议情况报告单-景区管理分公司-2026-10-30.docx; docs/extracted/meeting-templates/议题二审议情况报告单-景区管理分公司-2026-10-30.md
+- build/议题审议情况报告单-2026-10-30/议题二审议情况报告单-熊猫部落-2026-10-30.docx → assets/working/meeting-templates/议题二审议情况报告单-熊猫部落-2026-10-30.docx; docs/extracted/meeting-templates/议题二审议情况报告单-熊猫部落-2026-10-30.md
+- build/议题审议情况报告单-2026-10-30/议题二审议情况报告单-研创院-2026-10-30.docx → assets/working/meeting-templates/议题二审议情况报告单-研创院-2026-10-30.docx; docs/extracted/meeting-templates/议题二审议情况报告单-研创院-2026-10-30.md
+- build/议题审议情况报告单-2026-10-30/议题二审议情况报告单-聚力旅行社-2026-10-30.docx → assets/working/meeting-templates/议题二审议情况报告单-聚力旅行社-2026-10-30.docx; docs/extracted/meeting-templates/议题二审议情况报告单-聚力旅行社-2026-10-30.md
+- build/议题审议情况报告单-2026-10-30/议题二审议情况报告单-茅山森林世界-2026-10-30.docx → assets/working/meeting-templates/议题二审议情况报告单-茅山森林世界-2026-10-30.docx; docs/extracted/meeting-templates/议题二审议情况报告单-茅山森林世界-2026-10-30.md
+- build/议题审议情况报告单-2026-10-30/议题二审议情况报告单-行政管理中心-2026-10-30.docx → assets/working/meeting-templates/议题二审议情况报告单-行政管理中心-2026-10-30.docx; docs/extracted/meeting-templates/议题二审议情况报告单-行政管理中心-2026-10-30.md
+- build/议题审议情况报告单-2026-10-30/议题二审议情况报告单-财务管理中心-2026-10-30.docx → assets/working/meeting-templates/议题二审议情况报告单-财务管理中心-2026-10-30.docx; docs/extracted/meeting-templates/议题二审议情况报告单-财务管理中心-2026-10-30.md
+- build/面板/PPT-新旧三列对照-20261106/本次整合核心逻辑关键词-20261107.md → docs/working/research/本次整合核心逻辑关键词-20261107.md
+- build/面板/PPT-新旧三列对照-20261106/集团本部25件范围确认定稿-20261107.md → docs/working/research/集团本部25件范围确认定稿-20261107.md
+- build/面板/PPT-旧新制度对比-20261106/干部管理制度新旧对比-20261106.pdf → assets/ppt/干部管理制度新旧对比-20261106.pdf
+- build/面板/PPT-旧新制度对比-20261106/干部管理制度新旧对比-20261106.pptx → assets/ppt/干部管理制度新旧对比-20261106.pptx
+- build/面板/最终件清单-PPT-20261106.md → docs/evidence/ppt/最终件清单-PPT-20261106.md
+- outputs/云上文旅集团人事档案管理办法.final.docx → outputs/云上文旅集团人事档案管理办法.final.docx; docs/current/final/云上文旅集团人事档案管理办法.final.md
+- outputs/云上文旅集团人事档案管理办法.final.receipt.md → outputs/云上文旅集团人事档案管理办法.final.receipt.md; docs/evidence/final/云上文旅集团人事档案管理办法.final.receipt.md
+- outputs/关于召开第四届第一次工会会员代表大会的通知-2026-10-29.final.docx → outputs/关于召开第四届第一次工会会员代表大会的通知-2026-10-29.final.docx; docs/current/final/关于召开第四届第一次工会会员代表大会的通知-2026-10-29.final.md
+- outputs/关于召开第四届第一次工会会员代表大会的通知-2026-10-29.final.provenance.md → outputs/关于召开第四届第一次工会会员代表大会的通知-2026-10-29.final.provenance.md; docs/evidence/final/关于召开第四届第一次工会会员代表大会的通知-2026-10-29.final.provenance.md
+- outputs/关于召开第四届第一次工会会员代表大会的通知-2026-10-29.final.receipt.md → outputs/关于召开第四届第一次工会会员代表大会的通知-2026-10-29.final.receipt.md; docs/evidence/final/关于召开第四届第一次工会会员代表大会的通知-2026-10-29.final.receipt.md
+- outputs/关于召开职工代表大会的通知-2026-10-28.final.docx → outputs/关于召开职工代表大会的通知-2026-10-28.final.docx; docs/current/final/关于召开职工代表大会的通知-2026-10-28.final.md
+- outputs/关于召开职工代表大会的通知-2026-10-28.final.provenance.md → outputs/关于召开职工代表大会的通知-2026-10-28.final.provenance.md; docs/evidence/final/关于召开职工代表大会的通知-2026-10-28.final.provenance.md
+- outputs/关于召开职工代表大会的通知-2026-10-28.final.receipt.md → outputs/关于召开职工代表大会的通知-2026-10-28.final.receipt.md; docs/evidence/final/关于召开职工代表大会的通知-2026-10-28.final.receipt.md
+- outputs/关于规范文件归档管理的通知.final.docx → outputs/关于规范文件归档管理的通知.final.docx; docs/current/final/关于规范文件归档管理的通知.final.md
+- outputs/关于规范文件归档管理的通知.final.receipt.md → outputs/关于规范文件归档管理的通知.final.receipt.md; docs/evidence/final/关于规范文件归档管理的通知.final.receipt.md
+- outputs/职代会代表选举办法-2026-10-28.final.docx → outputs/职代会代表选举办法-2026-10-28.final.docx; docs/current/final/职代会代表选举办法-2026-10-28.final.md
+- outputs/职代会代表选举办法-2026-10-28.final.provenance.md → outputs/职代会代表选举办法-2026-10-28.final.provenance.md; docs/evidence/final/职代会代表选举办法-2026-10-28.final.provenance.md
+- outputs/职代会代表选举办法-2026-10-28.final.receipt.md → outputs/职代会代表选举办法-2026-10-28.final.receipt.md; docs/evidence/final/职代会代表选举办法-2026-10-28.final.receipt.md
+- outputs/职代会报备件-2026-10-28.final.docx → outputs/职代会报备件-2026-10-28.final.docx; docs/current/final/职代会报备件-2026-10-28.final.md
+- outputs/职代会报备件-2026-10-28.final.provenance.md → outputs/职代会报备件-2026-10-28.final.provenance.md; docs/evidence/final/职代会报备件-2026-10-28.final.provenance.md
+- outputs/职代会报备件-2026-10-28.final.receipt.md → outputs/职代会报备件-2026-10-28.final.receipt.md; docs/evidence/final/职代会报备件-2026-10-28.final.receipt.md
+- outputs/职工代表大会拟审议议案清单-2026-10-28.final.docx → outputs/职工代表大会拟审议议案清单-2026-10-28.final.docx; docs/current/final/职工代表大会拟审议议案清单-2026-10-28.final.md
+- outputs/职工代表大会拟审议议案清单-2026-10-28.final.provenance.md → outputs/职工代表大会拟审议议案清单-2026-10-28.final.provenance.md; docs/evidence/final/职工代表大会拟审议议案清单-2026-10-28.final.provenance.md
+- outputs/职工代表大会拟审议议案清单-2026-10-28.final.receipt.md → outputs/职工代表大会拟审议议案清单-2026-10-28.final.receipt.md; docs/evidence/final/职工代表大会拟审议议案清单-2026-10-28.final.receipt.md
+- outputs/附件五-结构比例测算表-2026-10-28.final.docx → outputs/附件五-结构比例测算表-2026-10-28.final.docx; docs/current/final/附件五-结构比例测算表-2026-10-28.final.md
+- outputs/附件五-结构比例测算表-2026-10-28.final.receipt.md → outputs/附件五-结构比例测算表-2026-10-28.final.receipt.md; docs/evidence/final/附件五-结构比例测算表-2026-10-28.final.receipt.md
+- outputs/附件五-结构比例测算表-2026-10-28.provenance.md → outputs/附件五-结构比例测算表-2026-10-28.provenance.md; docs/evidence/final/附件五-结构比例测算表-2026-10-28.provenance.md
+- outputs/附件六-职工总数口径说明-2026-10-28.final.docx → outputs/附件六-职工总数口径说明-2026-10-28.final.docx; docs/current/final/附件六-职工总数口径说明-2026-10-28.final.md
+- outputs/附件六-职工总数口径说明-2026-10-28.provenance.md → outputs/附件六-职工总数口径说明-2026-10-28.provenance.md; docs/evidence/final/附件六-职工总数口径说明-2026-10-28.provenance.md

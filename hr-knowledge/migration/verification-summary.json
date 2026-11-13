@@ -1,0 +1,11 @@
+{
+  "status": "pass",
+  "source_records": 160,
+  "migrated_sources": 147,
+  "held_sources": 13,
+  "checked_original_destinations": 162,
+  "checked_markdown_companions": 44,
+  "error_count": 0,
+  "sensitive_hit_count": 0,
+  "held_artifact_leak_count": 0
+}

@@ -1,0 +1,24 @@
+{
+  "selection_count": 160,
+  "status_counts": {
+    "migrated": 147,
+    "held": 13
+  },
+  "by_batch": {
+    "batch1": {
+      "migrated": 79,
+      "held": 8
+    },
+    "batch2": {
+      "migrated": 68,
+      "held": 5
+    }
+  },
+  "exclusion_reason_counts": {
+    "known_person_name": 9,
+    "possible_personal_data": 5,
+    "restricted_personnel_or_credential_path": 7
+  },
+  "copied_destination_count": 206,
+  "full_manifest_outside_online_root": "/Users/leto/WorkBuddy/HR技术中台/review-inbox/hr-knowledge-migration/curated-manifest.json"
+}

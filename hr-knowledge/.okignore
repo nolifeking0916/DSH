@@ -1,0 +1,27 @@
+# OpenKnowledge 不索引机器状态、依赖和仓外待审内容。
+.git/
+.ok/local/
+.ok/worktrees/
+node_modules/
+review-inbox/
+*.tmp
+*.log
+.env
+.env.*
+*.pem
+*.key
+*.p12
+
+# DOCX 是 ZIP/XML 容器；桌面端直接 View as text 会显示二进制乱码。
+# 原件仍保留在 Git，文件树只显示同名 PDF 阅读版。
+**/*.docx
+
+# 默认阅读视图：只收起旧稿、证据镜像和技术台账，不移动或删除原件。
+# 这些规则仅影响桌面文件树；Git、原始路径和 OpenViking 检索副本保持不变。
+# 若要重新显示，移除对应规则后刷新文件树（showAll 不会绕过 .okignore）。
+docs/evidence/
+docs/working/
+docs/extracted/
+outputs/旧件留档/
+migration/
+scripts/

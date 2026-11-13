@@ -31,12 +31,28 @@
 const { Buffer } = require("node:buffer");
 const { scoreAll, rep, KEYS } = require("./score.js");
 
-const CORS = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type,Authorization,Prefer",
-  "Access-Control-Max-Age": "600"
-};
+/* 【票 #54 第 2 层 · 2026-10-26 · 维护者拍板】Origin 白名单，落**函数层**：
+   · Origin ∈ 白名单（候选页 / HR 台）→ 回显**该单个 origin**；
+   · 无 Origin（curl、服务端直调）→ 回 `*`（服务端本就不受 CORS 约束，保持可读）；
+   · 其余来源 → **不回 ACAO** ⇒ 浏览器读不到响应。
+   ⚠ 网关 `EnableSafeDomain` 保持 **false 不动** —— 不把 10:31 那个「请求 origin,*」逗号多值 bug 放回来。
+   ⚠ 这不是访问控制（research/网关与函数鉴权手段 §4：安全域名/CORS 只挡浏览器跨源、不挡 curl）；
+     按人鉴权在第 3 层（票 #44）。 */
+const ALLOWED_ORIGINS = [
+  "https://assessment-test-uu-one-d4gc4ot78a702cb70.webapps.tcloudbase.com",
+  "https://hr-panel-uu-one-d4gc4ot78a702cb70.webapps.tcloudbase.com"
+];
+
+function corsHeaders(origin) {
+  const h = {
+    "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type,Authorization,Prefer",
+    "Access-Control-Max-Age": "600"
+  };
+  if (!origin) h["Access-Control-Allow-Origin"] = "*";
+  else if (ALLOWED_ORIGINS.indexOf(origin) !== -1) h["Access-Control-Allow-Origin"] = origin;
+  return h;
+}
 
 function env(name) {
   const v = process.env[name];
@@ -68,10 +84,12 @@ async function pg(method, path, body, prefer) {
   return data;
 }
 
-function reply(status, body) {
+/* 【票 #54 第 2 层】origin 由 handler 入口取一次、按参数传进来 —— **不用模块级变量**，
+   避免同实例并发请求串号；origin 缺省时（curl / 服务端直调）由 corsHeaders 回 `*`。 */
+function _reply(status, body, origin) {
   return {
     statusCode: status,
-    headers: Object.assign({ "Content-Type": "application/json; charset=utf-8" }, CORS),
+    headers: Object.assign({ "Content-Type": "application/json; charset=utf-8" }, corsHeaders(origin)),
     body: JSON.stringify(body)
   };
 }
@@ -103,40 +121,68 @@ function codeCheckOn() {
   return !(v === "off" || v === "0" || v === "false");
 }
 
-/* ============================================================ 补交第三项（票 #26 · 2026-10-26）
-   纯函数，可被本地单测 import（exports._mergeM3Patch）。
-   规则：**只填空位** —— 已作答的题位不覆盖（幂等 + 不可篡改已答内容）；
-   题位必须是 0..(题数-1) 的整数，选项必须是 0-3 的整数；其它一律判为不合法。 */
+/* ============================================================ 题数（票 #83/#85）
+   三个模块的题数都从**服务端题库**取，只在题库读不到时兜底，避免写死魔数。 */
 function m3Slots() {
   try { return KEYS.m3.questions.length; } catch (e) { return 40; }
 }
-function mergeM3Patch(cur, patch) {
-  const n = m3Slots();
-  const arr = Array.isArray(cur) ? cur.slice(0, n) : [];
-  while (arr.length < n) arr.push(null);
-  const filled = [], skipped = [], bad = [];
-  for (const k of Object.keys(patch || {})) {
-    const i = Number(k);
-    if (!Number.isInteger(i) || i < 0 || i >= n) { bad.push(k); continue; }
-    const v = patch[k];
-    if (!Number.isInteger(v) || v < 0 || v > 3) { bad.push(k); continue; }
-    const old = arr[i];
-    if (old === null || old === undefined) { arr[i] = v; filled.push(i); }
-    else { skipped.push(i); }
-  }
-  let empty = 0;
-  for (const v of arr) if (v === null || v === undefined) empty++;
-  return { array: arr, filled: filled, skipped: skipped, bad: bad, empty: empty };
+/* 第二项题数（自评 + 情境）：与第三项同一口径，从**服务端题库**取，兜底 76 */
+function m2Slots() {
+  try { return KEYS.eq.self_items.length + KEYS.eq.sjt.length; } catch (e) { return 76; }
 }
-
-/* 补答动作的结构化日志（与 exportLog 同一纪律：先留位置） */
-function patchLog(code, merged, m3out) {
-  const line = {
-    ev: "assessment_m3_patch", code: code, at: new Date().toISOString(),
-    filled: merged.filled, skipped: merged.skipped, remaining_empty: merged.empty,
-    m3_grade: m3out && m3out.grade
-  };
-  try { console.log(JSON.stringify(line)); } catch (e) { /* 日志失败不影响补答 */ }
+/* 第一项题数：服务端题库，兜底 96（与 m2Slots/m3Slots 同纪律，票 #87） */
+function m1Slots() {
+  try { return KEYS.m1.questions.length; } catch (e) { return 96; }
+}
+/* ============================================================ 计分前形状自检（票 #87 · 方案 A 草案 2026-11-03，待维护者拍板）
+   #83/#85 已在 POST 入口按字段 400；这是 scoreAll 前的**唯一口径兜底**，也给读侧
+   （历史行）提供同一判定。只看**形状**，不看完成度：
+   · m1/m3 是定长数组 ⇒ 长度必须分别 96/40（m3 整列 null = 加列前历史行）；
+   · m2 是稀疏对象 ⇒ 键必须在 0-(n-1)（少键＝「仍然提交」合法路径，不报）。
+   返回 [{module,kind,expected,actual}]，空数组 = 形状合法。 */
+function shapeSelfCheck(m1, m2raw, m3) {
+  const probs = [];
+  const n1 = m1Slots();
+  if (!Array.isArray(m1) || m1.length !== n1) {
+    probs.push({ module: "m1", kind: "shape", expected: n1, actual: Array.isArray(m1) ? m1.length : null });
+  }
+  const n3 = m3Slots();
+  if (!Array.isArray(m3) || m3.length !== n3) {
+    probs.push({ module: "m3", kind: "shape", expected: n3, actual: Array.isArray(m3) ? m3.length : null });
+  }
+  if (m2raw !== undefined && m2raw !== null) {
+    const n2 = m2Slots();
+    if (typeof m2raw !== "object" || Array.isArray(m2raw)) {
+      probs.push({ module: "m2", kind: "shape", expected: "sparse-object",
+        actual: Array.isArray(m2raw) ? "array" : typeof m2raw });
+    } else {
+      for (const k of Object.keys(m2raw)) {
+        const i = Number(k);
+        if (!Number.isInteger(i) || i < 0 || i >= n2) {
+          probs.push({ module: "m2", kind: "shape", expected: "slot 0-" + (n2 - 1), actual: k });
+          break;
+        }
+      }
+    }
+  }
+  return probs;
+}
+/* 读侧判定（方案 A 不新增列）：每次读取按现状现算，坏形状只在报告/统计侧隔离、不回写。
+   m2_answers 为 null 合法（第二项可空交）；m3_answers 为 null = 加列前历史行。 */
+function rowShapeProblems(row) {
+  if (!row) return [{ module: "row", kind: "shape", expected: "object", actual: null }];
+  return shapeSelfCheck(
+    Array.isArray(row.m1_raw) ? row.m1_raw : null,
+    row.m2_answers !== undefined ? row.m2_answers : null,
+    Array.isArray(row.m3_answers) ? row.m3_answers : null
+  );
+}
+/* 拒收留痕（票 #87 要做的事 3）：与 exportLog/patchLog 同一纪律 —— 一行结构化
+   JSON 到 stdout（随云函数日志进 CLS），可查谁/何时/哪个模块/差多少；不另造表。 */
+function rejectLog(meta, reasons) {
+  const line = Object.assign({ ev: "assessment_submit_reject", at: new Date().toISOString() },
+    meta, { reasons: reasons });
+  try { console.log(JSON.stringify(line)); } catch (e) { /* 日志失败不改变拒收结论 */ }
 }
 function str(v) {
   if (v === null || v === undefined) return null;
@@ -159,6 +205,34 @@ function exportLog(scope, extra) {
    **不需要重新计分**：compose() 只吃 m1 短板档 + m2 总档 + m3 总档
    （src/modules/report.js 的 compose()），这三样都在已落库的 out 里。
    函数里的 report.js 与页面里的是同一份（逐字节相同）⇒ 两边算出来一致。 */
+// 票 #78 第 4 步：服务端算可信度，只下发 level+flags（#45：不下发逐题）
+function credibilitySrv(row) {
+  function maxRun(seq) {
+    let best = 0, cur = 0, prev = null;
+    (seq || []).forEach((v) => {
+      if (v == null) { cur = 0; prev = null; return; }
+      if (v === prev) cur++; else { cur = 1; prev = v; }
+      if (cur > best) best = cur;
+    });
+    return best;
+  }
+  const out = {};
+  const raw = Array.isArray(row.m1_raw) ? row.m1_raw : null;
+  let f1 = [], l1 = "高";
+  if (raw) {
+    const run = maxRun(raw), ones = raw.filter(v => v === 1).length, zeros = raw.filter(v => v === 0).length;
+    const ans = ones + zeros, dom = ans ? Math.max(ones, zeros) / ans : 0;
+    if (run >= 25 || dom >= 0.85) { l1 = "低"; f1.push("96 题里同侧连答最长 " + run + " 题、某一侧占比 " + Math.round(dom*100) + "%，接近连续作答同一端的形态"); }
+    else if (run >= 15 || dom >= 0.70) { l1 = "中"; f1.push("同侧连答最长 " + run + " 题、某一侧占比 " + Math.round(dom*100) + "%，作答偏好偏集中"); }
+  } else { l1 = "中"; f1.push("本次未留存逐题作答，同侧作答与缺失只能看汇总口径"); }
+  const miss1 = Number(row.unanswered_m1 || 0);
+  if (miss1 > 0) f1.push("第一项有 " + miss1 + " 题未作答");
+  out.m1 = { level: l1, flags: f1 };
+  out.m2 = { level: "中", flags: ["汇总台导出不含 m2 原始作答，缺失与一致信号以 m2_result 为准"] };
+  out.m3 = { level: "中", flags: ["汇总台导出不含 m3 原始作答，缺失与作答模式只能看汇总口径"] };
+  out.overall = { level: "中", speed: null, flags: out.m1.flags.concat(out.m2.flags, out.m3.flags) };
+  return out;
+}
 function composeStored(m1o, m2o, m3o) {
   if (!m1o || !m2o || !m3o) return null;
   const g1 = m1o.short && m1o.short.grade;
@@ -238,52 +312,29 @@ function matchNarrative(rules, profile) {
 
 exports.main = async (event) => {
   const method = (event.httpMethod || event.requestContext && event.requestContext.httpMethod || "GET").toUpperCase();
+  /* 【票 #54 第 2 层】本次请求的 Origin 在入口取一次，绑进**本请求**的 reply 闭包：
+     后续所有 reply(...) 都只看这一次的 origin（不用模块级变量，避免并发串号）。
+     白名单判定在 corsHeaders()：白名单 → 回显该 origin；无 Origin → `*`；其余 → 不回 ACAO。 */
+  const _h = event.headers || {};
+  const origin = String(_h.origin || _h.Origin || "");
+  const reply = (s, b) => _reply(s, b, origin);
   if (method === "OPTIONS") return reply(204, {});
 
   const q = event.queryStringParameters || {};
   const table = process.env.PG_TABLE || "responses";
   try {
-    /* ---- 补交第三项（2026-10-26 · 票 #26 的临时补答通道）------------------------
-       场景：某份作答的**第三项**有题位未作答（页面 bug 或候选人跳答），第一、二项完整。
-       本分支**只填空位**：已作答的题位一律不覆盖 ⇒ 幂等、且不能篡改已答内容；
-       合并后由服务端用同一套 report.js **重算第三项成绩**，
-       第一项成绩、第二项成绩与逐题作答**一个字都不动**。
-       body: { code, m3_answers: { "<题位>": <选项下标 0-3> } }
-       ⚠ 这个接口的门槛就是 code 本身（谁拿到 code 就能补空位）—— 补答页用完即删，
-         且访问控制归票 #44。 */
+    /* ---- 票 #86（2026-11-03）：补交第三项通道 action=patch_m3 已停用 --------------
+       旧实现（票 #26 的临时补答）门槛只有测评编号、**无鉴权**，谁拿到 code 就能
+       PATCH 服务端成绩。两位当事人的第三项已在库补完（40/40、0 空、值域 0-3），
+       /patch 三份一次性补答页随票 #86 静态清理删除 ⇒ 服务端分支整段下掉：
+         · 这里显式回 **410 Gone**：不解析 body、不查库、不写库（无凭据也无通道）；
+         · 必须在普通交卷 POST 分支**之前**拦住，否则它会带着 action 参数落进
+           普通交卷逻辑，被当成一份新交卷处理；
+         · 不做「加凭据保留」：按人鉴权归票 #44 的施测人路径，将来若重开补答，
+           另立带鉴权的正式接口，不复活这个一次性动作名。 */
     if (method === "POST" && q.action === "patch_m3") {
-      let payload = event.body;
-      if (typeof payload === "string") {
-        try { payload = JSON.parse(payload); } catch (e) { return reply(400, { ok: false, error: "请求体不是合法 JSON" }); }
-      }
-      if (!payload || typeof payload !== "object") return reply(400, { ok: false, error: "缺少作答记录" });
-      const code = str(payload.code);
-      if (!code) return reply(400, { ok: false, error: "缺少 code（测评编号）" });
-      const patch = payload.m3_answers;
-      if (!patch || typeof patch !== "object" || Array.isArray(patch)) {
-        return reply(400, { ok: false, error: "m3_answers 应为 {题位: 选项下标}" });
-      }
-      const rows = await pg("GET", "/" + table + "?code=eq." + encodeURIComponent(code) +
-        "&select=code,respondent_name,m1_raw,m2_answers,m3_answers,m3_result");
-      if (!rows || !rows.length) return reply(404, { ok: false, error: "没有这一份", code: code });
-      const row = rows[0];
-      const merged = mergeM3Patch(row.m3_answers, patch);
-      if (merged.bad.length) {
-        return reply(400, { ok: false, error: "题位或选项不合法", bad: merged.bad,
-          "allowed_slots": "0-" + (m3Slots() - 1), "allowed_options": "0-3" });
-      }
-      if (!merged.filled.length) {
-        return reply(200, { ok: true, code: code, filled: [], skipped: merged.skipped,
-          "remaining_empty": merged.empty,
-          "note": "没有可补的空位（已作答的题位不覆盖）" });
-      }
-      const out = scoreAll({ m1_raw: row.m1_raw, m2_answers: row.m2_answers, m3_answers: merged.array });
-      await pg("PATCH", "/" + table + "?code=eq." + encodeURIComponent(code),
-        { m3_answers: merged.array, m3_result: out.m3 });
-      patchLog(code, merged, out.m3);
-      return reply(200, { ok: true, code: code, filled: merged.filled, skipped: merged.skipped,
-        "remaining_empty": merged.empty, "m3_grade": out.m3 && out.m3.grade,
-        "name": row.respondent_name });
+      return reply(410, { ok: false, retired: "patch_m3",
+        error: "补答通道已停用（票 #86）；第三项补答已结束，如需补答请走施测人路径" });
     }
 
     if (method === "POST") {
@@ -302,6 +353,27 @@ exports.main = async (event) => {
       if (codeCheckOn() && !CODE_RE.test(code)) {
         return reply(400, { ok: false, error: "测评编号格式不对（应为 EQ-YYYYMMDD-6 位随机码-4 位校验码）", code: code });
       }
+      /* 票 #87 方案 A：统一前置形状自检（对**原始载荷**，在任何逐字段解析之前）。
+         m1/m3 定长 96/40、m2 稀疏对象键在 0-75。任一不符 ⇒ 整份拒收、不落库，
+         400 带 reasons，并写 CLS 结构化留痕（谁/编号/模块/期望/实得）。
+         值域（m1 0/1、m2 与 m3 0-3）仍归后面的逐字段校验，这里只管形状。
+         这样 41 项 / 39 项 / 整缺 / m1 题数不符都走同一个带留痕的入口，
+         不会先被 #83 那条只回错误串、不留痕的旧 400 拦走。 */
+      {
+        const earlyProbs = shapeSelfCheck(
+          Array.isArray(raw.m1_raw) ? raw.m1_raw : null,
+          raw.m2_answers,
+          Array.isArray(raw.m3_answers) ? raw.m3_answers : null
+        );
+        if (earlyProbs.length) {
+          rejectLog({ disposition: "rejected", code: code,
+            respondent_name: str(raw.respondent_name) || str(payload.name) || null,
+            id_last4: str(raw.id_last4), id_hash: str(raw.id_hash), group_name: str(raw.group_name) },
+            earlyProbs);
+          return reply(400, { ok: false, error: "作答形状自检未过，整份拒收、不落库",
+            "void": true, reasons: earlyProbs });
+        }
+      }
 
       /* ---- m1_raw：96 题；-1 / null = 未作答 → 落 null ----
          线上候选人页把「未作答」编码成 **-1**（publish/index.html 的 cloudPayload），
@@ -318,6 +390,35 @@ exports.main = async (event) => {
         if (v !== 0 && v !== 1) return reply(400, { ok: false, error: "m1_raw 第 " + (i + 1) + " 题不是 0/1" });
         m1[i] = v;
       }
+      /* ---- m2_answers：题位范围（票 #83）＋ 值域（票 #85 · 2026-10-26）----
+         第二项是**自评 + 情境**共 76 题，作答以 {题位: 选项下标} 的对象上报
+         （publish/candidate/index.html 的 buildPayload：**答了的题位才有键**）。
+         ⇒ 这里查两件事，都不是查键的个数：
+           · 题位范围（#83）：键必须是 0-75 的整数题位。
+             键数少于 76 = 有题没答（页面上「仍然提交（按未作答计分）」那条路径，
+             服务端照旧按未作答计分）—— **不该拦**；
+             题位超出 0-75 = 形状坏了（多余项 / 越界）—— 400。
+           · 值域（#85）：**已作答题位**的值必须是 0-3 的整数（四选项下标）。
+             超范围（-1/4/7…）、字符串、小数、null 占位一律 400 —— 票 #85 实测前
+             这类值会被静默算成别的分。键不存在才表示未答；键在但值不合法 = 形状坏。
+         （第一项、第三项是定长数组 ⇒ 查长度；第二项是稀疏对象 ⇒ 查题位范围 + 值域。） */
+      const m2n = m2Slots();
+      if (raw.m2_answers !== undefined && raw.m2_answers !== null) {
+        const m2in = raw.m2_answers;
+        if (typeof m2in !== "object" || Array.isArray(m2in)) {
+          return reply(400, { ok: false, error: "第二项 m2_answers 应为 {题位: 选项下标} 的对象，实得 " + (Array.isArray(m2in) ? "数组" : typeof m2in) });
+        }
+        for (const k of Object.keys(m2in)) {
+          const i = Number(k);
+          if (!Number.isInteger(i) || i < 0 || i >= m2n) {
+            return reply(400, { ok: false, error: "第二项 m2_answers 题位 " + k + " 超出 0-" + (m2n - 1) + "（第二项共 " + m2n + " 题）" });
+          }
+          const mv = m2in[k];
+          if (!Number.isInteger(mv) || mv < 0 || mv > 3) {
+            return reply(400, { ok: false, error: "第二项 m2_answers 题位 " + k + "（第 " + (i + 1) + " 题）的选项下标应为 0-3 的整数，实得 " + JSON.stringify(mv) });
+          }
+        }
+      }
       /* ---- m3_answers：值域校验（2026-10-26 · 票 #26 根因的服务器侧兜底）----
          第三项是**四选项**（选项下标 0/1/2/3）。客户端曾把 2/3 丢成 null
          （normalize 只认 0/1）⇒ 那一批数据整批被按「未作答」计分。
@@ -333,6 +434,30 @@ exports.main = async (event) => {
             return reply(400, { ok: false, error: "m3_answers 第 " + (i + 1) + " 题不是 0-3 的选项下标", got: v });
           }
         }
+      }
+      /* ---- m3_answers：长度校验（票 #83 · 2026-10-26）----
+         形状校验只做了**一半**：值域（0-3）查了，**长度没查** ⇒ 一份 41 项的
+         载荷被接受并落库（票 #83 的实测）。第一项的 96 题是查长度的（上面那段），
+         这里按同一写法、同一错误码风格补齐：第三项必须是 40 题的数组。
+         ⚠ 客户端（publish/candidate/index.html 的 buildPayload）第三项恒是
+           nM3()=40 的定长数组（没答的题位 = null 占位）⇒ 正常交卷长度恒为 40，
+           本校验**不拦**「按未作答计分」那条路径（库里已有只答了 20 题的真实份子）。 */
+      const m3n = m3Slots();
+      const m3len = Array.isArray(m3) ? m3.length : 0;
+      if (m3len !== m3n) {
+        return reply(400, { ok: false, error: "第三项 m3_answers 应为 " + m3n + " 题的 0-3 选项下标序列，实得 " + m3len });
+      }
+      /* 票 #87 方案 A：计分前形状自检。#83/#85 入口已拦同类问题；这一步保证任何写
+         路径（含以后新增的）都不可能让坏形状走到 scoreAll。裁定 A：整份拒收、不落库，
+         CLS 结构化留痕（票 #87：不是只回一个 400 就完事）。 */
+      const shapeProbs = shapeSelfCheck(m1, raw.m2_answers, m3);
+      if (shapeProbs.length) {
+        rejectLog({ disposition: "rejected", code: code,
+          respondent_name: str(raw.respondent_name) || str(payload.name) || null,
+          id_last4: str(raw.id_last4), id_hash: str(raw.id_hash), group_name: str(raw.group_name) },
+          shapeProbs);
+        return reply(400, { ok: false, error: "作答形状自检未过，整份拒收、不落库",
+          "void": true, reasons: shapeProbs });
       }
       /* 服务端算分：浏览器自报的任何分数一律不采信 */
       let out;
@@ -384,25 +509,30 @@ exports.main = async (event) => {
     if (method === "GET") {
       if (q.action === "list") {
         const limit = Math.min(parseInt(q.limit || "50", 10) || 50, 200);
-        const rows = await pg("GET", "/" + table + "?select=code,respondent_name,id_last4,id_hash,group_name,level,submitted_at,duration_ms,unanswered_m1,m1_scores,m2_result,m3_result&order=submitted_at.desc&limit=" + limit);
+        /* 【票 #54 第 1 层】action=list 去掉 id_hash（id_last4 保留供核对）——
+           HR 台只渲染 code/姓名/后4位/组/层级/时间/时长/未答题/等级，未用 id_hash。 */
+        const rows = await pg("GET", "/" + table + "?select=code,respondent_name,id_last4,group_name,level,submitted_at,duration_ms,unanswered_m1,m1_raw,m2_answers,m3_answers,m1_scores,m2_result,m3_result&order=submitted_at.desc&limit=" + limit);
         /* 「等级」= 综合档（compose）：m1 短板档 + m2 总档 + m3 总档重算，
            **不需要重新计分**（三样都在已落库的 out 里）⇒ 只取用、不回传。 */
         const out = (rows || []).map((r) => {
-          const cp = composeStored(r.m1_scores, r.m2_result, r.m3_result);
+          /* 票 #87 方案 A：坏形状（历史遗留行）不综合、不给「待提升」，显式作废标记 */
+          const probs = rowShapeProblems(r);
+          const cp = probs.length ? null : composeStored(r.m1_scores, r.m2_result, r.m3_result);
           return {
             code: r.code,
             respondent_name: r.respondent_name || null,
             id_last4: r.id_last4 || null,
-            id_hash: r.id_hash || null,
             group_name: r.group_name || null,
             level: r.level || null,
             submitted_at: r.submitted_at || null,
             duration_ms: r.duration_ms === null ? null : Number(r.duration_ms),
             unanswered_m1: r.unanswered_m1 === null ? null : Number(r.unanswered_m1),
-            grade: cp ? cp.grade : null
+            grade: cp ? cp.grade : null,
+            voided: probs.length ? { kind: "shape", reasons: probs } : null
           };
         });
-        return reply(200, { ok: true, count: out.length, rows: out });
+        return reply(200, { ok: true, count: out.length,
+          count_voided: out.filter((r) => r.voided).length, rows: out });
       }
       if (q.action === "narrative") {
         /* 判读话术：调用方只传**分数画像**，不传候选人编号 ⇒ 不碰 responses 表，
@@ -433,6 +563,22 @@ exports.main = async (event) => {
           const rows = await pg("GET", "/" + table + "?code=eq." + encodeURIComponent(q.code) + "&limit=1");
           if (!rows || !rows.length) return reply(404, { ok: false, error: "没有这一份", code: q.code });
           const row = rows[0];
+          /* 票 #87 方案 A：历史坏形状行不出报告，不许再以「待提升」面貌进判读 */
+          const probs = rowShapeProblems(row);
+          if (probs.length) {
+            exportLog("single-void", { code: row.code, count: 0, source: src });
+            return reply(200, {
+              ok: true, kind: "single-void",
+              code: row.code,
+              respondent_name: row.respondent_name || null,
+              id_last4: row.id_last4 || null,
+              submitted_at: row.submitted_at || null,
+              generated_at: new Date().toISOString(),
+              report: null,
+              "void": { kind: "shape", reasons: probs,
+                note: "该份作答形状不完整（历史遗留行），不计成绩、不出报告" }
+            });
+          }
           const compose = composeStored(row.m1_scores, row.m2_result, row.m3_result);
           exportLog("single", { code: row.code, count: 1, source: src });
           return reply(200, {
@@ -459,6 +605,8 @@ exports.main = async (event) => {
               m3: row.m3_result || null,
               compose: compose
             },
+            /* 票 #78 第 4 步：可信度由服务端算好后随 export 下发（只 level+flags，#45 不下发逐题） */
+            credibility: credibilitySrv(row),
             /* 位置先留出来：判读话术库那半由另一条会话负责（report_narrative），
                那边就绪后在这里挂上即可，页面已有渲染位。 */
             narrative: null
@@ -471,7 +619,7 @@ exports.main = async (event) => {
              { meta, respondents: [{ id, group, responses: [96 个 0/1], times_ms: [] }] }
              **未答完的份子不进管线**：管线的 0/1 形状放不下「未作答」，
              硬塞会被当成「选了 a 侧」把分压低 ⇒ 单独列出来，由施测人决定要不要人工看。 */
-          const rows = await pg("GET", "/" + table + "?select=code,respondent_name,id_last4,group_name,m1_raw,unanswered_m1&order=submitted_at.desc&limit=" + limit);
+          const rows = await pg("GET", "/" + table + "?select=code,respondent_name,id_last4,group_name,m1_raw,m2_answers,m3_answers,unanswered_m1&order=submitted_at.desc&limit=" + limit);
           const respondents = [];
           const excluded = [];
           for (const r of rows || []) {
@@ -481,6 +629,17 @@ exports.main = async (event) => {
               excluded.push({
                 code: r.code, respondent_name: r.respondent_name || null, unanswered_m1: unanswered,
                 reason: raw.length !== 96 ? "m1_raw 不是 96 题" : "有未答题"
+              });
+              continue;
+            }
+            const shapeProbs = shapeSelfCheck(raw, r.m2_answers,
+              Array.isArray(r.m3_answers) ? r.m3_answers : null);
+            if (shapeProbs.length) {
+              excluded.push({
+                code: r.code, respondent_name: r.respondent_name || null, unanswered_m1: unanswered,
+                reason: "形状不完整（历史遗留，票 #87）：" +
+                  shapeProbs.map((x) => x.module + " 期望 " + JSON.stringify(x.expected) +
+                    " 实得 " + JSON.stringify(x.actual)).join("；")
               });
               continue;
             }
@@ -507,10 +666,18 @@ exports.main = async (event) => {
             excluded: excluded
           });
         }
-        const rows = await pg("GET", "/" + table + "?select=code,respondent_name,id_last4,id_hash,group_name,level,submitted_at,duration_ms,unanswered_m1,m1_scores,m2_result,m3_result&order=submitted_at.desc&limit=" + limit);
+        const rows = await pg("GET", "/" + table + "?select=code,respondent_name,id_last4,id_hash,group_name,level,submitted_at,duration_ms,unanswered_m1,m1_raw,m2_answers,m3_answers,m1_scores,m2_result,m3_result&order=submitted_at.desc&limit=" + limit);
         const out = [];
+        const voided = [];
         const byGrade = {}, byGroup = {}, byLevel = {};
         for (const r of rows || []) {
+          /* 票 #87 方案 A：坏形状不进批次汇总与分布统计 */
+          const probs = rowShapeProblems(r);
+          if (probs.length) {
+            voided.push({ code: r.code, respondent_name: r.respondent_name || null,
+              submitted_at: r.submitted_at || null, voided: { kind: "shape", reasons: probs } });
+            continue;
+          }
           const cp = composeStored(r.m1_scores, r.m2_result, r.m3_result);
           const m1o = r.m1_scores || {};
           out.push({
@@ -535,16 +702,23 @@ exports.main = async (event) => {
         }
         exportLog("batch", { count: out.length, source: src });
         return reply(200, {
-          ok: true, kind: "batch", count: out.length, generated_at: new Date().toISOString(),
+          ok: true, kind: "batch", count: out.length, count_voided: voided.length,
+          generated_at: new Date().toISOString(),
           rows: out,
+          voided: voided,
           distribution: { by_grade: byGrade, by_group: byGroup, by_level: byLevel },
           pipeline_query: "?action=export&scope=batch&limit=" + limit + "&format=pipeline&src=" + encodeURIComponent(src)
         });
       }
       if (!q.code) return reply(400, { ok: false, error: "缺 code" });
-      const rows = await pg("GET", "/" + table + "?code=eq." + encodeURIComponent(q.code) + "&limit=1");
+      /* 【票 #54 第 1 层 · 读侧收窄 · 2026-10-26 维护者拍板】by-code 只回「存在与否」：
+         **不回** m1_raw / m2_answers / m3_answers（逐题作答）、各分、id_hash。
+         唯一调用方＝候选页 alreadySubmitted()（publish/candidate/index.html:1771），
+         它只读 row.code 判真假 ⇒ 收窄后「已交卷」判定行为不变。
+         逐题/整行读取归施测人路径（?action=export，第 3 层加鉴权，票 #44）。 */
+      const rows = await pg("GET", "/" + table + "?code=eq." + encodeURIComponent(q.code) + "&select=code,submitted_at&limit=1");
       if (!rows || !rows.length) return reply(404, { ok: false, error: "没有这一份", code: q.code });
-      return reply(200, { ok: true, row: rows[0] });
+      return reply(200, { ok: true, row: { code: rows[0].code, submitted_at: rows[0].submitted_at || null, exists: true } });
     }
 
     return reply(405, { ok: false, error: "只支持 GET / POST / OPTIONS" });
@@ -556,5 +730,7 @@ exports.main = async (event) => {
   }
 };
 
-/* 本地单测用的导出（不参与线上逻辑） */
-exports._mergeM3Patch = mergeM3Patch;
+/* 本地单测用的导出（不参与线上逻辑）。
+   票 #86 起补答通道下线，_mergeM3Patch 随之删除。 */
+exports._shapeSelfCheck = shapeSelfCheck;
+exports._rowShapeProblems = rowShapeProblems;

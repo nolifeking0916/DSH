@@ -1,0 +1,45 @@
+# Bundle patch: 一次 pre-step 同时注入「经验 + 技能 + 记忆」，并关掉原来的两个注入插件。
+- insert:
+    - id: context-inject
+      name: '@local/context-inject'
+      config:
+        enabled: true
+        apiBase: https://memos.memtensor.cn/api/openmem/v1
+        userId: HR
+        # 密钥不再写在本文件里：改由 launchd 用户域注入 MEMOS_API_KEY，
+        # 插件读不到 config.apiKey 时自动回退到 process.env[apiKeyEnv]。
+        # 注入方式：~/Library/LaunchAgents/com.leto.dsh.memos-env.plist（登录时从
+        # ~/.dsh/secrets/memos_api_key 读，plist 本身不含明文）。
+        apiKeyEnv: MEMOS_API_KEY
+        apiKey: ''
+        kbId: basef0649423-0dab-4fc0-8c91-a585f66c0ba5
+        patternsDir: /Users/leto/.dsh/wiki/patterns
+        # 一次请求里同时取记忆事实、偏好、技能（KB），统一排序与预算
+        relativity: 0.45
+        skillThreshold: 0.5
+        shortQuerySkillThreshold: 0.6
+        # 2026-10-24 记忆「减量提质」：常驻只留 2 条高相关记忆（≥0.55），其余由模型按需调
+        # search_memory 工具。依据：采纳率实测 记忆 9.1% ＜ 技能 22.7% ＜ 经验 25.0%。
+        maxMem: 2
+        memoryMinScore: 0.55
+        maxSkills: 5
+        maxPatterns: 3
+        # 服务端候选池上限：给足才拿得到 skill 视图（4 会把 skill_detail_list 挤空），客户端再截断
+        serverLimit: 25
+        budgetChars: 800
+        # 2026-10-24：按类配额分配预算，避免【记忆】被经验+技能挤成 0 条（实测 room=-53）
+        patternQuota: 340
+        skillQuota: 220
+        memoryQuota: 240
+        # 技能本地兜底：MemOS 命中为 0 或请求失败时，读本地技能目录做关键词匹配
+        localSkillFallback: true
+        skillsDir: /Users/leto/.dsh/skills
+        timeoutMs: 1800
+        injectStep: 1
+        debugLog: /tmp/context-inject.log
+
+# 顶层裸条目＝按 id 覆盖已存在条目
+- id: memos-autoinject
+  disabled: true
+- id: wikiskill-inject
+  disabled: true

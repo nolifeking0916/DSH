@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "source_root": "/Users/leto/.dsh/bot/workspace/outputs",
+  "target_root": "outputs",
+  "cloud_search": false,
+  "records": [
+    {
+      "source": "sun-management-all-recordings-20261110/管理专题原话-从严筛选/孙晓东管理哲学与要求原话-从严汇编.md",
+      "target": "管理原话-20261110/01-管理专题从严汇编.md",
+      "sha256": "3b936dc96de779c5376040e8aeb32c69a2ef0c53c6ba4107a0edf1b7b4897081"
+    },
+    {
+      "source": "sun-management-all-recordings-20261110/管理专题原话-从严筛选/从严筛选说明与校验.md",
+      "target": "管理原话-20261110/02-从严筛选说明与校验.md",
+      "sha256": "5157c9a83c481746e48ff86c7ce0b481e400ee30bfaa30e67c6946a2e90826c2"
+    },
+    {
+      "source": "sun-management-all-recordings-20261110/孙晓东管理哲学与要求原话-全部录音逐字汇编.md",
+      "target": "管理原话-20261110/03-全部录音逐字汇编.md",
+      "sha256": "0f1164d8d0e051ea4816e0a87969dbca093a6c6501023169ca652301cc5e468e"
+    },
+    {
+      "source": "sun-management-all-recordings-20261110/覆盖与校验报告.md",
+      "target": "管理原话-20261110/04-全部录音覆盖与校验报告.md",
+      "sha256": "3a259596f7f129b361ad31fb8fbbcbf62f3c269d1d3db10ae7a5ab13126010cc"
+    }
+  ]
+}

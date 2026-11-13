@@ -1,0 +1,11 @@
+title: archive
+description: 收录 1 个文件，以系统运维相关内容为主；目录标签由文件路径、格式和可读取文本汇总生成。
+tags:
+  - 主题-系统运维
+  - 检索-OpenViking
+  - 状态-规格管理
+  - 类型-规格说明
+category: 系统运维
+lifecycle: 规格管理
+search_scope: OpenViking
+file_count: 1

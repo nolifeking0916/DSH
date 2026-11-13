@@ -10,11 +10,11 @@
       "origin_status": "eligible_reviewed_intake"
     },
     {
-      "key": "6bc6a7e7c9134dc499d22dfd6d919846:5160000082982646aa040633daffe8c41da825deb8db4ff41bd4c19bc83896d7",
-      "artifact_id": "6bc6a7e7c9134dc499d22dfd6d919846",
+      "key": "5edd5dbf2a2846718d615fa989891b74:dead3973e3d110482321e503586475110fbd994a11ebdacba9baa62d437bea3d",
+      "artifact_id": "5edd5dbf2a2846718d615fa989891b74",
       "target": "dsh-workspace/outputs/P挪O岗位建议表-20261113.provenance.md",
-      "sha256": "5160000082982646aa040633daffe8c41da825deb8db4ff41bd4c19bc83896d7",
-      "bytes": 1257,
+      "sha256": "dead3973e3d110482321e503586475110fbd994a11ebdacba9baa62d437bea3d",
+      "bytes": 1522,
       "origin_status": "eligible_reviewed_intake"
     },
     {
@@ -55,6 +55,14 @@
       "target": "dsh-workspace/outputs/荐读摘句-度假景区专业观察-v2-2026-11-13.provenance.md",
       "sha256": "da058d465b36e412c4055f0d41f113078c254e493d212c443927a271bca1bc67",
       "bytes": 11968,
+      "origin_status": "eligible_reviewed_intake"
+    },
+    {
+      "key": "4253a4263188474b832a69b34bf28c02:d35d3bb3c2fe5eb725dec9fde20e5628be381e6e4b8dadd436293d92fe09f345",
+      "artifact_id": "4253a4263188474b832a69b34bf28c02",
+      "target": "dsh-workspace/outputs/荐读摘句-度假景区专业观察-v2-Ardot版-2026-11-13.provenance.md",
+      "sha256": "d35d3bb3c2fe5eb725dec9fde20e5628be381e6e4b8dadd436293d92fe09f345",
+      "bytes": 5058,
       "origin_status": "eligible_reviewed_intake"
     },
     {

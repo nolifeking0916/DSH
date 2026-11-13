@@ -51,10 +51,13 @@ def main():
     write_record(renamed, artifact="different-artifact")
     code, out = run(env)
     assert code == 0 and out["error_count"] == 0, out
-    renamed.write_text("synthetic conflicting v3\n", encoding="utf-8")
+    # Atomic replacement may change the inode/artifact id; a unique previous target
+    # still proves lineage, so this is a modification rather than an unknown collision.
+    renamed.write_text("synthetic atomic-replacement v3\n", encoding="utf-8")
     write_record(renamed, artifact="third-artifact")
     code, out = run(env)
-    assert code == 2 and out["error_count"] >= 1, out
+    assert code == 0 and out["error_count"] == 0, out
+    assert (root / "dsh-workspace" / "renamed.md").read_text(encoding="utf-8") == "synthetic atomic-replacement v3\n"
     # A reviewed exclusion removes the candidate without deleting the central copy or
     # misclassifying the explicit scope decision as a source deletion.
     state.mkdir(parents=True, exist_ok=True)
@@ -62,7 +65,16 @@ def main():
     code, out = run(env)
     assert code == 0 and out["file_count"] == 0 and out["deletion_count"] == 0, out
     assert (root / "dsh-workspace" / "renamed.md").exists(), "exclusion must preserve the central copy"
-    print(json.dumps({"status": "pass", "cases": ["initial", "modify", "rename", "delete_hold", "same_hash_adoption", "identity_conflict_hold", "explicit_exclusion_preserve"]}))
+    # A target with no manifest lineage remains blocked even when the new source is valid.
+    unknown = source / "unknown.md"
+    unknown.write_text("new source\n", encoding="utf-8")
+    unknown_target = root / "dsh-workspace" / "unknown.md"
+    unknown_target.write_text("unowned existing target\n", encoding="utf-8")
+    write_record(unknown, artifact="unknown-artifact")
+    code, out = run(env)
+    assert code == 2 and out["error_count"] >= 1, out
+    assert unknown_target.read_text(encoding="utf-8") == "unowned existing target\n"
+    print(json.dumps({"status": "pass", "cases": ["initial", "modify", "rename", "delete_hold", "same_hash_adoption", "atomic_replace_same_target_modify", "explicit_exclusion_preserve", "unknown_target_identity_conflict_hold"]}))
 
 if __name__ == "__main__":
     main()

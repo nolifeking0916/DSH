@@ -146,6 +146,14 @@ def main():
             same_artifact = [x for x in previous if x["artifact_id"] == item["artifact_id"]]
             if len(same_artifact) == 1:
                 old = same_artifact[0]
+        if not old:
+            # Atomic replacement changes the inode/artifact id, but the unique approved
+            # target still supplies version lineage for an ordinary content modification.
+            same_target = [x for x in previous if x["target"] == item["target"]]
+            if len(same_target) == 1:
+                old = same_target[0]
+            elif len(same_target) > 1:
+                errors.append({"reason": "ambiguous_previous_target", "target": item["target"]})
         if old:
             superseded[item["key"]] = old
             if old["target"] != item["target"]:

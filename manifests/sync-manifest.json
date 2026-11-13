@@ -10,6 +10,14 @@
       "origin_status": "eligible_reviewed_intake"
     },
     {
+      "key": "6bc6a7e7c9134dc499d22dfd6d919846:5160000082982646aa040633daffe8c41da825deb8db4ff41bd4c19bc83896d7",
+      "artifact_id": "6bc6a7e7c9134dc499d22dfd6d919846",
+      "target": "dsh-workspace/outputs/P挪O岗位建议表-20261113.provenance.md",
+      "sha256": "5160000082982646aa040633daffe8c41da825deb8db4ff41bd4c19bc83896d7",
+      "bytes": 1257,
+      "origin_status": "eligible_reviewed_intake"
+    },
+    {
       "key": "eba5a79976e145838c301b1cce9dcbea:1cb9dad34bc1036e22a9b67ae98a4197ceedcb85821a0bc3bbef30d9e0600b98",
       "artifact_id": "eba5a79976e145838c301b1cce9dcbea",
       "target": "dsh-workspace/outputs/干部管理培训要点-2026-11-12.provenance.md",

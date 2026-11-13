@@ -133,6 +133,9 @@ def main():
     items = [x for x in items if x["target"] not in excluded_targets]
     previous_path = STATE / "projected-manifest.json"
     previous = json.loads(previous_path.read_text(encoding="utf-8")).get("entries", []) if previous_path.is_file() else []
+    # An explicit exclusion is the reviewed scope decision, not an implicit source deletion.
+    # Never copy or delete the central copy as a side effect of this filter.
+    previous = [x for x in previous if x["target"] not in excluded_targets]
     old_by_key = {x["key"]: x for x in previous}
     new_targets = {x["target"] for x in items}
     renames = []

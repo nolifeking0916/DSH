@@ -55,7 +55,14 @@ def main():
     write_record(renamed, artifact="third-artifact")
     code, out = run(env)
     assert code == 2 and out["error_count"] >= 1, out
-    print(json.dumps({"status": "pass", "cases": ["initial", "modify", "rename", "delete_hold", "same_hash_adoption", "identity_conflict_hold"]}))
+    # A reviewed exclusion removes the candidate without deleting the central copy or
+    # misclassifying the explicit scope decision as a source deletion.
+    state.mkdir(parents=True, exist_ok=True)
+    (state / "excluded-targets.json").write_text(json.dumps({"excluded": [{"target": "dsh-workspace/renamed.md", "sha256": digest(renamed), "reason": "synthetic_sensitive"}]}), encoding="utf-8")
+    code, out = run(env)
+    assert code == 0 and out["file_count"] == 0 and out["deletion_count"] == 0, out
+    assert (root / "dsh-workspace" / "renamed.md").exists(), "exclusion must preserve the central copy"
+    print(json.dumps({"status": "pass", "cases": ["initial", "modify", "rename", "delete_hold", "same_hash_adoption", "identity_conflict_hold", "explicit_exclusion_preserve"]}))
 
 if __name__ == "__main__":
     main()

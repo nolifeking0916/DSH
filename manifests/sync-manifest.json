@@ -4,7 +4,7 @@
     {
       "key": "bd1971afb90a4fce9c2d2ed02e9a44c6:9cf45f6a013d726def731cd588eccc3a10a38177a3b4053d8c73871fd6a63eda",
       "artifact_id": "bd1971afb90a4fce9c2d2ed02e9a44c6",
-      "target": "dsh-workspace/work/hr-data-center/outputs/P序列在职清单-20261112.provenance.md",
+      "target": "dsh-workspace/outputs/P序列在职清单-20261112.provenance.md",
       "sha256": "9cf45f6a013d726def731cd588eccc3a10a38177a3b4053d8c73871fd6a63eda",
       "bytes": 4570,
       "origin_status": "eligible_reviewed_intake"
@@ -12,15 +12,47 @@
     {
       "key": "eba5a79976e145838c301b1cce9dcbea:1cb9dad34bc1036e22a9b67ae98a4197ceedcb85821a0bc3bbef30d9e0600b98",
       "artifact_id": "eba5a79976e145838c301b1cce9dcbea",
-      "target": "dsh-workspace/work/hr-data-center/outputs/干部管理培训要点-2026-11-12.provenance.md",
+      "target": "dsh-workspace/outputs/干部管理培训要点-2026-11-12.provenance.md",
       "sha256": "1cb9dad34bc1036e22a9b67ae98a4197ceedcb85821a0bc3bbef30d9e0600b98",
       "bytes": 10770,
       "origin_status": "eligible_reviewed_intake"
     },
     {
+      "key": "2c0140e287864e8c954447b495405f8d:037baa79d5cd7d74302f7319943f0103ed6d78cdd36e55f7a96a36ebb982228e",
+      "artifact_id": "2c0140e287864e8c954447b495405f8d",
+      "target": "dsh-workspace/outputs/荐读摘句-多主题-2026-11-13.provenance.md",
+      "sha256": "037baa79d5cd7d74302f7319943f0103ed6d78cdd36e55f7a96a36ebb982228e",
+      "bytes": 3189,
+      "origin_status": "eligible_reviewed_intake"
+    },
+    {
+      "key": "938c047bfa434f84967ca32853fca939:5f9af612622d28a7f4a46ac7b22275457ebfe6d8dcc3aa982d7961395bca0ee3",
+      "artifact_id": "938c047bfa434f84967ca32853fca939",
+      "target": "dsh-workspace/outputs/荐读摘句-度假景区专业观察-2026-11-13-MiniMax版.provenance.md",
+      "sha256": "5f9af612622d28a7f4a46ac7b22275457ebfe6d8dcc3aa982d7961395bca0ee3",
+      "bytes": 7366,
+      "origin_status": "eligible_reviewed_intake"
+    },
+    {
+      "key": "7de67976f89146aeb366909ccb3ca74d:2ec15410240d5001f9739ab3285bff8cd29882c2f659a7be6faa29798063d002",
+      "artifact_id": "7de67976f89146aeb366909ccb3ca74d",
+      "target": "dsh-workspace/outputs/荐读摘句-度假景区专业观察-2026-11-13.provenance.md",
+      "sha256": "2ec15410240d5001f9739ab3285bff8cd29882c2f659a7be6faa29798063d002",
+      "bytes": 7988,
+      "origin_status": "eligible_reviewed_intake"
+    },
+    {
+      "key": "98d91d02b4ba482d92beff5169acaecf:da058d465b36e412c4055f0d41f113078c254e493d212c443927a271bca1bc67",
+      "artifact_id": "98d91d02b4ba482d92beff5169acaecf",
+      "target": "dsh-workspace/outputs/荐读摘句-度假景区专业观察-v2-2026-11-13.provenance.md",
+      "sha256": "da058d465b36e412c4055f0d41f113078c254e493d212c443927a271bca1bc67",
+      "bytes": 11968,
+      "origin_status": "eligible_reviewed_intake"
+    },
+    {
       "key": "643e13b8b92b445a808e098b9872e11b:c60f3fdd95559486f9493d5b9b9a7eed06eaa051b267da988cf5086ac987c7ea",
       "artifact_id": "643e13b8b92b445a808e098b9872e11b",
-      "target": "dsh-workspace/work/hr-data-center/outputs/集团岗位MPO分类统览表-20261112.provenance.md",
+      "target": "dsh-workspace/outputs/集团岗位MPO分类统览表-20261112.provenance.md",
       "sha256": "c60f3fdd95559486f9493d5b9b9a7eed06eaa051b267da988cf5086ac987c7ea",
       "bytes": 7890,
       "origin_status": "eligible_reviewed_intake"
@@ -2063,6 +2095,38 @@
       "target": "hr-knowledge/outputs/荐读摘句-2026-11-09.provenance.md",
       "sha256": "a079dec0238f27e56ba2e4594334e4ce84ff54738b12b4dfb606f749b2c8603a",
       "bytes": 3643,
+      "origin_status": "already_in_knowledge"
+    },
+    {
+      "key": "67b19a0fbdfd448389561aa1b4ef24d0:e18a46d7d25dd16334ec3be63567a0653ae1571afc7dfc6900ed3835ff6342fd",
+      "artifact_id": "67b19a0fbdfd448389561aa1b4ef24d0",
+      "target": "hr-knowledge/outputs/荐读摘句-2026-11-13.provenance.md",
+      "sha256": "e18a46d7d25dd16334ec3be63567a0653ae1571afc7dfc6900ed3835ff6342fd",
+      "bytes": 7193,
+      "origin_status": "already_in_knowledge"
+    },
+    {
+      "key": "2a50e8993ac44a6d9a5928383dfd7e4f:a6b0ed980c1d4a08a6038f9280203b1680c833e30d544a610552a0f9be246b15",
+      "artifact_id": "2a50e8993ac44a6d9a5928383dfd7e4f",
+      "target": "hr-knowledge/outputs/荐读摘句-多主题-2026-11-13-MiniMax版.provenance.md",
+      "sha256": "a6b0ed980c1d4a08a6038f9280203b1680c833e30d544a610552a0f9be246b15",
+      "bytes": 3217,
+      "origin_status": "already_in_knowledge"
+    },
+    {
+      "key": "346c88847f2c461bb2b958f38df2e5f7:594810d2ed3ee9a8eb31369931620f01fb14e81e288fc5dee869d55c46e15445",
+      "artifact_id": "346c88847f2c461bb2b958f38df2e5f7",
+      "target": "hr-knowledge/outputs/荐读摘句-景区主题-2026-11-13-MiniMax版.provenance.md",
+      "sha256": "594810d2ed3ee9a8eb31369931620f01fb14e81e288fc5dee869d55c46e15445",
+      "bytes": 3717,
+      "origin_status": "already_in_knowledge"
+    },
+    {
+      "key": "0bc583c11d4247cd8c9a5f01a0b22ce4:2b7064c5d8f725c45f21414aeac60fd4527830e37f7d4425208c580ebac111bd",
+      "artifact_id": "0bc583c11d4247cd8c9a5f01a0b22ce4",
+      "target": "hr-knowledge/outputs/荐读摘句-景区主题-2026-11-13.provenance.md",
+      "sha256": "2b7064c5d8f725c45f21414aeac60fd4527830e37f7d4425208c580ebac111bd",
+      "bytes": 3745,
       "origin_status": "already_in_knowledge"
     },
     {

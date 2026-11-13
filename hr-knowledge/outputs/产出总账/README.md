@@ -16,23 +16,23 @@ type: note
 
 > 本页由 DSH 总账生成；OpenKnowledge 跟从展示。完整源路径和原始回执只保存在本机状态区。
 
-- 总账指纹：8f7baddbc4cf2938fbee794b4e8e5d3e18a91e9df20df7613f355a007e1a8de5
-- 本轮候选：24266 件
-- 唯一 artifact：18959 个
-- 文件身份匹配：24258 件；其中移动/改名：0 件；唯一哈希关联：0 件
-- 哈希缓存命中：11302 件；读取错误：0 件
+- 总账指纹：5e13609b76bcd9b2ae80523de4ee4f24d8ee35d7d192be54a3c6f19e9f6e9ea7
+- 本轮候选：25560 件
+- 唯一 artifact：19610 个
+- 文件身份匹配：25556 件；其中移动/改名：4 件；唯一哈希关联：4 件
+- 哈希缓存命中：12600 件；读取错误：0 件
 - 原件策略：只读发现，不移动、不删除、不改名。
 
 ## 接收状态
 
 | 状态 | 文件数 | 含义 |
 |---|---:|---|
-| already_in_knowledge | 2737 | 知识仓已有同内容，不重复收录 |
-| eligible_reviewed_intake | 25 | 来源明确，可进入安全接收复核 |
-| held_binary_review | 2050 | 图片等二进制内容需人工查看 |
+| already_in_knowledge | 2736 | 知识仓已有同内容，不重复收录 |
+| eligible_reviewed_intake | 26 | 来源明确，可进入安全接收复核 |
+| held_binary_review | 2095 | 图片等二进制内容需人工查看 |
 | held_changed_version | 16 | 内容变化，不能静默覆盖旧接收版 |
 | held_cloud_not_local | 12956 | iCloud 占位文件，只登记，不触发下载 |
-| held_origin_review | 6481 | AI 来源未确认，等待人工判断 |
+| held_origin_review | 7730 | AI 来源未确认，等待人工判断 |
 | held_sensitive_path | 1 | 路径显示可能敏感，默认留在本地 |
 
 ## AI 来源分级
@@ -41,7 +41,7 @@ type: note
 |---|---:|
 | confirmed | 520 |
 | probable | 146 |
-| unknown | 23600 |
+| unknown | 24894 |
 
 ## 边界
 
